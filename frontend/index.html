@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secondus — Real-Time Negotiation Intelligence</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #14141f;
+            --bg-card: #1a1a2e;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888aa;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --urgent: #ef4444;
+            --watch: #f59e0b;
+            --note: #6b7280;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        /* Setup Screen */
+        #setup-screen {
+            max-width: 600px;
+            margin: 4rem auto;
+        }
+
+        .setup-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .setup-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            min-height: 48px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--accent);
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .tag button {
+            background: none;
+            border: none;
+            color: inherit;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .tag button:hover {
+            opacity: 1;
+        }
+
+        .tag-input {
+            flex: 1;
+            min-width: 120px;
+            border: none;
+            background: transparent;
+            padding: 0.25rem;
+        }
+
+        .tag-input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #5558e3;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Live Screen */
+        #live-screen {
+            display: none;
+        }
+
+        .live-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 20px;
+            color: var(--success);
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-control:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-control.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-control.danger {
+            border-color: var(--urgent);
+            color: var(--urgent);
+        }
+
+        .btn-control.danger:hover {
+            background: var(--urgent);
+            color: white;
+        }
+
+        .live-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+            height: calc(100vh - 200px);
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .interventions-panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .intervention-count {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .count-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .count-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .count-badge.urgent .dot { background: var(--urgent); }
+        .count-badge.watch .dot { background: var(--watch); }
+        .count-badge.note .dot { background: var(--note); }
+
+        .interventions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .intervention-card {
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border-left: 3px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .intervention-card.urgent {
+            border-color: var(--urgent);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .intervention-card.watch {
+            border-color: var(--watch);
+        }
+
+        .intervention-card.note {
+            border-color: var(--note);
+        }
+
+        .intervention-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .intervention-type {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .intervention-card.urgent .intervention-type { color: var(--urgent); }
+        .intervention-card.watch .intervention-type { color: var(--watch); }
+        .intervention-card.note .intervention-type { color: var(--note); }
+
+        .intervention-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .intervention-content {
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+
+        .transcript-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+        }
+
+        .transcript-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .screen-preview {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            aspect-ratio: 16/10;
+        }
+
+        .screen-preview-inner {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .screen-preview-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .audio-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .vu-meter {
+            height: 40px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            padding: 4px;
+        }
+
+        .vu-bar {
+            flex: 1;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: height 0.05s;
+        }
+
+        .context-panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .context-item {
+            margin-bottom: 1rem;
+        }
+
+        .context-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .context-value {
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .live-grid {
+                grid-template-columns: 1fr;
+            }
+            .side-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Secondus <span>/ negotiation intelligence</span></div>
+        </header>
+
+        <!-- Setup Screen -->
+        <div id="setup-screen">
+            <h1 class="setup-title">Prepare for your negotiation</h1>
+            <p class="setup-subtitle">Tell me about your deal so I can watch your back.</p>
+
+            <form id="setup-form">
+                <div class="form-group">
+                    <label for="goals">What are your goals for this deal?</label>
+                    <textarea id="goals" placeholder="e.g., Close at $50K or below, 12-month contract minimum, include support SLA..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="batna">What's your BATNA? (Best Alternative if this falls through)</label>
+                    <textarea id="batna" placeholder="e.g., We have a competing offer from Vendor B at $55K with similar terms..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Key terms to watch (press Enter to add)</label>
+                    <div class="tag-input-container" id="terms-container">
+                        <input type="text" class="tag-input" id="terms-input" placeholder="e.g., payment terms, liability cap...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="counterparty">Who are you negotiating with?</label>
+                    <input type="text" id="counterparty" placeholder="e.g., Acme Corp, represented by their VP of Sales">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="start-btn">
+                    Start Live Session
+                </button>
+            </form>
+        </div>
+
+        <!-- Live Screen -->
+        <div id="live-screen">
+            <div class="live-header">
+                <div class="session-info">
+                    <div class="status-badge">
+                        <span class="status-dot"></span>
+                        Live
+                    </div>
+                    <div class="timer" id="timer">00:00</div>
+                </div>
+                <div class="controls">
+                    <button class="btn-control" id="mic-btn" title="Toggle microphone">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        Mic
+                    </button>
+                    <button class="btn-control" id="screen-btn" title="Share screen">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        Screen
+                    </button>
+                    <button class="btn-control danger" id="end-btn" title="End session">
+                        End Session
+                    </button>
+                </div>
+            </div>
+
+            <div class="live-grid">
+                <div class="main-panel">
+                    <div class="interventions-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Live Interventions</span>
+                            <div class="intervention-count">
+                                <span class="count-badge urgent"><span class="dot"></span> <span id="urgent-count">0</span></span>
+                                <span class="count-badge watch"><span class="dot"></span> <span id="watch-count">0</span></span>
+                                <span class="count-badge note"><span class="dot"></span> <span id="note-count">0</span></span>
+                            </div>
+                        </div>
+                        <div class="interventions-list" id="interventions-list">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👂</div>
+                                <p>Listening to your negotiation...</p>
+                                <p style="font-size: 0.875rem; margin-top: 0.5rem;">I'll alert you when I spot something important.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transcript-panel">
+                        <span class="panel-title">Live Transcript</span>
+                        <p class="transcript-text" id="transcript">Waiting for audio...</p>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="screen-preview">
+                        <div class="panel-header">
+                            <span class="panel-title">Screen Capture</span>
+                        </div>
+                        <div class="screen-preview-inner" id="screen-preview">
+                            Click "Screen" to share your document
+                        </div>
+                    </div>
+
+                    <div class="audio-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Audio Level</span>
+                        </div>
+                        <div class="vu-meter" id="vu-meter">
+                            <!-- Bars will be added by JS -->
+                        </div>
+                    </div>
+
+                    <div class="context-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Session Context</span>
+                        </div>
+                        <div id="context-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let sessionId = null;
+        let ws = null;
+        let mediaStream = null;
+        let screenStream = null;
+        let audioContext = null;
+        let audioWorklet = null;
+        let timerInterval = null;
+        let startTime = null;
+        let keyTerms = [];
+        let counts = { urgent: 0, watch: 0, note: 0 };
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const liveScreen = document.getElementById('live-screen');
+        const setupForm = document.getElementById('setup-form');
+        const termsInput = document.getElementById('terms-input');
+        const termsContainer = document.getElementById('terms-container');
+        const micBtn = document.getElementById('mic-btn');
+        const screenBtn = document.getElementById('screen-btn');
+        const endBtn = document.getElementById('end-btn');
+        const interventionsList = document.getElementById('interventions-list');
+        const transcript = document.getElementById('transcript');
+        const timer = document.getElementById('timer');
+        const screenPreview = document.getElementById('screen-preview');
+        const vuMeter = document.getElementById('vu-meter');
+        const contextDisplay = document.getElementById('context-display');
+
+        // Initialize VU meter bars
+        for (let i = 0; i < 32; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'vu-bar';
+            bar.style.height = '10%';
+            vuMeter.appendChild(bar);
+        }
+
+        // Tag input handling
+        termsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && termsInput.value.trim()) {
+                e.preventDefault();
+                addTerm(termsInput.value.trim());
+                termsInput.value = '';
+            }
+        });
+
+        function addTerm(term) {
+            keyTerms.push(term);
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${term} <button type="button" onclick="removeTerm(this, '${term}')">&times;</button>`;
+            termsContainer.insertBefore(tag, termsInput);
+        }
+
+        function removeTerm(btn, term) {
+            keyTerms = keyTerms.filter(t => t !== term);
+            btn.parentElement.remove();
+        }
+
+        // Form submission
+        setupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const config = {
+                goals: document.getElementById('goals').value,
+                batna: document.getElementById('batna').value,
+                key_terms: keyTerms,
+                counterparty: document.getElementById('counterparty').value
+            };
+
+            try {
+                const res = await fetch('/session/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const data = await res.json();
+                sessionId = data.session_id;
+
+                // Show context in side panel
+                displayContext(config);
+
+                // Connect WebSocket
+                connectWebSocket();
+
+                // Switch screens
+                setupScreen.style.display = 'none';
+                liveScreen.style.display = 'block';
+
+                // Start timer
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+
+            } catch (err) {
+                console.error('Failed to create session:', err);
+                alert('Failed to start session. Please try again.');
+            }
+        });
+
+        function displayContext(config) {
+            let html = '';
+            if (config.goals) {
+                html += `<div class="context-item"><div class="context-label">Goals</div><div class="context-value">${config.goals}</div></div>`;
+            }
+            if (config.batna) {
+                html += `<div class="context-item"><div class="context-label">BATNA</div><div class="context-value">${config.batna}</div></div>`;
+            }
+            if (config.key_terms.length) {
+                html += `<div class="context-item"><div class="context-label">Key Terms</div><div class="context-value">${config.key_terms.join(', ')}</div></div>`;
+            }
+            if (config.counterparty) {
+                html += `<div class="context-item"><div class="context-label">Counterparty</div><div class="context-value">${config.counterparty}</div></div>`;
+            }
+            contextDisplay.innerHTML = html;
+        }
+
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/negotiate/${sessionId}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            ws.onerror = (err) => {
+                console.error('WebSocket error:', err);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+            };
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'intervention') {
+                addIntervention(data);
+            } else if (data.type === 'transcript') {
+                transcript.textContent = data.content;
+            } else if (data.type === 'error') {
+                console.error('Server error:', data.content);
+            }
+        }
+
+        function addIntervention(data) {
+            // Remove empty state if present
+            const emptyState = interventionsList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            // Update counts
+            counts[data.urgency]++;
+            document.getElementById(`${data.urgency}-count`).textContent = counts[data.urgency];
+
+            // Create card
+            const card = document.createElement('div');
+            card.className = `intervention-card ${data.urgency}`;
+
+            const typeLabel = data.urgency === 'urgent' ? '⚡ URGENT' :
+                             data.urgency === 'watch' ? '⚠ WATCH' : '● NOTE';
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+
+            card.innerHTML = `
+                <div class="intervention-header">
+                    <span class="intervention-type">${typeLabel}</span>
+                    <span class="intervention-time">${mins}:${secs}</span>
+                </div>
+                <div class="intervention-content">${data.content}</div>
+            `;
+
+            interventionsList.insertBefore(card, interventionsList.firstChild);
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            timer.textContent = `${mins}:${secs}`;
+        }
+
+        // Microphone handling
+        micBtn.addEventListener('click', async () => {
+            if (micBtn.classList.contains('active')) {
+                // Stop mic
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(t => t.stop());
+                    mediaStream = null;
+                }
+                if (audioWorklet) {
+                    audioWorklet.disconnect();
+                    audioWorklet = null;
+                }
+                micBtn.classList.remove('active');
+            } else {
+                // Start mic
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            sampleRate: 16000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        }
+                    });
+
+                    audioContext = new AudioContext({ sampleRate: 16000 });
+                    const source = audioContext.createMediaStreamSource(mediaStream);
+
+                    // Create analyzer for VU meter
+                    const analyzer = audioContext.createAnalyser();
+                    analyzer.fftSize = 64;
+                    source.connect(analyzer);
+
+                    // VU meter animation
+                    const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+                    function updateVU() {
+                        if (!mediaStream) return;
+                        analyzer.getByteFrequencyData(dataArray);
+                        const bars = vuMeter.querySelectorAll('.vu-bar');
+                        for (let i = 0; i < bars.length; i++) {
+                            const value = dataArray[i] || 0;
+                            bars[i].style.height = `${Math.max(10, value / 2.55)}%`;
+                        }
+                        requestAnimationFrame(updateVU);
+                    }
+                    updateVU();
+
+                    // Process audio with ScriptProcessor (AudioWorklet would be better)
+                    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+                    processor.onaudioprocess = (e) => {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            // Convert to 16-bit PCM
+                            const pcm = new Int16Array(inputData.length);
+                            for (let i = 0; i < inputData.length; i++) {
+                                pcm[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
+                            }
+                            // Send as base64
+                            const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm.buffer)));
+                            ws.send(JSON.stringify({ type: 'audio', data: base64 }));
+                        }
+                    };
+                    source.connect(processor);
+                    processor.connect(audioContext.destination);
+
+                    micBtn.classList.add('active');
+                } catch (err) {
+                    console.error('Mic access denied:', err);
+                    alert('Microphone access is required for live negotiation support.');
+                }
+            }
+        });
+
+        // Screen share handling
+        screenBtn.addEventListener('click', async () => {
+            if (screenBtn.classList.contains('active')) {
+                // Stop screen share
+                if (screenStream) {
+                    screenStream.getTracks().forEach(t => t.stop());
+                    screenStream = null;
+                }
+                screenPreview.innerHTML = 'Click "Screen" to share your document';
+                screenBtn.classList.remove('active');
+            } else {
+                // Start screen share
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            cursor: 'never',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    });
+
+                    const video = document.createElement('video');
+                    video.srcObject = screenStream;
+                    video.play();
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Capture frames periodically
+                    const captureFrame = () => {
+                        if (!screenStream) return;
+
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0);
+
+                        // Update preview
+                        const previewImg = document.createElement('img');
+                        previewImg.src = canvas.toDataURL('image/jpeg', 0.5);
+                        screenPreview.innerHTML = '';
+                        screenPreview.appendChild(previewImg);
+
+                        // Send to backend
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                            ws.send(JSON.stringify({ type: 'screen', data: base64 }));
+                        }
+                    };
+
+                    // Capture every 2 seconds
+                    setInterval(captureFrame, 2000);
+
+                    screenStream.getVideoTracks()[0].onended = () => {
+                        screenBtn.classList.remove('active');
+                        screenPreview.innerHTML = 'Click "Screen" to share your document';
+                    };
+
+                    screenBtn.classList.add('active');
+                } catch (err) {
+                    console.error('Screen share denied:', err);
+                }
+            }
+        });
+
+        // End session
+        endBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to end this session?')) {
+                // Cleanup
+                if (ws) {
+                    ws.send(JSON.stringify({ type: 'end' }));
+                    ws.close();
+                }
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(t => t.stop());
+                }
+                if (screenStream) {
+                    screenStream.getTracks().forEach(t => t.stop());
+                }
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+
+                // Reset UI
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
