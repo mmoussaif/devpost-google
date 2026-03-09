@@ -1,6 +1,6 @@
 # Secondus — Task Tracker
 
-## Current Sprint: Hackathon Submission
+## Current Sprint: Hackathon Submission (Deadline: March 16, 5:00 PM PT)
 
 ### Done
 - [x] Project structure created
@@ -8,27 +8,60 @@
 - [x] Agent definition with Gemini 3.1 Flash (`agent.py`)
 - [x] Frontend UI with audio/screen capture (`index.html`)
 - [x] Architecture diagram (`docs/architecture.svg`)
-- [x] Deployment script (`deploy.sh`)
+- [x] Deployment script (`deploy.sh`) — **+0.2 bonus points**
 - [x] README with spin-up instructions
 - [x] CLAUDE.md workflow guidelines
 - [x] AGENTS.md architecture docs
+- [x] Public GitHub repo pushed
 
 ### In Progress
 - [ ] Test locally with `python main.py`
 - [ ] Deploy to Cloud Run
-- [ ] Record GCP console proof video
+- [ ] Record GCP console proof video (mp4 in repo)
 
 ### Pending
-- [ ] Record 4-minute demo video
+- [ ] Record 4-minute demo video (YouTube/Vimeo)
 - [ ] Write Devpost submission text
-- [ ] GDG signup for bonus points
-- [ ] Apply for GCP credits (deadline March 13)
+- [ ] GDG signup — **+0.2 bonus points**
+- [ ] Apply for GCP credits — **DEADLINE: March 13, 12:00 PM PT**
+- [ ] Write blog post on dev.to — **+0.6 bonus points**
 
-## Submission Checklist (March 16)
+---
 
-- [ ] Public GitHub repo with code
-- [ ] README with spin-up instructions
-- [ ] Architecture diagram in submission carousel
-- [ ] 4-minute demo video
-- [ ] GCP deployment proof (video or code link)
-- [ ] Devpost form complete
+## Official Submission Requirements (from Rules)
+
+### Mandatory (Pass/Fail)
+- [x] Public code repository
+- [x] Spin-up instructions in README.md
+- [x] Architecture diagram
+- [ ] Proof of Google Cloud deployment (screen recording OR code link)
+- [ ] Demo video (max 4 min, YouTube/Vimeo, English)
+- [ ] Select category: **Live Agents**
+
+### Demo Video Must Include
+- [ ] Project in action (actual software, no mockups)
+- [ ] Pitch: problem + solution value
+- [ ] Show barge-in/interruption working
+- [ ] Max 4 minutes (only first 4 min judged)
+
+### Judging Criteria
+| Criterion | Weight | Our Focus |
+|-----------|--------|-----------|
+| Innovation & Multimodal UX | 40% | Barge-in, audio+vision, beyond text box |
+| Technical Implementation | 30% | ADK, Cloud Run, error handling |
+| Demo & Presentation | 30% | Clear story, live proof, architecture |
+
+### Bonus Points (Max +1.0)
+- [ ] Blog/podcast/video about build: +0.6
+- [x] Automated deployment (deploy.sh): +0.2
+- [ ] GDG membership: +0.2
+
+---
+
+## Key Deadlines
+| Date | Item |
+|------|------|
+| **March 13, 12:00 PM PT** | GCP credits request deadline |
+| **March 16, 5:00 PM PT** | Submission deadline |
+| March 17 – April 3 | Judging period |
+| April 22-24 | Winners announced at Google NEXT

@@ -4,15 +4,29 @@
 
 > Your trusted second in high-stakes deals — like the advisor who stands behind you in a duel, knowing your strategy and protecting your interests.
 
+[![Category](https://img.shields.io/badge/Category-Live%20Agent-blue)]()
+[![Gemini](https://img.shields.io/badge/Model-Gemini%203.1%20Flash-orange)]()
+[![Cloud Run](https://img.shields.io/badge/Hosted-Google%20Cloud%20Run-green)]()
+
 ![Architecture](docs/architecture.svg)
 
-## What it does
+## The Problem
 
-Secondus listens to your live deal conversation via microphone while watching your contract or term sheet on screen, then interrupts at the right moment with sharp tactical guidance:
+In high-stakes negotiations, you're on your own. Legal review happens before and after — never during the moment that matters. Skilled counterparties use tactics like anchoring, artificial urgency, and nibbling to extract concessions you didn't intend to make. By the time you realize what happened, the deal is signed.
 
-- **Drift Detection** — Flags when spoken terms contradict the written document
-- **Tactic Recognition** — Identifies manipulation tactics (anchoring, artificial urgency, nibbling) and suggests counters
-- **Leverage Spotting** — Catches moments when the counterparty reveals flexibility
+## The Solution
+
+Secondus is a **real-time negotiation intelligence agent** that:
+
+- **Listens** to your live conversation via microphone
+- **Watches** your contract or term sheet via screen share
+- **Interrupts** at the right moment with tactical guidance (barge-in capability)
+
+This breaks the "text box" paradigm — Secondus doesn't wait for you to ask a question. It proactively alerts you when it spots:
+
+- **Drift Detection** — Spoken terms contradicting the written document
+- **Tactic Recognition** — Manipulation tactics (anchoring, artificial urgency, nibbling) with suggested counters
+- **Leverage Moments** — When the counterparty reveals flexibility you can exploit
 
 ## Tech Stack
 
@@ -86,15 +100,32 @@ secondus/
 
 ## Gemini Live Agent Challenge 2026
 
-Built for the [Gemini Live Agent Challenge](https://devpost.com) hackathon.
+Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.devpost.com) hackathon.
 
-**Category:** Live Agent
+| | |
+|---|---|
+| **Category** | Live Agent |
+| **Mandatory Tech** | Gemini Live API via ADK bidi-streaming |
+| **Cloud Hosting** | Google Cloud Run |
 
-**Google Cloud Services:**
-- Vertex AI (Gemini 3.1 Flash)
-- Cloud Run
-- Cloud Firestore
+### Google Cloud Services Used
+
+| Service | Purpose |
+|---------|---------|
+| **Vertex AI** | Gemini 3.1 Flash model access |
+| **Cloud Run** | Serverless backend hosting |
+| **Cloud Firestore** | Session state persistence |
+
+### Key Features for Judging
+
+- **Beyond Text Box**: Proactive barge-in interruptions, not reactive Q&A
+- **Multimodal**: Simultaneous audio + vision processing
+- **Barge-In**: Agent interrupts conversation at critical moments
+- **ADK Native**: Uses `Runner.run_live()` for proper bidi-streaming
+- **Automated Deployment**: `deploy.sh` for infrastructure-as-code
 
 ---
 
 Built by [@mmoussaif](https://github.com/mmoussaif)
+
+`#GeminiLiveAgentChallenge`
