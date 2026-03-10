@@ -39,8 +39,8 @@
   - [x] Screen share UI updates ("Contract loaded" indicator)
 
 ### In Progress
-- [ ] Test end-to-end contract drift flow
-- [ ] Test locally with `python main.py`
+- [x] Test end-to-end contract drift flow
+- [x] Test locally with `python main.py`
 - [ ] Deploy to Cloud Run
 - [ ] Record GCP console proof video (mp4 in repo)
 

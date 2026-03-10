@@ -25,28 +25,7 @@ Secondus is a **real-time negotiation intelligence agent** that breaks the "text
 | **Learning System** | Tracks your patterns and provides research-backed advice |
 | **Barge-In** | Interrupts conversation at critical moments — no prompt needed |
 
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph Client["Browser"]
-        MIC[🎤 Mic] --> WS
-        CAM[📹 Camera] --> MP[MediaPipe]
-        MP --> UI[Visual Coach]
-    end
-
-    subgraph Backend["Cloud Run"]
-        WS[WebSocket] --> ADK[Google ADK]
-        ADK --> LS[Learning System]
-    end
-
-    subgraph Google["Google Cloud"]
-        ADK <--> GL[Gemini Live API]
-        LS <--> FS[(Firestore)]
-    end
-
-    GL --> |Real-time coaching| WS
-```
+👉 **[Judges: Click here for the full AGENTS.md System Architecture, Mermaid Diagrams, and API Design](AGENTS.md)**
 
 ## Key Features
 

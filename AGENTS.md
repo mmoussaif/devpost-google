@@ -183,6 +183,37 @@ flowchart LR
     style GL fill:#4285F4,color:white
 ```
 
+### Contract Drift Detection (Vision + Audio)
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Session UI"]
+        DOC[contract.html<br/>Shared Tab] --> SS[Screen Share API]
+        SS --> |JPEG frames| WS[WebSocket]
+        MIC[Microphone] --> |16kHz PCM| WS
+    end
+
+    subgraph Backend["Secondus Server"]
+        WS --> SM[Session Manager]
+        SM --> |Audio| AA[Adversary Agent]
+        SM --> |Audio + JPEG| SA[Coach Agent]
+    end
+
+    subgraph Analysis["Gemini Live Processing"]
+        AA --> |Negotiates against terms| GL[Native Audio]
+        SA --> |Cross-references| V[Vision Model]
+        V --> |Compares verbal vs written| DD{Drift Detected?}
+    end
+
+    DD -- Yes --> ALR[Generate TACTIC Alert]
+    ALR --> WS
+    WS --> UI[Show DRIFT Card]
+
+    style V fill:#4285F4,color:white
+    style GL fill:#4285F4,color:white
+    style DD fill:#EA4335,color:white
+```
+
 ---
 
 ## Agent Design
