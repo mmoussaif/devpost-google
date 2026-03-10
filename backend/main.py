@@ -138,7 +138,7 @@ SAY THIS:"""
 
 
 
-async def generate_coaching(adversary_text: str, goals: str, batna: str, user_history: str = "") -> dict:
+async def generate_coaching(adversary_text: str, goals: str, batna: str, user_history: str = "", screen_bytes: bytes = None) -> dict:
     """Generate real-time coaching response to what adversary said."""
     try:
         prompt = COACHING_PROMPT.format(
@@ -147,11 +147,18 @@ async def generate_coaching(adversary_text: str, goals: str, batna: str, user_hi
             adversary_text=adversary_text,
             user_history=user_history or "No prior commitments yet"
         )
+        
+        contents = [prompt]
+        if screen_bytes:
+            contents.append(
+                types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg")
+            )
+            contents.append("CRITICAL: Look at the provided screen capture of the contract. If the counterparty's spoken text contradicts the document terms in a way that hurts the user, output a 'DRIFT: [Contract says X, they said Y]' alert alongside your SAY THIS response!")
 
         response = await asyncio.to_thread(
             coaching_client.models.generate_content,
             model="gemini-2.0-flash",
-            contents=prompt,
+            contents=contents,
         )
 
         coaching_text = response.text.strip()
@@ -743,6 +750,29 @@ Say this opening NOW, then wait for their response.""")]
                             types.Content(parts=[types.Part(text=data["data"])])
                         )
 
+                    elif msg_type == "screen":
+                        image_bytes = base64.b64decode(data["data"])
+                        # Store for the coach to detect drift
+                        if session_id in active_sessions:
+                            active_sessions[session_id]["latest_screen"] = image_bytes
+                        
+                        # Send to the adversary so it knows what's on the document
+                        live_queue.send_content(
+                            types.Content(
+                                parts=[
+                                    types.Part(
+                                        inline_data=types.Blob(
+                                            mime_type="image/jpeg",
+                                            data=image_bytes,
+                                        )
+                                    ),
+                                    types.Part(
+                                        text="[Document context: The user is looking at this document. Use these terms (e.g. price, timeline) as the baseline for your negotiation, but remember your role is the counterparty trying to negotiate a BETTER deal for yourself (e.g. lower price, longer payment terms).]"
+                                    ),
+                                ]
+                            )
+                        )
+
                     elif msg_type == "end":
                         live_queue.close()
                         break
@@ -821,6 +851,7 @@ Say this opening NOW, then wait for their response.""")]
                                 goals=config.get("goals", ""),
                                 batna=config.get("batna", ""),
                                 user_history=user_history_text,
+                                screen_bytes=active_sessions.get(session_id, {}).get("latest_screen")
                             )
 
                             # 3. Send coaching to frontend
