@@ -753,26 +753,11 @@ Say this opening NOW, then wait for their response.""")]
 
                     elif msg_type == "screen":
                         image_bytes = base64.b64decode(data["data"])
-                        # Store for the coach to detect drift
+                        # Store for the coach only (drift detection). Do NOT send to the adversary:
+                        # sending screen to the live agent confuses the conversation (model reacts to
+                        # document instead of user speech) and breaks transcript/sync.
                         if session_id in active_sessions:
                             active_sessions[session_id]["latest_screen"] = image_bytes
-                        
-                        # Send to the adversary so it knows what's on the document
-                        live_queue.send_content(
-                            types.Content(
-                                parts=[
-                                    types.Part(
-                                        inline_data=types.Blob(
-                                            mime_type="image/jpeg",
-                                            data=image_bytes,
-                                        )
-                                    ),
-                                    types.Part(
-                                        text="[Document context: The user is looking at this document. Use these terms (e.g. price, timeline) as the baseline for your negotiation, but remember your role is the counterparty trying to negotiate a BETTER deal for yourself (e.g. lower price, longer payment terms).]"
-                                    ),
-                                ]
-                            )
-                        )
 
                     elif msg_type == "client_barge_in":
                         # Client-side Zero-latency VAD detected speech. Flush current text as interrupted.
