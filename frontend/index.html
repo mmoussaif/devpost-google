@@ -603,6 +603,76 @@
         }
         .intervention-card.signal .intervention-type { color: #8b5cf6; }
 
+        /* DRIFT Alert - Contract vs Speech mismatch */
+        .intervention-card.drift {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%);
+            border-width: 2px;
+            animation: drift-pulse 2s ease-in-out infinite;
+        }
+        .intervention-card.drift .intervention-type {
+            color: #f59e0b;
+            font-size: 0.85rem;
+        }
+        @keyframes drift-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            50% { box-shadow: 0 0 15px 3px rgba(245, 158, 11, 0.3); }
+        }
+
+        /* LEVERAGE Alert - Opportunity detected */
+        .intervention-card.leverage {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border-width: 2px;
+        }
+        .intervention-card.leverage .intervention-type { color: #10b981; }
+
+        /* TACTIC Alert - Enhanced urgency */
+        .intervention-card.tactic {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.1) 100%);
+            border-width: 2px;
+            animation: tactic-shake 0.5s ease-in-out;
+        }
+        @keyframes tactic-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* Drift Banner - Top of screen alert */
+        .drift-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            animation: slide-down 0.3s ease;
+            font-weight: 600;
+        }
+        .drift-banner.show { display: flex; }
+        .drift-banner-icon { font-size: 1.25rem; }
+        .drift-banner-text { flex: 1; text-align: center; }
+        .drift-banner-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        @keyframes slide-down {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
         .vu-meter.agent-speaking {
             background: rgba(16, 185, 129, 0.2);
             animation: pulse-glow 0.5s ease;
@@ -975,6 +1045,13 @@
     </style>
 </head>
 <body>
+    <!-- Drift Alert Banner -->
+    <div class="drift-banner" id="drift-banner">
+        <span class="drift-banner-icon">📋⚠️</span>
+        <span class="drift-banner-text" id="drift-banner-text">Contract drift detected!</span>
+        <button class="drift-banner-close" onclick="hideDriftBanner()">Dismiss</button>
+    </div>
+
     <div class="container">
         <header>
             <div class="logo">Secondus <span>/ negotiation intelligence</span></div>
@@ -2200,16 +2277,29 @@
                 return;
             }
 
-            // Check for TACTIC alerts
+            // Check for TACTIC alerts - manipulation detected
             if (content.includes('TACTIC:')) {
-                data.urgency = 'urgent';
+                data.urgency = 'tactic';
                 addIntervention(data);
+                // Also update coach panel with counter
+                const tacticMatch = content.match(/TACTIC:\s*(\w+)/i);
+                if (tacticMatch) {
+                    updateCoachPanel(`Counter: ${tacticMatch[1]}`, 'Manipulation tactic detected');
+                }
                 return;
             }
 
-            // Check for DRIFT alerts
+            // Check for DRIFT alerts - contract vs speech mismatch
             if (content.includes('DRIFT:')) {
-                data.urgency = 'watch';
+                data.urgency = 'drift';
+                addIntervention(data);
+                showDriftBanner(content);
+                return;
+            }
+
+            // Check for LEVERAGE alerts - opportunity detected
+            if (content.includes('LEVERAGE:')) {
+                data.urgency = 'leverage';
                 addIntervention(data);
                 return;
             }
@@ -2248,6 +2338,30 @@
             // Extract the tip after the colon
             const tip = content.split(':').slice(1).join(':').trim();
             voiceTip.textContent = tip || content;
+        }
+
+        function showDriftBanner(content) {
+            const banner = document.getElementById('drift-banner');
+            const bannerText = document.getElementById('drift-banner-text');
+
+            // Extract the drift details
+            const driftMatch = content.match(/DRIFT:\s*(.+?)(?:\.|$)/i);
+            if (driftMatch) {
+                bannerText.textContent = `⚠️ ${driftMatch[1]}`;
+            } else {
+                bannerText.textContent = '⚠️ Contract terms don\'t match what was said!';
+            }
+
+            banner.classList.add('show');
+
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 10000);
+        }
+
+        function hideDriftBanner() {
+            document.getElementById('drift-banner').classList.remove('show');
         }
 
         function addSignal(data) {
@@ -2304,8 +2418,16 @@
             const card = document.createElement('div');
             card.className = `intervention-card ${data.urgency}`;
 
-            const typeLabel = data.urgency === 'urgent' ? '⚡ URGENT' :
-                             data.urgency === 'watch' ? '⚠ WATCH' : '● NOTE';
+            // Enhanced type labels for different alert types
+            const typeLabels = {
+                'urgent': '⚡ URGENT',
+                'watch': '⚠️ WATCH',
+                'note': '● NOTE',
+                'drift': '📋 DRIFT',
+                'leverage': '💪 LEVERAGE',
+                'tactic': '🎯 TACTIC'
+            };
+            const typeLabel = typeLabels[data.urgency] || '● NOTE';
 
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');

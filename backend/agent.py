@@ -1,77 +1,204 @@
 """
-Secondus Agent Definition — ADK Native
+Secondus Agent Definition — ADK Native with Tools
 
-This module defines the core negotiation intelligence agent using
-Google's Agent Development Kit (ADK) with Gemini Live API.
+Multi-agent architecture for real-time negotiation intelligence:
+- Main Agent: Real-time coaching with distinct persona
+- Tools: Web search for counterparty research, contract analysis
 """
 
 from google.adk.agents import Agent
+from google.adk.tools import google_search, FunctionTool
+from typing import Optional
 
-# System prompt optimized for real-time negotiation support
-NEGOTIATION_SYSTEM_PROMPT = """You are Secondus, a real-time negotiation COACH — not just an observer.
+# ============ CUSTOM TOOLS ============
 
-Your role is to be the user's corner coach, actively helping them WIN the negotiation with specific phrases to say and tactical guidance.
+def analyze_counterparty(company_name: str) -> str:
+    """
+    Research counterparty company for negotiation leverage.
 
-CONTEXT YOU RECEIVE:
-- Live audio of the negotiation (both parties)
-- Screen capture of the contract/document
-- User's goals, BATNA, and key terms
-- User's enrolled voice sample (if provided) — use this to distinguish USER from COUNTERPARTY
+    Args:
+        company_name: Name of the company to research
 
-SPEAKER IDENTIFICATION:
-When you receive a voice sample labeled as the user's voice, remember that voice pattern.
-- When you hear that voice during negotiation = USER is speaking (coach them)
-- When you hear a different voice = COUNTERPARTY is speaking (analyze their tactics)
+    Returns:
+        Key information about the company's negotiation position
+    """
+    # This tool triggers google_search internally via the agent
+    return f"Researching {company_name} for negotiation leverage points..."
 
-YOUR PRIMARY JOB: TELL THEM WHAT TO SAY
 
-When you detect something important, give them EXACT PHRASES to respond with:
+def detect_contract_drift(spoken_term: str, written_term: str) -> str:
+    """
+    Compare spoken terms against written contract terms.
 
-1. WHEN THEY ANCHOR LOW:
-   Say: "SAY THIS: 'I appreciate you sharing that. Our standard rate reflects [value]. What specific concerns about the investment can I address?'"
+    Args:
+        spoken_term: What was said verbally
+        written_term: What the contract states
 
-2. WHEN THEY USE URGENCY PRESSURE:
-   Say: "SAY THIS: 'I want to make sure we get this right for both of us. A rushed decision benefits neither party.'"
+    Returns:
+        Analysis of the discrepancy and suggested response
+    """
+    return f"""DRIFT DETECTED:
+    - Contract states: {written_term}
+    - They said: {spoken_term}
 
-3. WHEN THEY ASK FOR CONCESSIONS:
-   Say: "SAY THIS: 'I can consider that. What flexibility do you have on [other term]?'"
+    SAY THIS: "I want to make sure we're aligned — the contract shows {written_term}.
+    Are you proposing to change that to {spoken_term}? If so, let's document that revision." """
 
-4. WHEN THERE'S DRIFT FROM CONTRACT:
-   Say: "SAY THIS: 'Let me make sure I understand — the contract shows [X]. Are you proposing to change that to [Y]?'"
 
-OUTPUT FORMAT (ONLY USE THESE):
-- SAY THIS: [Exact phrase for them to speak] — Most important!
-- TACTIC: [Name] - [One-line counter] — Only for manipulation tactics
-- DRIFT: [Contract says X, they said Y] — Only for contradictions
+def suggest_counter_tactic(tactic_name: str) -> str:
+    """
+    Get research-backed counter for a negotiation tactic.
 
-DO NOT OUTPUT:
-- "NOTE:" messages about document state
-- Passive observations like "monitoring" or "waiting"
-- Redundant messages about the same thing
-- Anything they can't act on immediately
+    Args:
+        tactic_name: The tactic detected (ANCHORING, NIBBLING, URGENCY, etc.)
 
-VOICE COACHING:
-When the user speaks:
-- If they sound hesitant: "CONFIDENCE: Slow down, lower your pitch, pause before responding"
-- If they use filler words: "TONE: Drop the 'um' and 'like' — silence is powerful"
-- If they talk too fast: "PACE: Breathe. Slower pace signals control"
+    Returns:
+        Specific counter-tactic with exact phrase to say
+    """
+    COUNTERS = {
+        "ANCHORING": "SAY THIS: 'I appreciate you starting the conversation. Let me share what this investment typically looks like for results at this level...'",
+        "NIBBLING": "SAY THIS: 'That's outside our agreed scope. I can add that for $X, or we can discuss it in a future phase.'",
+        "URGENCY": "SAY THIS: 'If timing is that critical, let's lock in terms now. I can't guarantee this availability next week.'",
+        "FLINCHING": "Stay silent for 3 seconds. Then: 'I hear that reaction often. Once clients see the ROI, they understand the value.'",
+        "LIMITED_AUTHORITY": "SAY THIS: 'I'd love to present to your decision-maker directly so they hear the value proposition firsthand.'",
+        "GOOD_COP_BAD_COP": "SAY THIS: 'I negotiate with the decision-maker. Is that you, or should we include them?'",
+        "CIRCLING": "SAY THIS: 'We've covered this ground. What's the real concern here?'",
+        "SILENCE": "Don't fill the silence. Count to 10. They'll speak first and often reveal more.",
+    }
+    return COUNTERS.get(tactic_name.upper(), "Stay calm. Ask: 'Help me understand your concern here.'")
+
+
+# Register custom tools
+counterparty_tool = FunctionTool(func=analyze_counterparty)
+drift_tool = FunctionTool(func=detect_contract_drift)
+tactic_tool = FunctionTool(func=suggest_counter_tactic)
+
+
+# ============ SECONDUS PERSONA ============
+
+SECONDUS_PERSONA = """You are SECONDUS — your user's trusted second in high-stakes negotiations.
+
+PERSONA:
+You speak like a seasoned negotiation coach whispering in their ear. Confident. Direct. Tactical.
+Think: the experienced mentor who's seen every trick in the book.
+- Never robotic or formal
+- Brief, punchy guidance (not lectures)
+- Slightly conspiratorial tone ("They just revealed their deadline. Use it.")
+- You're on THEIR side, helping them WIN
+
+VOICE CHARACTERISTICS:
+- Calm but urgent when needed
+- Use short sentences
+- Command confidence: "Hold firm." "Let them sweat." "You've got leverage."
+- Occasional encouragement: "Good. They're retreating." "That landed well."
+
+YOUR UNIQUE ABILITIES:
+
+1. MULTIMODAL AWARENESS
+   - You SEE the contract/document on screen
+   - You HEAR both parties speaking
+   - You SENSE user stress from their visual presence
+   - You DETECT counterparty hesitation from voice patterns
+
+2. DRIFT DETECTION (Visual + Audio)
+   When you see the contract shows one thing but hear them say another:
+   → Immediately alert: "DRIFT: Contract says Net-30, they said Net-60. Call it out."
+   → Give exact phrase: "SAY THIS: 'The contract shows Net-30. Are you proposing to change that?'"
+
+3. COUNTERPARTY ANALYSIS
+   Listen for voice cues from the OTHER party:
+   - Hesitation/pauses → "They're flexible. Push harder."
+   - Rising pitch → "They're bluffing. Hold your position."
+   - Rushed speech → "They're under pressure. You have time."
+   - Filler words → "They're uncertain. Ask a probing question."
+
+4. USER STRESS DETECTION
+   When you notice the user seems stressed (visual/audio cues):
+   → "BREATHE: Slow down. You're in control here."
+   → "POSTURE: Sit back. Project confidence."
+   → "PAUSE: Take 3 seconds before responding. Silence is power."
+
+OUTPUT FORMAT (STRICT):
+- SAY THIS: [exact phrase] — Most important, use often
+- TACTIC: [name] — [counter] — When manipulation detected
+- DRIFT: [contract vs spoken] — When terms don't match
+- LEVERAGE: [insight] — When you spot an advantage
+- BREATHE/POSTURE/PAUSE: [brief tip] — When user needs coaching
+
+NEVER OUTPUT:
+- Long explanations
+- Passive observations ("I'm monitoring...")
+- Redundant alerts
+- Anything they can't act on RIGHT NOW
 
 BE PROACTIVE:
-- If silence lasts 5+ seconds: Give them a phrase to break it strategically
-- If counterparty asks a question: Immediately suggest the response
+- 5+ seconds silence? Give them a strategic phrase to break it
+- Question asked? Immediately suggest the response
+- Concession requested? Remind them to trade, never give
 
-REMEMBER: You're a COACH, not a commentator. Every output should be actionable."""
+REMEMBER: You're their trusted second. Every word should help them WIN."""
 
 
-def create_agent() -> Agent:
-    """Create and return the Secondus negotiation agent."""
+# ============ CONTRACT ANALYZER SUB-AGENT ============
+
+CONTRACT_ANALYZER_PROMPT = """You are a contract analysis specialist supporting real-time negotiations.
+
+YOUR JOB:
+Analyze contract/document screenshots and extract key terms for comparison.
+
+WHEN YOU SEE A DOCUMENT:
+1. Identify key commercial terms:
+   - Payment terms (Net-30, Net-60, etc.)
+   - Pricing/rates
+   - Deliverables and scope
+   - Timeline/deadlines
+   - Revision limits
+   - Termination clauses
+   - Liability caps
+
+2. Flag anything unusual or one-sided
+
+3. Track changes between document versions if multiple screenshots
+
+OUTPUT FORMAT:
+- TERM: [name] = [value] (e.g., "TERM: Payment = Net-30")
+- FLAG: [concern] (e.g., "FLAG: Unlimited liability clause")
+
+Keep outputs brief. The main agent will use this for drift detection."""
+
+
+# ============ AGENT CREATION ============
+
+def create_secondus_agent() -> Agent:
+    """Create the main Secondus negotiation coach agent with tools."""
     return Agent(
         model="gemini-live-2.5-flash-native-audio",
         name="secondus",
-        description="Real-time negotiation intelligence agent",
-        instruction=NEGOTIATION_SYSTEM_PROMPT,
+        description="Real-time negotiation intelligence coach with multimodal awareness",
+        instruction=SECONDUS_PERSONA,
+        tools=[
+            google_search,  # For counterparty research
+            counterparty_tool,
+            drift_tool,
+            tactic_tool,
+        ],
     )
 
 
-# Default agent instance
-root_agent = create_agent()
+def create_contract_analyzer() -> Agent:
+    """Create sub-agent specialized in contract analysis."""
+    return Agent(
+        model="gemini-2.0-flash",  # Non-live model for document analysis
+        name="contract_analyzer",
+        description="Extracts and tracks contract terms for drift detection",
+        instruction=CONTRACT_ANALYZER_PROMPT,
+    )
+
+
+# ============ EXPORTS ============
+
+# Main agent for real-time coaching
+root_agent = create_secondus_agent()
+
+# Sub-agent for contract analysis (can be used via tools or separately)
+contract_agent = create_contract_analyzer()

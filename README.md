@@ -50,7 +50,34 @@ flowchart LR
 
 ## Key Features
 
-### 1. Practice Mode with AI Adversary
+### 1. The "Second" Persona — Your Trusted Advisor
+
+Secondus isn't just an AI — it's your corner coach with a distinct voice:
+
+- **Tactical whispers**: "They just revealed their deadline. Use it."
+- **Confident commands**: "Hold firm." "Let them sweat." "You've got leverage."
+- **Proactive guidance**: Suggests exact phrases to say, not observations
+
+### 2. Contract Drift Detection (Audio + Vision)
+
+True multimodal intelligence comparing what's SAID vs what's WRITTEN:
+
+```
+📋 DRIFT: Contract says Net-30, they said Net-60
+   SAY THIS: "The contract shows Net-30. Are you proposing to change that?"
+```
+
+Visual banner alerts when spoken terms contradict the document on screen.
+
+### 3. Counterparty Voice Analysis
+
+Listens to the OTHER party's voice patterns:
+
+- **Hesitation/pauses** → "They're flexible. Push harder."
+- **Rising pitch** → "They're bluffing. Hold your position."
+- **Rushed speech** → "They're under pressure. You have time."
+
+### 4. Practice Mode with AI Adversary
 
 Practice against a tough AI negotiator that uses real tactics:
 
@@ -60,7 +87,7 @@ Practice against a tough AI negotiator that uses real tactics:
 - **LIMITED AUTHORITY** — "Need to check with my boss"
 - **URGENCY** — Artificial deadlines
 
-### 2. Visual Intelligence (MediaPipe)
+### 6. Visual Intelligence (MediaPipe)
 
 Real-time body language coaching:
 
@@ -70,7 +97,7 @@ Real-time body language coaching:
 | **Pose** | Lean, shoulder posture | "Lean in to show engagement" |
 | **Hands** | Steepling, open palms | "Open palms signal honesty" |
 
-### 3. Personalized Learning System
+### 7. Personalized Learning System
 
 Tracks your patterns across sessions:
 
@@ -78,7 +105,15 @@ Tracks your patterns across sessions:
 - **Strengths**: Held price, closed deal, strong presence
 - **Recommendations**: Research-backed advice from Harvard PON, Chris Voss, Joe Navarro
 
-### 4. Cost Control
+### 8. ADK Tools Integration
+
+Built-in tools for enhanced coaching:
+
+- **google_search** — Research counterparty company for leverage
+- **detect_contract_drift** — Compare spoken vs written terms
+- **suggest_counter_tactic** — Get research-backed counter moves
+
+### 9. Cost Control
 
 Built-in protections for API costs:
 

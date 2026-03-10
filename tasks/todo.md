@@ -13,8 +13,22 @@
 - [x] CLAUDE.md workflow guidelines
 - [x] AGENTS.md architecture docs
 - [x] Public GitHub repo pushed
+- [x] Voice enrollment with server-side validation
+- [x] Practice mode with adversary agent (Gemini Live)
+- [x] Tactical alerts (ANCHORING, NIBBLING, FLINCHING, etc.)
+- [x] **MediaPipe Visual Intelligence**:
+  - [x] Face Mesh for facial expression/tension analysis
+  - [x] Pose detection for posture/lean analysis
+  - [x] Hands tracking for gesture detection
+  - [x] Real-time visual coaching tips
+- [x] Session recording & post-session analysis
+- [x] Scoring based on user participation
+- [x] Auto-end session on "goodbye" detection
+- [x] Proper session cleanup (stops audio immediately)
 
 ### In Progress
+- [x] Improved gesture detection (steepling, open palms, face touching)
+- [x] Color-coded visual feedback bars
 - [ ] Test locally with `python main.py`
 - [ ] Deploy to Cloud Run
 - [ ] Record GCP console proof video (mp4 in repo)
