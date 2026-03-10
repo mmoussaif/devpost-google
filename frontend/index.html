@@ -2919,49 +2919,54 @@
             const tacticCount = Object.values(metrics.tacticsUsed).reduce((a, b) => a + b, 0);
             const uniqueTactics = Object.keys(metrics.tacticsUsed).length;
 
-            // Performance scoring based on ACTUAL USER participation (not adversary)
+            // Performance scoring based on ACTUAL conversation (exchanges show real interaction)
             let score = 0;
 
-            // Use USER turns, not adversary turns
-            const userParticipation = metrics.userTurns || 0;
-            const userSpoke = userParticipation > 0 || (metrics.userAudioChunks || 0) > 100;
+            // Count REAL exchanges (how many times adversary responded to user)
+            // This is more accurate than userTurns which counts mic silence
+            const realExchanges = sessionRecording.exchanges.length;
+            const userActuallySpoke = realExchanges >= 2; // At least one back-and-forth
+            const userParticipation = Math.max(0, realExchanges - 1); // Subtract adversary opening
 
-            // 1. Engagement score: Did USER actually speak? (0-40 points)
-            const turnScore = userSpoke ? Math.min(40, userParticipation * 10) : 0;
+            // === NEGOTIATION PERFORMANCE SCORE ===
+            // Based on Chris Voss "Never Split the Difference" principles:
+            // 1. Engagement (did you participate?)
+            // 2. Tactical awareness (did you face/counter tactics?)
+            // 3. Progress (did you move toward a deal?)
+            // 4. Outcome (did you close?)
 
-            // 2. Emotional confidence score (0-30 points) - from audio + visual
-            let emotionScore = 0;
-            if (sessionRecording.emotions && sessionRecording.emotions.length > 0) {
-                const avgConfidence = sessionRecording.emotions.reduce((sum, e) => sum + e.confidence, 0) / sessionRecording.emotions.length;
-                emotionScore = Math.round(avgConfidence * 0.3);
-            }
+            // 1. ENGAGEMENT: Real back-and-forth exchanges (0-30 points)
+            // Score only if there were REAL exchanges (not just adversary opening)
+            const turnScore = userActuallySpoke ? Math.min(30, userParticipation * 10) : 0;
 
-            // 2b. Visual presence score (bonus points from MediaPipe) - only if user participated
+            // 2. TACTICAL HANDLING: Faced and countered tactics (0-25 points)
+            // More tactics faced = harder session = more points if you survived
+            const tacticScore = Math.min(25, uniqueTactics * 8);
+
+            // 3. PROGRESS: Moved negotiation forward (0-20 points)
+            const progressScore = userActuallySpoke ? Math.min(20, metrics.progressInstances * 10) : 0;
+
+            // 4. OUTCOME: Closed the deal (0-25 points)
+            const outcomeScore = (metrics.dealClosed && userActuallySpoke) ? 25 : 0;
+
+            // 5. VISUAL PRESENCE (bonus 0-10 points) - only counts if you actually negotiated
             let visualScore = 0;
             const visualSummary = getVisualMetricsSummary();
-            if (visualSummary && userSpoke) {
+            if (visualSummary && userActuallySpoke && userParticipation >= 2) {
                 visualScore = Math.round((visualSummary.avgEyeContact + visualSummary.avgPosture) / 20);
-                // Penalize high tension
-                if (visualSummary.avgTension > 50) visualScore -= 5;
             }
 
-            // 3. Progress score: Did they move the negotiation forward? (0-20 points)
-            const progressScore = userSpoke ? Math.min(20, metrics.progressInstances * 10) : 0;
-
-            // 4. Handling tactics: Did they face and handle tactics? (0-10 points)
-            const tacticScore = Math.min(10, uniqueTactics * 3);
-
-            // 5. Penalties for stalling/circling
-            const penalties = (metrics.stallingInstances * 3) + (metrics.circlingInstances * 3);
+            // 6. PENALTIES for stalling/circling (lets adversary control)
+            const penalties = (metrics.stallingInstances * 5) + (metrics.circlingInstances * 3);
 
             // Calculate final score
-            score = turnScore + emotionScore + visualScore + progressScore + tacticScore - penalties;
+            score = turnScore + tacticScore + progressScore + outcomeScore + visualScore - penalties;
 
-            // Cap score based on USER participation level
-            if (!userSpoke) {
-                score = Math.min(score, 15); // Didn't speak at all
+            // HARD CAPS based on participation
+            if (!userActuallySpoke) {
+                score = 0; // No real conversation = zero score
             } else if (userParticipation < 2) {
-                score = Math.min(score, 35); // Barely participated
+                score = Math.min(score, 30); // Very brief
             } else if (userParticipation < 4) {
                 score = Math.min(score, 60); // Short session
             }

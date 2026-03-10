@@ -702,18 +702,18 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
     live_queue = LiveRequestQueue()
 
     try:
-        # Send initial scenario context - IMPORTANT: Tell adversary to WAIT for user
+        # Send initial scenario context - Tell adversary to BEGIN with opening
         context = session_data.get("context", "Practice negotiation")
         live_queue.send_content(
             types.Content(
-                parts=[types.Part(text=f"""SCENARIO: {context}
+                parts=[types.Part(text=f"""BEGIN THE NEGOTIATION NOW.
 
-CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
-- DO NOT speak first. WAIT for the consultant to speak.
-- Only respond AFTER you hear them talk.
-- Keep your responses SHORT (1-3 sentences).
-- This is a back-and-forth conversation. Wait for them to finish speaking before you respond.
-- Listen to their audio input before generating a response.""")]
+You are Alex Chen, TechNova CTO. User's goals: {session_data.get('config', {}).get('goals', 'Close at $80K')}
+
+START by saying your opening pitch:
+"Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
+
+Say this opening NOW, then wait for their response.""")]
             )
         )
 
