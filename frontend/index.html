@@ -2402,6 +2402,13 @@
                     timestamp
                 });
 
+            } else if (data.type === 'user_says') {
+                // Fallback: If Web Speech API crashed/failed, use Gemini's backend transcript
+                const lastUserNodes = document.querySelectorAll('.transcript-entry.user');
+                const isDuplicate = lastUserNodes.length > 0 && lastUserNodes[lastUserNodes.length - 1].textContent.includes(data.content);
+                if (!isDuplicate) {
+                    addTranscriptEntry('user', data.content);
+                }
             } else if (data.type === 'adversary_audio') {
                 // Buffer audio chunks until turn complete
                 bufferAudioChunk(data.data);
@@ -2958,23 +2965,19 @@
                                 if (abs > maxLevel) maxLevel = abs;
                             }
 
-                            // Track user audio activity (threshold 0.01 = actual speech)
-                            if (maxLevel > 0.01 && isPracticeMode) {
+                            // Track user audio activity (threshold 0.05 = actual speech volume)
+                            if (maxLevel > 0.05 && isPracticeMode) {
+                                // ZERO-LATENCY BARGE IN: Stop the AI instantly locally!
+                                if (isAdversarySpeaking) {
+                                    console.log("Client-side VAD detected speech! Stopping adversary playback...");
+                                    clearAudio();
+                                    ws.send(JSON.stringify({ type: 'client_barge_in' }));
+                                }
+
                                 sessionRecording.metrics.userAudioChunks++;
                                 // Count as a "turn" every ~50 chunks of speech (~2.5 seconds)
                                 if (sessionRecording.metrics.userAudioChunks % 50 === 0) {
                                     sessionRecording.metrics.userTurns++;
-
-                                    // Fallback: if speech recognition hasn't captured anything,
-                                    // record a placeholder user exchange
-                                    const userExchanges = sessionRecording.exchanges.filter(e => e.speaker === 'user');
-                                    if (userExchanges.length === 0 && sessionRecording.metrics.userTurns === 1) {
-                                        sessionRecording.exchanges.push({
-                                            speaker: 'user',
-                                            text: '[Speech detected — transcript unavailable]',
-                                            timestamp: timer.textContent
-                                        });
-                                    }
                                 }
                             }
 

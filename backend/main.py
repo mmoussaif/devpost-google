@@ -716,6 +716,7 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
     )
 
     live_queue = LiveRequestQueue()
+    state = {"accumulated_text": ""}
 
     try:
         # Send initial scenario context - Tell adversary to BEGIN with opening
@@ -773,6 +774,15 @@ Say this opening NOW, then wait for their response.""")]
                             )
                         )
 
+                    elif msg_type == "client_barge_in":
+                        # Client-side Zero-latency VAD detected speech. Flush current text as interrupted.
+                        if state["accumulated_text"].strip():
+                            await websocket.send_json({
+                                "type": "adversary_says",
+                                "content": state["accumulated_text"].strip() + " -- [interrupted]"
+                            })
+                        state["accumulated_text"] = ""
+
                     elif msg_type == "end":
                         live_queue.close()
                         break
@@ -781,7 +791,6 @@ Say this opening NOW, then wait for their response.""")]
                 live_queue.close()
 
         async def send_adversary_response():
-            accumulated_text = ""
             user_history = []  # Track what the user has said/committed to
             low_cost = session_data.get("low_cost_mode", False)
             try:
@@ -821,16 +830,21 @@ Say this opening NOW, then wait for their response.""")]
                             await websocket.send_json({
                                 "type": "clear_audio"
                             })
-                            if accumulated_text.strip():
+                            if state["accumulated_text"].strip():
                                 # Send what was generated right before the interruption so it shows in the transcript
                                 await websocket.send_json({
                                     "type": "adversary_says",
-                                    "content": accumulated_text.strip() + " -- [interrupted]"
+                                    "content": state["accumulated_text"].strip() + " -- [interrupted]"
                                 })
-                            accumulated_text = "" # Reset accumulated trans as they were interrupted
+                            state["accumulated_text"] = "" # Reset accumulated trans as they were interrupted
                             
                         if hasattr(trans, "text") and trans.text and trans.text.strip():
                             user_text = trans.text.strip()
+                            # Send fallback transcript to UI just in case Chrome Web Speech API crashed
+                            await websocket.send_json({
+                                "type": "user_says",
+                                "content": user_text
+                            })
                             # Add to history if not duplicate
                             if not user_history or user_history[-1] != user_text:
                                 user_history.append(user_text)
@@ -842,13 +856,13 @@ Say this opening NOW, then wait for their response.""")]
                     if hasattr(event, "output_transcription") and event.output_transcription:
                         trans = event.output_transcription
                         if hasattr(trans, "text") and trans.text:
-                            if not accumulated_text.endswith(trans.text):
-                                accumulated_text += trans.text
+                            if not state["accumulated_text"].endswith(trans.text):
+                                state["accumulated_text"] += trans.text
 
                     # Send transcript on turn complete AND generate coaching
                     if hasattr(event, "turn_complete") and event.turn_complete:
-                        if accumulated_text.strip():
-                            adversary_statement = accumulated_text.strip()
+                        if state["accumulated_text"].strip():
+                            adversary_statement = state["accumulated_text"].strip()
 
                             # 1. Send what adversary said
                             await websocket.send_json({
@@ -876,7 +890,7 @@ Say this opening NOW, then wait for their response.""")]
                                 "context": coaching.get("context", ""),
                             })
 
-                            accumulated_text = ""
+                            state["accumulated_text"] = ""
 
             except WebSocketDisconnect:
                 pass
