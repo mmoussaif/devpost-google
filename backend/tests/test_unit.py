@@ -12,7 +12,7 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent import create_agent, NEGOTIATION_SYSTEM_PROMPT, root_agent
+from agent import create_secondus_agent, SECONDUS_PERSONA, root_agent
 
 
 class TestAgentDefinition:
@@ -20,20 +20,20 @@ class TestAgentDefinition:
 
     def test_agent_creation(self):
         """Test that agent is created with correct parameters."""
-        agent = create_agent()
+        agent = create_secondus_agent()
         assert agent is not None
         assert agent.name == "secondus"
         assert agent.model == "gemini-live-2.5-flash-native-audio"
 
     def test_agent_has_description(self):
         """Test that agent has a description."""
-        agent = create_agent()
-        assert agent.description == "Real-time negotiation intelligence agent"
+        agent = create_secondus_agent()
+        assert agent.description == "Real-time negotiation intelligence coach with multimodal awareness"
 
     def test_agent_has_instruction(self):
         """Test that agent has system instruction."""
-        agent = create_agent()
-        assert agent.instruction == NEGOTIATION_SYSTEM_PROMPT
+        agent = create_secondus_agent()
+        assert agent.instruction == SECONDUS_PERSONA
 
     def test_root_agent_is_singleton(self):
         """Test that root_agent is pre-created."""
@@ -46,31 +46,31 @@ class TestSystemPrompt:
 
     def test_prompt_is_coaching_focused(self):
         """Test prompt focuses on coaching, not passive observation."""
-        assert "COACH" in NEGOTIATION_SYSTEM_PROMPT
-        assert "SAY THIS" in NEGOTIATION_SYSTEM_PROMPT
+        assert "coach" in SECONDUS_PERSONA.lower()  # "negotiation coach"
+        assert "SAY THIS" in SECONDUS_PERSONA
 
     def test_prompt_contains_output_format(self):
         """Test prompt defines actionable output formats."""
-        assert "TACTIC:" in NEGOTIATION_SYSTEM_PROMPT
-        assert "DRIFT:" in NEGOTIATION_SYSTEM_PROMPT
+        assert "TACTIC:" in SECONDUS_PERSONA
+        assert "DRIFT:" in SECONDUS_PERSONA
 
     def test_prompt_handles_counterparty_tactics(self):
         """Test prompt addresses common negotiation scenarios."""
-        assert "ANCHOR" in NEGOTIATION_SYSTEM_PROMPT.upper()
-        assert "URGENCY" in NEGOTIATION_SYSTEM_PROMPT.upper()
-        assert "CONCESSION" in NEGOTIATION_SYSTEM_PROMPT.upper()
+        assert "TACTIC" in SECONDUS_PERSONA  # "TACTIC: [name]" output format
+        assert "PRICE" in SECONDUS_PERSONA  # Price pushback handling
+        assert "trade" in SECONDUS_PERSONA.lower()  # "trade, never give"
 
     def test_prompt_includes_voice_coaching(self):
         """Test prompt includes voice coaching guidance."""
-        assert "CONFIDENCE" in NEGOTIATION_SYSTEM_PROMPT
-        assert "TONE" in NEGOTIATION_SYSTEM_PROMPT
-        assert "PACE" in NEGOTIATION_SYSTEM_PROMPT
+        assert "confidence" in SECONDUS_PERSONA.lower()  # "Command confidence", "Confident"
+        assert "BREATHE" in SECONDUS_PERSONA  # Voice/stress coaching
+        assert "POSTURE" in SECONDUS_PERSONA  # Body language coaching
 
     def test_prompt_supports_speaker_identification(self):
         """Test prompt includes speaker identification guidance."""
-        assert "voice sample" in NEGOTIATION_SYSTEM_PROMPT.lower()
-        assert "USER" in NEGOTIATION_SYSTEM_PROMPT
-        assert "COUNTERPARTY" in NEGOTIATION_SYSTEM_PROMPT
+        assert "voice" in SECONDUS_PERSONA.lower()
+        assert "USER" in SECONDUS_PERSONA
+        assert "COUNTERPARTY" in SECONDUS_PERSONA
 
 
 class TestSessionConfig:
@@ -192,10 +192,11 @@ class TestAdversaryAgent:
         """Test that adversary prompt includes negotiation tactics."""
         from adversary import ADVERSARY_SYSTEM_PROMPT
 
-        assert "ANCHORING" in ADVERSARY_SYSTEM_PROMPT
-        assert "FLINCHING" in ADVERSARY_SYSTEM_PROMPT
-        assert "NIBBLING" in ADVERSARY_SYSTEM_PROMPT
-        assert "SILENCE" in ADVERSARY_SYSTEM_PROMPT
+        # Adversary uses implicit tactics in the scenario
+        assert "$50K" in ADVERSARY_SYSTEM_PROMPT  # Anchoring with low offer
+        assert "equity" in ADVERSARY_SYSTEM_PROMPT  # Equity offer tactic
+        assert "board" in ADVERSARY_SYSTEM_PROMPT  # Limited authority
+        assert "fast" in ADVERSARY_SYSTEM_PROMPT  # Urgency
 
     def test_adversary_is_singleton(self):
         """Test that adversary_agent is pre-created."""

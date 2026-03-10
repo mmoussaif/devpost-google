@@ -92,12 +92,13 @@ flowchart LR
         B1[main.py<br/>FastAPI]
         B2[agent.py<br/>Secondus Agent]
         B3[learnings.py<br/>Pattern Tracker]
+        B4[adversary.py<br/>Practice Adversary]
     end
 
     subgraph External
         direction TB
         C1[Gemini Live API]
-        C2[Firestore]
+        C2[Local JSON Storage]
     end
 
     A1 --> A2
@@ -108,7 +109,9 @@ flowchart LR
     A2 <--> B1
     B1 --> B2
     B1 --> B3
+    B1 --> B4
     B2 <--> C1
+    B4 <--> C1
     B3 <--> C2
 ```
 
@@ -124,7 +127,7 @@ sequenceDiagram
 
     Note over U,L: Session Setup
     U->>F: Enter goals, BATNA, terms
-    F->>B: POST /practice/start
+    F->>B: POST /session/practice
     B->>L: GET briefing
     L-->>B: Focus areas, past patterns
     B-->>F: Session ready + briefing
@@ -535,6 +538,10 @@ sequenceDiagram
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check with model status |
+| `/session/create` | POST | Create a new live negotiation session |
+| `/session/practice` | POST | Start a practice session with AI adversary |
+| `/session/{session_id}/status` | GET | Get status of an active session |
+| `/voice/validate` | POST | Validate voice enrollment audio |
 | `/learnings/briefing` | GET | Pre-session personalized briefing |
 | `/learnings/analyze` | POST | Analyze session and extract patterns |
 | `/learnings/tip/{tactic}` | GET | Quick counter-tip for a tactic |
@@ -543,8 +550,8 @@ sequenceDiagram
 
 | Endpoint | Purpose | Message Format |
 |----------|---------|----------------|
-| `/ws/negotiate` | Live negotiation session | `{type, data, sessionId}` |
-| `/ws/practice` | Practice with AI adversary | `{type, audio, config}` |
+| `/ws/negotiate/{session_id}` | Live negotiation session | `{type, data, sessionId}` |
+| `/ws/practice/{session_id}` | Practice with AI adversary | `{type, audio, config}` |
 
 ### WebSocket Message Types
 
@@ -706,8 +713,10 @@ gcloud run deploy secondus \
   --region=us-central1 \
   --allow-unauthenticated \
   --set-env-vars="GOOGLE_CLOUD_PROJECT=$PROJECT_ID" \
-  --memory=1Gi \
-  --timeout=300
+  --memory=2Gi \
+  --cpu=2 \
+  --timeout=3600 \
+  --concurrency=80
 ```
 
 ### Environment Variables

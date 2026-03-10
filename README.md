@@ -87,7 +87,7 @@ Practice against a tough AI negotiator that uses real tactics:
 - **LIMITED AUTHORITY** — "Need to check with my boss"
 - **URGENCY** — Artificial deadlines
 
-### 6. Visual Intelligence (MediaPipe)
+### 5. Visual Intelligence (MediaPipe)
 
 Real-time body language coaching:
 
@@ -97,7 +97,7 @@ Real-time body language coaching:
 | **Pose** | Lean, shoulder posture | "Lean in to show engagement" |
 | **Hands** | Steepling, open palms | "Open palms signal honesty" |
 
-### 7. Personalized Learning System
+### 6. Personalized Learning System
 
 Tracks your patterns across sessions:
 
@@ -105,7 +105,7 @@ Tracks your patterns across sessions:
 - **Strengths**: Held price, closed deal, strong presence
 - **Recommendations**: Research-backed advice from Harvard PON, Chris Voss, Joe Navarro
 
-### 8. ADK Tools Integration
+### 7. ADK Tools Integration
 
 Built-in tools for enhanced coaching:
 
@@ -113,7 +113,7 @@ Built-in tools for enhanced coaching:
 - **detect_contract_drift** — Compare spoken vs written terms
 - **suggest_counter_tactic** — Get research-backed counter moves
 
-### 9. Cost Control
+### 8. Cost Control
 
 Built-in protections for API costs:
 
@@ -173,6 +173,7 @@ secondus/
 ├── backend/
 │   ├── main.py           # FastAPI + ADK bidi-streaming server
 │   ├── agent.py          # Secondus agent definition
+│   ├── adversary.py      # AI adversary for practice mode
 │   ├── learnings.py      # Pattern tracking & recommendations
 │   ├── requirements.txt
 │   └── tests/            # Test suite
