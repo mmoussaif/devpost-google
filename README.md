@@ -204,6 +204,10 @@ See [AGENTS.md](AGENTS.md) for detailed architecture documentation including:
 
 ---
 
+## Author
+
 Built by [@mmoussaif](https://github.com/mmoussaif)
+
+[Google Developer Community](https://developers.google.com/community) member | [Build with AI Workshop](https://developers.google.com/community) — Google Cambridge 2024
 
 `#GeminiLiveAgentChallenge`
