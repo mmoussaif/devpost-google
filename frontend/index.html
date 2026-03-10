@@ -930,6 +930,35 @@
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 0.75rem;
+            border: 4px solid transparent;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        /* Color-coded visual feedback borders */
+        .webcam-container.feedback-excellent {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .webcam-container.feedback-good {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .webcam-container.feedback-warning {
+            border-color: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+        .webcam-container.feedback-poor {
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: pulse-poor 1s ease-in-out infinite;
+        }
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
+        }
+        @keyframes pulse-poor {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
         }
         .webcam-video {
             width: 100%;
@@ -3987,6 +4016,33 @@
         if (tip !== visualState.lastTip) {
             visualState.lastTip = tip;
             visualTipEl.textContent = tip;
+        }
+
+        // Update webcam border color based on overall score
+        const webcamContainer = document.querySelector('.webcam-container');
+        if (webcamContainer) {
+            // Calculate overall score (weighted average)
+            const overallScore = (visualState.eyeContact * 0.4) +
+                                 (visualState.shoulderPosture * 0.3) +
+                                 (visualState.gestureScore * 0.3);
+
+            // Remove all feedback classes
+            webcamContainer.classList.remove('feedback-excellent', 'feedback-good', 'feedback-warning', 'feedback-poor');
+
+            // Apply appropriate class based on score and state
+            if (!visualState.faceVisible || visualState.tooClose || visualState.tooFar) {
+                webcamContainer.classList.add('feedback-poor');
+            } else if (visualState.faceTouching || visualState.facialTension > 60) {
+                webcamContainer.classList.add('feedback-warning');
+            } else if (overallScore >= 70) {
+                webcamContainer.classList.add('feedback-excellent');
+            } else if (overallScore >= 50) {
+                webcamContainer.classList.add('feedback-good');
+            } else if (overallScore >= 30) {
+                webcamContainer.classList.add('feedback-warning');
+            } else {
+                webcamContainer.classList.add('feedback-poor');
+            }
         }
 
         // Record for session analysis

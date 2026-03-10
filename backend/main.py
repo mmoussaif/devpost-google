@@ -106,7 +106,8 @@ The counterparty just said something. Give the user an IMMEDIATE response to say
 
 RULES:
 - Output ONLY a "SAY THIS:" line with the exact phrase to say
-- Address what they JUST said, not old topics
+- Address what the counterparty JUST said
+- Consider what the USER already committed to (don't contradict their position)
 - Keep it to 1-2 sentences max
 - Be tactical and confident
 
@@ -114,19 +115,25 @@ CONTEXT:
 User's goals: {goals}
 User's BATNA: {batna}
 
+CONVERSATION HISTORY (what the user already said/committed to):
+{user_history}
+
 COUNTERPARTY JUST SAID:
 "{adversary_text}"
+
+IMPORTANT: If the user already agreed to specific terms, your coaching should REINFORCE those terms, not contradict them.
 
 YOUR COACHING (one SAY THIS line only):"""
 
 
-async def generate_coaching(adversary_text: str, goals: str, batna: str) -> dict:
+async def generate_coaching(adversary_text: str, goals: str, batna: str, user_history: str = "") -> dict:
     """Generate real-time coaching response to what adversary said."""
     try:
         prompt = COACHING_PROMPT.format(
             goals=goals or "Close the deal",
             batna=batna or "Walk away",
-            adversary_text=adversary_text
+            adversary_text=adversary_text,
+            user_history=user_history or "No prior commitments yet"
         )
 
         response = await asyncio.to_thread(
@@ -733,6 +740,7 @@ CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
 
         async def send_adversary_response():
             accumulated_text = ""
+            user_history = []  # Track what the user has said/committed to
             low_cost = session_data.get("low_cost_mode", False)
             try:
                 # Use TEXT modality in low-cost mode (no audio generation = 80% cheaper)
@@ -740,6 +748,7 @@ CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
                     response_modalities=["TEXT"] if low_cost else ["AUDIO"],
                     streaming_mode=StreamingMode.BIDI,
                     output_audio_transcription=None if low_cost else types.AudioTranscriptionConfig(),
+                    input_audio_transcription=types.AudioTranscriptionConfig(),  # Transcribe user speech
                 )
 
                 async for event in adversary_runner.run_live(
@@ -760,7 +769,19 @@ CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
                                         "mime_type": blob.mime_type,
                                     })
 
-                    # Accumulate transcription
+                    # Capture what the USER said (input transcription)
+                    if hasattr(event, "input_transcription") and event.input_transcription:
+                        trans = event.input_transcription
+                        if hasattr(trans, "text") and trans.text and trans.text.strip():
+                            user_text = trans.text.strip()
+                            # Add to history if not duplicate
+                            if not user_history or user_history[-1] != user_text:
+                                user_history.append(user_text)
+                                # Keep last 5 user statements for context
+                                if len(user_history) > 5:
+                                    user_history.pop(0)
+
+                    # Accumulate adversary transcription
                     if hasattr(event, "output_transcription") and event.output_transcription:
                         trans = event.output_transcription
                         if hasattr(trans, "text") and trans.text:
@@ -779,11 +800,15 @@ CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
                             })
 
                             # 2. Generate coaching response from Secondus
+                            # Include what the user has committed to
                             config = session_data.get("config", {})
+                            user_history_text = "\n".join([f"- User said: \"{stmt}\"" for stmt in user_history[-3:]])
+
                             coaching = await generate_coaching(
                                 adversary_text=adversary_statement,
                                 goals=config.get("goals", ""),
                                 batna=config.get("batna", ""),
+                                user_history=user_history_text,
                             )
 
                             # 3. Send coaching to frontend
