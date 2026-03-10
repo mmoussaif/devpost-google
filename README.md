@@ -5,10 +5,9 @@
 > Your trusted second in high-stakes deals — like the advisor who stands behind you in a duel, knowing your strategy and protecting your interests.
 
 [![Category](https://img.shields.io/badge/Category-Live%20Agent-blue)]()
-[![Gemini](https://img.shields.io/badge/Model-Gemini%203.1%20Flash-orange)]()
+[![Gemini](https://img.shields.io/badge/Model-Gemini%20Live%202.5%20Flash-orange)]()
 [![Cloud Run](https://img.shields.io/badge/Hosted-Google%20Cloud%20Run-green)]()
-
-![Architecture](docs/architecture.svg)
+[![ADK](https://img.shields.io/badge/Framework-Google%20ADK-yellow)]()
 
 ## The Problem
 
@@ -16,27 +15,87 @@ In high-stakes negotiations, you're on your own. Legal review happens before and
 
 ## The Solution
 
-Secondus is a **real-time negotiation intelligence agent** that:
+Secondus is a **real-time negotiation intelligence agent** that breaks the "text box" paradigm:
 
-- **Listens** to your live conversation via microphone
-- **Watches** your contract or term sheet via screen share
-- **Interrupts** at the right moment with tactical guidance (barge-in capability)
+| Capability | What It Does |
+|------------|--------------|
+| **Real-Time Coaching** | Tells you exactly what to say with "SAY THIS:" phrases |
+| **Tactic Detection** | Spots manipulation tactics and provides instant counters |
+| **Visual Coaching** | Uses MediaPipe to analyze your body language in real-time |
+| **Learning System** | Tracks your patterns and provides research-backed advice |
+| **Barge-In** | Interrupts conversation at critical moments — no prompt needed |
 
-This breaks the "text box" paradigm — Secondus doesn't wait for you to ask a question. It proactively alerts you when it spots:
+## Architecture
 
-- **Drift Detection** — Spoken terms contradicting the written document
-- **Tactic Recognition** — Manipulation tactics (anchoring, artificial urgency, nibbling) with suggested counters
-- **Leverage Moments** — When the counterparty reveals flexibility you can exploit
+```mermaid
+flowchart LR
+    subgraph Client["Browser"]
+        MIC[🎤 Mic] --> WS
+        CAM[📹 Camera] --> MP[MediaPipe]
+        MP --> UI[Visual Coach]
+    end
+
+    subgraph Backend["Cloud Run"]
+        WS[WebSocket] --> ADK[Google ADK]
+        ADK --> LS[Learning System]
+    end
+
+    subgraph Google["Google Cloud"]
+        ADK <--> GL[Gemini Live API]
+        LS <--> FS[(Firestore)]
+    end
+
+    GL --> |Real-time coaching| WS
+```
+
+## Key Features
+
+### 1. Practice Mode with AI Adversary
+
+Practice against a tough AI negotiator that uses real tactics:
+
+- **ANCHORING** — Low first offers
+- **NIBBLING** — Asks for extras after agreement
+- **FLINCHING** — Price shock reactions
+- **LIMITED AUTHORITY** — "Need to check with my boss"
+- **URGENCY** — Artificial deadlines
+
+### 2. Visual Intelligence (MediaPipe)
+
+Real-time body language coaching:
+
+| Detection | What We Track | Coaching |
+|-----------|---------------|----------|
+| **Face Mesh** | Eye contact, facial tension | "Maintain eye contact" |
+| **Pose** | Lean, shoulder posture | "Lean in to show engagement" |
+| **Hands** | Steepling, open palms | "Open palms signal honesty" |
+
+### 3. Personalized Learning System
+
+Tracks your patterns across sessions:
+
+- **Weaknesses**: Stalling tolerance, gave equity, payment terms
+- **Strengths**: Held price, closed deal, strong presence
+- **Recommendations**: Research-backed advice from Harvard PON, Chris Voss, Joe Navarro
+
+### 4. Cost Control
+
+Built-in protections for API costs:
+
+- 5-minute session timeout
+- Low-cost text-only mode option
+- Real-time cost tracking display
+- Budget alert integration
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Model | **Gemini 3.1 Flash** via Gemini Live API |
-| Framework | **Google ADK** with bidi-streaming (`run_live()`) |
-| Backend | **FastAPI** on **Cloud Run** |
-| Frontend | Vanilla HTML/JS with WebSocket, WebRTC |
-| Storage | **Cloud Firestore** for session state |
+| Model | `gemini-live-2.5-flash-native-audio` |
+| Framework | Google ADK with `Runner.run_live()` |
+| Backend | FastAPI on Cloud Run |
+| Frontend | Vanilla HTML/JS + MediaPipe |
+| Storage | Cloud Firestore |
 
 ## Quick Start
 
@@ -77,52 +136,71 @@ chmod +x deploy.sh
 ```
 secondus/
 ├── backend/
-│   ├── main.py          # FastAPI + ADK bidi-streaming server
-│   ├── agent.py         # Secondus agent definition
-│   └── requirements.txt
+│   ├── main.py           # FastAPI + ADK bidi-streaming server
+│   ├── agent.py          # Secondus agent definition
+│   ├── learnings.py      # Pattern tracking & recommendations
+│   ├── requirements.txt
+│   └── tests/            # Test suite
 ├── frontend/
-│   └── index.html       # Live session UI
+│   └── index.html        # Live session UI with MediaPipe
 ├── docs/
-│   └── architecture.svg # System architecture diagram
-├── deploy.sh            # One-command Cloud Run deployment
+│   └── architecture.svg  # System architecture diagram
+├── AGENTS.md             # Detailed architecture documentation
+├── deploy.sh             # One-command Cloud Run deployment
 └── README.md
 ```
 
-## How It Works
+## API Endpoints
 
-1. **Setup Phase** — User enters goals, BATNA, key terms, and counterparty info
-2. **Live Session** — Browser captures mic audio (16kHz PCM) and screen (JPEG frames)
-3. **ADK Processing** — `Runner.run_live()` streams data to Gemini 3.1 Flash
-4. **Interventions** — Agent responds with urgency-coded alerts:
-   - `URGENT` — Requires immediate attention (barge-in)
-   - `WATCH` — Important tactical observation
-   - `NOTE` — Detail to remember for later
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | Health check |
+| `/ws/negotiate` | WebSocket | Live negotiation session |
+| `/ws/practice` | WebSocket | Practice with AI adversary |
+| `/learnings/briefing` | GET | Pre-session focus areas |
+| `/learnings/analyze` | POST | Post-session analysis |
 
 ## Gemini Live Agent Challenge 2026
 
 Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.devpost.com) hackathon.
 
-| | |
-|---|---|
-| **Category** | Live Agent |
-| **Mandatory Tech** | Gemini Live API via ADK bidi-streaming |
-| **Cloud Hosting** | Google Cloud Run |
+### Challenge Requirements
 
-### Google Cloud Services Used
+| Requirement | Implementation |
+|-------------|----------------|
+| **Live Agent Category** | Real-time voice + vision processing |
+| **Gemini Live API** | Native audio via ADK bidi-streaming |
+| **Google Cloud** | Cloud Run, Firestore, Vertex AI |
+| **Beyond Text Box** | Proactive barge-in, not reactive Q&A |
+
+### Google Cloud Services
 
 | Service | Purpose |
 |---------|---------|
-| **Vertex AI** | Gemini 3.1 Flash model access |
+| **Vertex AI** | Gemini Live API access |
 | **Cloud Run** | Serverless backend hosting |
-| **Cloud Firestore** | Session state persistence |
+| **Cloud Firestore** | Session state & learning persistence |
+| **Cloud Billing** | Budget alerts & cost tracking |
 
-### Key Features for Judging
+### Key Differentiators
 
-- **Beyond Text Box**: Proactive barge-in interruptions, not reactive Q&A
-- **Multimodal**: Simultaneous audio + vision processing
-- **Barge-In**: Agent interrupts conversation at critical moments
-- **ADK Native**: Uses `Runner.run_live()` for proper bidi-streaming
-- **Automated Deployment**: `deploy.sh` for infrastructure-as-code
+1. **Coach, Not Commentator** — Gives exact phrases to say, not observations
+2. **Multimodal Analysis** — Audio + vision + document understanding
+3. **Visual Intelligence** — Real-time body language feedback
+4. **Personalized Learning** — Improves based on your patterns
+5. **Research-Backed** — Uses proven negotiation frameworks
+
+## Documentation
+
+See [AGENTS.md](AGENTS.md) for detailed architecture documentation including:
+
+- System architecture diagrams (Mermaid)
+- Agent design and state machines
+- Visual intelligence pipeline
+- Learning system design
+- API reference
+- Cost management
+- Deployment architecture
 
 ---
 

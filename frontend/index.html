@@ -186,6 +186,192 @@
             transform: none;
         }
 
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        .btn-practice {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-practice:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .mode-hint {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .cost-options {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #f59e0b;
+        }
+        .timeout-warning {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #f59e0b;
+            color: #000;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: pulse 1s infinite;
+        }
+
+        /* Voice Enrollment */
+        .voice-enrollment {
+            margin-bottom: 1.5rem;
+        }
+        .voice-enroll-box {
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--text-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .voice-enroll-box.recording {
+            border-color: var(--urgent);
+            background: rgba(239, 68, 68, 0.1);
+            animation: pulse-record 1s infinite;
+        }
+        .voice-enroll-box.enrolled {
+            border-color: var(--primary);
+            border-style: solid;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        @keyframes pulse-record {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            50% { box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.2); }
+        }
+        .enroll-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        .enroll-icon { font-size: 1.5rem; }
+        .btn-enroll {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-enroll:hover { background: #5558e3; }
+        .btn-enroll.recording {
+            background: var(--urgent);
+            animation: pulse 1s infinite;
+        }
+        .enroll-progress {
+            margin-top: 1rem;
+        }
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .enroll-success {
+            color: var(--primary);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        .enroll-recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--urgent);
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--urgent);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .enroll-script {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        .btn-stop-enroll {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-stop-enroll:hover { background: #059669; }
+        .enroll-heard {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .heard-label {
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+        .heard-text {
+            color: var(--primary);
+            font-style: italic;
+        }
+
         /* Live Screen */
         #live-screen {
             display: none;
@@ -208,6 +394,21 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.25rem;
             color: var(--text-secondary);
+        }
+
+        .cost-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: help;
+        }
+        .cost-display.warning {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            animation: pulse 1s infinite;
         }
 
         .status-badge {
@@ -260,6 +461,15 @@
         .btn-control.active {
             background: var(--accent);
             border-color: var(--accent);
+        }
+        .btn-control.muted-during-playback {
+            background: var(--watch);
+            border-color: var(--watch);
+            opacity: 0.7;
+        }
+        .btn-control.muted-during-playback::after {
+            content: ' (listening...)';
+            font-size: 0.7rem;
         }
 
         .btn-control.danger {
@@ -387,6 +597,101 @@
         .intervention-card.watch .intervention-type { color: var(--watch); }
         .intervention-card.note .intervention-type { color: var(--note); }
 
+        .intervention-card.signal {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+        .intervention-card.signal .intervention-type { color: #8b5cf6; }
+
+        .vu-meter.agent-speaking {
+            background: rgba(16, 185, 129, 0.2);
+            animation: pulse-glow 0.5s ease;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            50% { box-shadow: 0 0 20px 5px rgba(16, 185, 129, 0.3); }
+        }
+
+        /* Coach Panel - Primary Focus */
+        .coach-panel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+        .coach-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .coach-icon { font-size: 1.5rem; }
+        .coach-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.9);
+        }
+        .coach-phrase {
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.5;
+            color: white;
+            padding: 0.5rem 0;
+        }
+        .coach-context {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.7);
+            margin-top: 0.5rem;
+        }
+
+        /* Voice Coaching Metrics */
+        .voice-coaching {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .voice-metric {
+            flex: 1;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .metric-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .metric-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .metric-fill.pace { background: #f59e0b; }
+        .voice-tip {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            flex: 2;
+        }
+
+        @keyframes pulse-coach {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5); }
+            100% { transform: scale(1); }
+        }
+
         .intervention-time {
             font-size: 0.75rem;
             color: var(--text-secondary);
@@ -403,10 +708,48 @@
             padding: 1rem 1.5rem;
         }
 
+        .transcript-panel.live-transcript {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .transcript-speaker {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .transcript-speaker.adversary {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .transcript-speaker.user {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        .transcript-speaker.user {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
         .transcript-text {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            font-style: italic;
+            font-size: 1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 3rem;
+        }
+
+        .transcript-panel.live-transcript .transcript-text {
+            font-size: 1.125rem;
+            font-weight: 500;
         }
 
         .side-panel {
@@ -499,6 +842,127 @@
             margin-bottom: 1rem;
         }
 
+        /* Visual Coaching Panel */
+        .visual-coaching-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            display: none;
+        }
+        .visual-coaching-panel.active {
+            display: block;
+        }
+        .webcam-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+        .webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+            pointer-events: none;
+        }
+        .webcam-overlay {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+        .visual-emotion-badge {
+            background: rgba(0,0,0,0.6);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+        }
+        .visual-metrics {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .visual-metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .visual-metric .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            min-width: 65px;
+        }
+        .visual-metric .metric-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .visual-metric .metric-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+        .visual-metric .metric-fill.eye-contact {
+            background: #06b6d4;
+        }
+        .visual-metric .metric-fill.posture {
+            background: #8b5cf6;
+        }
+        .visual-metric .metric-fill.gestures {
+            background: #f59e0b;
+        }
+        .metric-percent {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            min-width: 28px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .visual-tip {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border-radius: 6px;
+            text-align: center;
+        }
+        .visual-tip.warning {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            font-weight: 600;
+            animation: pulse-warning 1s infinite;
+        }
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .visual-tip.good {
+            color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .visual-coaching-panel.warning {
+            border: 2px solid #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4) !important;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .live-grid {
@@ -522,14 +986,43 @@
             <p class="setup-subtitle">Tell me about your deal so I can watch your back.</p>
 
             <form id="setup-form">
+                <!-- Voice Enrollment -->
+                <div class="form-group voice-enrollment">
+                    <label>🎤 Voice Enrollment (so I can recognize you)</label>
+                    <div class="voice-enroll-box" id="voice-enroll-box">
+                        <div class="enroll-status" id="enroll-status">
+                            <span class="enroll-icon">🎙️</span>
+                            <span>Record your voice so I can recognize you</span>
+                        </div>
+                        <button type="button" class="btn-enroll" id="enroll-btn">
+                            Record My Voice
+                        </button>
+                        <div class="enroll-progress" id="enroll-progress" style="display:none">
+                            <div class="enroll-recording-indicator">
+                                <span class="recording-dot"></span>
+                                <span>Recording — read this aloud:</span>
+                            </div>
+                            <p class="enroll-script">"The quick brown fox jumps over the lazy dog. I'm ready to discuss terms and find a fair agreement."</p>
+                            <div class="enroll-heard" id="enroll-heard">
+                                <span class="heard-label">Heard:</span>
+                                <span class="heard-text" id="heard-text">listening...</span>
+                            </div>
+                            <button type="button" class="btn-stop-enroll" id="stop-enroll-btn">Done Reading</button>
+                        </div>
+                        <div class="enroll-success" id="enroll-success" style="display:none">
+                            ✅ Voice enrolled! I'll recognize you in the conversation.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="goals">What are your goals for this deal?</label>
-                    <textarea id="goals" placeholder="e.g., Close at $50K or below, 12-month contract minimum, include support SLA..."></textarea>
+                    <textarea id="goals">Close at $80K minimum, net-30 payment terms, IP ownership retained, 3 revision rounds max</textarea>
                 </div>
 
                 <div class="form-group">
                     <label for="batna">What's your BATNA? (Best Alternative if this falls through)</label>
-                    <textarea id="batna" placeholder="e.g., We have a competing offer from Vendor B at $55K with similar terms..."></textarea>
+                    <textarea id="batna">Walk away - I have another prospect at $70K and can fill my pipeline elsewhere</textarea>
                 </div>
 
                 <div class="form-group">
@@ -541,12 +1034,24 @@
 
                 <div class="form-group">
                     <label for="counterparty">Who are you negotiating with?</label>
-                    <input type="text" id="counterparty" placeholder="e.g., Acme Corp, represented by their VP of Sales">
+                    <input type="text" id="counterparty" value="Startup CTO, budget-conscious, wants AI integration for their platform">
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="start-btn">
-                    Start Live Session
-                </button>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" id="start-btn">
+                        🎯 Start Live Session
+                    </button>
+                    <button type="button" class="btn btn-practice" id="practice-btn">
+                        🎭 Practice with AI Adversary
+                    </button>
+                </div>
+                <div class="cost-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="low-cost-mode">
+                        <span>Low-cost mode (text responses, no AI voice — saves ~80%)</span>
+                    </label>
+                </div>
+                <p class="mode-hint">Practice: 5 min max • AI simulates tough counterparty</p>
             </form>
         </div>
 
@@ -559,6 +1064,7 @@
                         Live
                     </div>
                     <div class="timer" id="timer">00:00</div>
+                    <div class="cost-display" id="cost-display" title="Estimated API cost">$0.00</div>
                 </div>
                 <div class="controls">
                     <button class="btn-control" id="mic-btn" title="Toggle microphone">
@@ -586,31 +1092,89 @@
 
             <div class="live-grid">
                 <div class="main-panel">
+                    <!-- COACH PROMPT - Most prominent -->
+                    <div class="coach-panel" id="coach-panel">
+                        <div class="coach-header">
+                            <span class="coach-icon">🎯</span>
+                            <span class="coach-title">SAY THIS</span>
+                        </div>
+                        <div class="coach-phrase" id="coach-phrase">
+                            Waiting for conversation to start...
+                        </div>
+                        <div class="coach-context" id="coach-context"></div>
+                    </div>
+
+                    <!-- LIVE TRANSCRIPT - Prominent position -->
+                    <div class="transcript-panel live-transcript">
+                        <div class="transcript-header">
+                            <span class="panel-title">💬 LIVE CONVERSATION</span>
+                            <span class="transcript-speaker" id="transcript-speaker"></span>
+                        </div>
+                        <p class="transcript-text" id="transcript">Waiting for conversation to start...</p>
+                    </div>
+
+                    <!-- Voice Coaching Bar -->
+                    <div class="voice-coaching" id="voice-coaching">
+                        <div class="voice-metric">
+                            <span class="metric-label">Confidence</span>
+                            <div class="metric-bar"><div class="metric-fill" id="confidence-bar" style="width: 70%"></div></div>
+                        </div>
+                        <div class="voice-metric">
+                            <span class="metric-label">Pace</span>
+                            <div class="metric-bar"><div class="metric-fill pace" id="pace-bar" style="width: 50%"></div></div>
+                        </div>
+                        <div class="voice-tip" id="voice-tip">Speak clearly and pause for effect</div>
+                    </div>
+
+                    <!-- Tactical Alerts (only important ones) -->
                     <div class="interventions-panel">
                         <div class="panel-header">
-                            <span class="panel-title">Live Interventions</span>
+                            <span class="panel-title">Tactical Alerts</span>
                             <div class="intervention-count">
                                 <span class="count-badge urgent"><span class="dot"></span> <span id="urgent-count">0</span></span>
                                 <span class="count-badge watch"><span class="dot"></span> <span id="watch-count">0</span></span>
-                                <span class="count-badge note"><span class="dot"></span> <span id="note-count">0</span></span>
                             </div>
                         </div>
                         <div class="interventions-list" id="interventions-list">
                             <div class="empty-state">
-                                <div class="empty-state-icon">👂</div>
-                                <p>Listening to your negotiation...</p>
-                                <p style="font-size: 0.875rem; margin-top: 0.5rem;">I'll alert you when I spot something important.</p>
+                                <div class="empty-state-icon">✓</div>
+                                <p>No alerts — you're doing great</p>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="transcript-panel">
-                        <span class="panel-title">Live Transcript</span>
-                        <p class="transcript-text" id="transcript">Waiting for audio...</p>
                     </div>
                 </div>
 
                 <div class="side-panel">
+                    <!-- Visual Coaching Panel (MediaPipe) -->
+                    <div class="visual-coaching-panel" id="visual-coaching-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Visual Coach</span>
+                            <span class="visual-emotion-badge" id="visual-emotion">😐 neutral</span>
+                        </div>
+                        <div class="webcam-container">
+                            <video class="webcam-video" id="webcam-video" autoplay muted playsinline></video>
+                            <canvas class="webcam-overlay" id="webcam-canvas"></canvas>
+                        </div>
+                        <div class="visual-metrics">
+                            <div class="visual-metric">
+                                <span class="metric-label">Eye Contact</span>
+                                <div class="metric-bar"><div class="metric-fill eye-contact" id="eye-contact-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="eye-contact-pct">50%</span>
+                            </div>
+                            <div class="visual-metric">
+                                <span class="metric-label">Posture</span>
+                                <div class="metric-bar"><div class="metric-fill posture" id="posture-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="posture-pct">50%</span>
+                            </div>
+                            <div class="visual-metric">
+                                <span class="metric-label">Gestures</span>
+                                <div class="metric-bar"><div class="metric-fill gestures" id="gestures-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="gestures-pct">50%</span>
+                            </div>
+                        </div>
+                        <div class="visual-tip" id="visual-tip">Starting visual coaching...</div>
+                    </div>
+
                     <div class="screen-preview">
                         <div class="panel-header">
                             <span class="panel-title">Screen Capture</span>
@@ -651,7 +1215,19 @@
         let timerInterval = null;
         let startTime = null;
         let keyTerms = [];
-        let counts = { urgent: 0, watch: 0, note: 0 };
+        let counts = { urgent: 0, watch: 0 };
+        let isPracticeMode = false;
+        let sessionEnded = false;
+        let voiceEnrolled = false;
+        let voiceSampleBase64 = null;
+
+        // Load saved voice sample from localStorage
+        const savedVoiceSample = localStorage.getItem('secondus_voice_sample');
+        if (savedVoiceSample) {
+            voiceSampleBase64 = savedVoiceSample;
+            voiceEnrolled = true;
+            console.log('Loaded saved voice sample from localStorage');
+        }
 
         // DOM Elements
         const setupScreen = document.getElementById('setup-screen');
@@ -677,6 +1253,19 @@
             vuMeter.appendChild(bar);
         }
 
+        // Show enrolled state if voice already saved
+        if (voiceEnrolled) {
+            const enrollBox = document.getElementById('voice-enroll-box');
+            const enrollBtn = document.getElementById('enroll-btn');
+            const enrollStatus = document.getElementById('enroll-status');
+            const enrollSuccess = document.getElementById('enroll-success');
+            enrollBox.classList.add('enrolled');
+            enrollBtn.style.display = 'none';
+            enrollStatus.style.display = 'none';
+            enrollSuccess.textContent = '✅ Voice already enrolled (saved locally)';
+            enrollSuccess.style.display = 'block';
+        }
+
         // Tag input handling
         termsInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && termsInput.value.trim()) {
@@ -699,6 +1288,128 @@
             btn.parentElement.remove();
         }
 
+        // Add default key terms
+        ['payment terms', 'IP ownership', 'liability cap', 'revision rounds'].forEach(term => {
+            addTerm(term);
+        });
+
+        // Voice Enrollment Handler (Server-side validation)
+        const enrollBtn = document.getElementById('enroll-btn');
+        const enrollProgress = document.getElementById('enroll-progress');
+        const enrollStatus = document.getElementById('enroll-status');
+        const enrollSuccess = document.getElementById('enroll-success');
+        const enrollBox = document.getElementById('voice-enroll-box');
+        const stopEnrollBtn = document.getElementById('stop-enroll-btn');
+        const heardText = document.getElementById('heard-text');
+        let activeMediaRecorder = null;
+        let activeStream = null;
+
+        enrollBtn.addEventListener('click', async () => {
+            if (voiceEnrolled) return; // Already enrolled
+
+            try {
+                // Request microphone access
+                activeStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        sampleRate: 48000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+
+                // Update UI for recording
+                enrollBtn.style.display = 'none';
+                enrollStatus.style.display = 'none';
+                enrollProgress.style.display = 'block';
+                enrollBox.classList.add('recording');
+                heardText.textContent = 'listening...';
+
+                // Set up MediaRecorder
+                activeMediaRecorder = new MediaRecorder(activeStream, { mimeType: 'audio/webm;codecs=opus' });
+                const audioChunks = [];
+
+                activeMediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                activeMediaRecorder.onstop = async () => {
+                    // Stop the stream
+                    activeStream.getTracks().forEach(t => t.stop());
+
+                    // Show validating state
+                    heardText.textContent = 'Validating with server...';
+                    stopEnrollBtn.disabled = true;
+                    stopEnrollBtn.textContent = 'Validating...';
+
+                    // Convert to base64
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result.split(',')[1];
+
+                        try {
+                            // Send to server for validation
+                            const response = await fetch('/voice/validate', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio_base64: base64Audio })
+                            });
+                            const result = await response.json();
+
+                            console.log('Voice validation result:', result);
+                            heardText.textContent = result.transcript || '(no speech detected)';
+
+                            if (result.success) {
+                                // Success! Save to localStorage
+                                voiceSampleBase64 = base64Audio;
+                                voiceEnrolled = true;
+                                localStorage.setItem('secondus_voice_sample', base64Audio);
+                                enrollBox.classList.remove('recording');
+                                enrollBox.classList.add('enrolled');
+                                enrollProgress.style.display = 'none';
+                                enrollSuccess.textContent = result.message;
+                                enrollSuccess.style.display = 'block';
+                            } else {
+                                // Failed - allow retry
+                                alert(result.message);
+                                resetEnrollUI();
+                            }
+                        } catch (err) {
+                            console.error('Voice validation error:', err);
+                            alert('Failed to validate voice. Please try again.');
+                            resetEnrollUI();
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+
+                // Start recording
+                activeMediaRecorder.start();
+
+            } catch (err) {
+                console.error('Voice enrollment failed:', err);
+                alert('Microphone access is required for voice enrollment.');
+                resetEnrollUI();
+            }
+        });
+
+        function resetEnrollUI() {
+            enrollBox.classList.remove('recording');
+            enrollBtn.style.display = 'block';
+            enrollStatus.style.display = 'flex';
+            enrollProgress.style.display = 'none';
+            stopEnrollBtn.disabled = false;
+            stopEnrollBtn.textContent = 'Done Reading';
+        }
+
+        // "Done Reading" button stops the recording
+        stopEnrollBtn.addEventListener('click', () => {
+            if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+                activeMediaRecorder.stop();
+            }
+        });
+
         // Form submission
         setupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -707,7 +1418,8 @@
                 goals: document.getElementById('goals').value,
                 batna: document.getElementById('batna').value,
                 key_terms: keyTerms,
-                counterparty: document.getElementById('counterparty').value
+                counterparty: document.getElementById('counterparty').value,
+                voice_sample: voiceSampleBase64 // Include voice enrollment if recorded
             };
 
             try {
@@ -738,6 +1450,682 @@
                 alert('Failed to start session. Please try again.');
             }
         });
+
+        // Session briefing from learning system
+        let sessionBriefing = null;
+
+        // Practice mode button
+        document.getElementById('practice-btn').addEventListener('click', async () => {
+            isPracticeMode = true;
+            const lowCostMode = document.getElementById('low-cost-mode').checked;
+
+            // Fetch pre-session briefing based on past performance
+            try {
+                const briefingRes = await fetch('/learnings/briefing');
+                sessionBriefing = await briefingRes.json();
+                console.log('Pre-session briefing:', sessionBriefing);
+            } catch (e) {
+                console.warn('Could not fetch briefing:', e);
+                sessionBriefing = null;
+            }
+
+            const config = {
+                goals: document.getElementById('goals').value || 'Close at $80K',
+                batna: document.getElementById('batna').value || 'Walk away',
+                scenario: document.getElementById('counterparty').value || 'AI consulting deal',
+                low_cost_mode: lowCostMode
+            };
+
+            try {
+                const res = await fetch('/session/practice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const data = await res.json();
+                sessionId = data.session_id;
+
+                displayContext({ ...config, key_terms: keyTerms });
+                connectPracticeWebSocket();
+
+                setupScreen.style.display = 'none';
+                liveScreen.style.display = 'block';
+
+                // Update UI for practice mode with personalized briefing
+                document.querySelector('.status-badge').innerHTML = '<span class="status-dot" style="background:#f59e0b"></span> Practice';
+
+                // Show personalized coaching based on past learnings
+                let openingCoach = "Start by stating your price confidently. Say: 'Based on the scope, my rate is $80,000.'";
+                let openingContext = "Opening move";
+                if (sessionBriefing && sessionBriefing.focus_areas && sessionBriefing.focus_areas.length > 0) {
+                    openingContext = `${sessionBriefing.message} | Focus: ${sessionBriefing.focus_areas[0]}`;
+                }
+                updateCoachPanel(openingCoach, openingContext);
+
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+
+                // Start cost tracking display (updates every 5 seconds)
+                startCostTracking();
+
+                // Auto-start microphone
+                setTimeout(() => micBtn.click(), 500);
+
+                // Start speech recognition for user transcript
+                startSpeechRecognition();
+
+                // Start visual coaching (MediaPipe)
+                startVisualCoaching();
+
+            } catch (err) {
+                console.error('Failed to start practice session:', err);
+                alert('Failed to start practice. Please try again.');
+            }
+        });
+
+        // Initialize Web Speech API for user transcript
+        function startSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn('Speech recognition not supported');
+                return;
+            }
+
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = false;
+            speechRecognition.lang = 'en-US';
+
+            let lastTranscript = '';
+            let silenceTimer = null;
+
+            speechRecognition.onresult = (event) => {
+                if (sessionEnded) return;
+
+                const result = event.results[event.results.length - 1];
+                if (result.isFinal) {
+                    const transcript = result[0].transcript.trim();
+
+                    // Avoid duplicates
+                    if (transcript && transcript !== lastTranscript && transcript.length > 3) {
+                        lastTranscript = transcript;
+                        const timestamp = timer.textContent;
+
+                        // Record user exchange
+                        sessionRecording.exchanges.push({
+                            speaker: 'user',
+                            text: transcript,
+                            timestamp
+                        });
+
+                        // Update UI to show user speech
+                        const speakerEl = document.getElementById('transcript-speaker');
+                        const textEl = document.getElementById('transcript-text');
+                        if (speakerEl && textEl) {
+                            speakerEl.textContent = '🎤 YOU';
+                            speakerEl.className = 'transcript-speaker user';
+                            textEl.textContent = transcript;
+                        }
+
+                        // Analyze user response for tactics handling
+                        analyzeUserResponse(transcript, timestamp);
+
+                        console.log('User said:', transcript);
+                    }
+                }
+            };
+
+            speechRecognition.onerror = (event) => {
+                // Silently ignore common non-critical errors (network = temporary connectivity)
+                const ignoredErrors = ['no-speech', 'aborted', 'network'];
+                if (!ignoredErrors.includes(event.error)) {
+                    console.warn('Speech recognition error:', event.error);
+                }
+            };
+
+            speechRecognition.onend = () => {
+                // Restart if session is still active
+                if (!sessionEnded && isPracticeMode) {
+                    try {
+                        speechRecognition.start();
+                    } catch (e) {
+                        // Already started
+                    }
+                }
+            };
+
+            try {
+                speechRecognition.start();
+                console.log('Speech recognition started');
+            } catch (e) {
+                console.warn('Failed to start speech recognition:', e);
+            }
+        }
+
+        // Stop speech recognition
+        function stopSpeechRecognition() {
+            if (speechRecognition) {
+                try {
+                    speechRecognition.stop();
+                } catch (e) {
+                    // Already stopped
+                }
+                speechRecognition = null;
+            }
+        }
+
+        // Analyze user response for negotiation quality
+        function analyzeUserResponse(text, timestamp) {
+            const lower = text.toLowerCase();
+
+            // Track positive negotiation behaviors
+            const strongOpeners = ['i believe', 'my rate is', 'the value is', 'based on', 'my experience'];
+            const counterAnchoring = ['actually', 'however', 'that said', 'on the other hand'];
+            const closingPhrases = ['let\'s do it', 'sounds good', 'we have a deal', 'agreed'];
+            const questionPhrases = ['what if', 'could you', 'how about', 'would you consider'];
+
+            // Check for strong negotiation behaviors
+            if (strongOpeners.some(p => lower.includes(p))) {
+                sessionRecording.metrics.progressInstances++;
+            }
+            if (counterAnchoring.some(p => lower.includes(p))) {
+                // User is countering - good sign
+                sessionRecording.metrics.progressInstances++;
+            }
+            if (closingPhrases.some(p => lower.includes(p))) {
+                sessionRecording.metrics.dealClosed = true;
+            }
+        }
+
+        function connectPracticeWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/practice/${sessionId}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handlePracticeMessage(data);
+            };
+
+            ws.onerror = (err) => console.error('WebSocket error:', err);
+            ws.onclose = () => console.log('Practice session closed');
+        }
+
+        // Audio playback for adversary voice - buffer chunks until turn complete
+        let playbackAudioContext = null;
+        let audioChunksBuffer = [];
+        let isAdversarySpeaking = false; // Flag to mute user mic during adversary playback
+
+        function bufferAudioChunk(base64Data) {
+            if (sessionEnded) return; // Don't buffer if session ended
+            audioChunksBuffer.push(base64Data);
+            updateAudioIndicator(true);
+            // Track cost: Gemini outputs at 24kHz, 16-bit PCM
+            const bytes = atob(base64Data).length;
+            costTracker.audioOutputSeconds += bytes / 2 / 24000;
+        }
+
+        function playBufferedAudio() {
+            if (sessionEnded || audioChunksBuffer.length === 0) return;
+
+            try {
+                // Gemini outputs at 24000Hz
+                const sampleRate = 24000;
+
+                if (!playbackAudioContext || playbackAudioContext.state === 'closed') {
+                    playbackAudioContext = new AudioContext({ sampleRate });
+                }
+
+                if (playbackAudioContext.state === 'suspended') {
+                    playbackAudioContext.resume();
+                }
+
+                // Combine all chunks into one buffer
+                let totalBytes = 0;
+                const decodedChunks = audioChunksBuffer.map(base64Data => {
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    totalBytes += bytes.length;
+                    return bytes;
+                });
+
+                // Merge all chunks
+                const combined = new Uint8Array(totalBytes);
+                let offset = 0;
+                for (const chunk of decodedChunks) {
+                    combined.set(chunk, offset);
+                    offset += chunk.length;
+                }
+
+                // Convert to Int16 PCM then Float32
+                const int16Array = new Int16Array(combined.buffer);
+                const float32Array = new Float32Array(int16Array.length);
+                for (let i = 0; i < int16Array.length; i++) {
+                    float32Array[i] = int16Array[i] / 32768.0;
+                }
+
+                // Create and play audio buffer
+                const audioBuffer = playbackAudioContext.createBuffer(1, float32Array.length, sampleRate);
+                audioBuffer.getChannelData(0).set(float32Array);
+
+                const source = playbackAudioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(playbackAudioContext.destination);
+
+                // Mute user mic during adversary playback to prevent echo/feedback
+                isAdversarySpeaking = true;
+                micBtn.classList.add('muted-during-playback');
+
+                source.onended = () => {
+                    isAdversarySpeaking = false;
+                    micBtn.classList.remove('muted-during-playback');
+                };
+
+                source.start();
+                console.log(`Playing ${audioChunksBuffer.length} chunks, ${float32Array.length} samples`);
+
+            } catch (err) {
+                console.error('Audio playback error:', err);
+            }
+
+            // Clear buffer for next turn
+            audioChunksBuffer = [];
+        }
+
+        // Detect tactics and generate coaching
+        function analyzeAndCoach(adversaryText) {
+            const text = adversaryText.toLowerCase();
+            const result = { phrase: '', context: '', tactics: [] };
+
+            // ANCHORING - low price mentioned
+            if (text.includes('$30') || text.includes('$40') || text.includes('$50') ||
+                text.match(/budget.*(tight|limited|only|around)/)) {
+                result.tactics.push({ name: 'ANCHORING', desc: 'They set a low anchor to pull you down' });
+                result.phrase = "I appreciate you sharing that. For the scope we discussed, my standard rate is $80K. What specific concerns about the investment can I address?";
+                result.context = "Counter-anchor with your price + ask about concerns";
+            }
+            // ARTIFICIAL URGENCY
+            else if (text.includes('deadline') || text.includes('urgent') || text.includes('asap') ||
+                     text.includes('by friday') || text.includes('need it by') || text.includes('quickly')) {
+                result.tactics.push({ name: 'URGENCY', desc: 'Creating time pressure to rush your decision' });
+                result.phrase = "I want to make sure we get this right for both of us. What's driving that timeline? I can explore options once I understand the real constraint.";
+                result.context = "Don't rush — probe the real deadline";
+            }
+            // GOOD COP / BAD COP or LIMITED AUTHORITY
+            else if (text.includes('my boss') || text.includes('board') || text.includes('cfo') ||
+                     text.includes('partner') || text.includes('check with') || text.includes('approval')) {
+                result.tactics.push({ name: 'LIMITED AUTHORITY', desc: 'Claiming they can\'t decide alone' });
+                result.phrase = "I understand. Can we get them on a call? I'd rather present directly than have you advocate for something you're not sure about.";
+                result.context = "Call the bluff — ask to include decision maker";
+            }
+            // NIBBLING - asking for extras or changing agreed terms
+            else if (text.includes('throw in') || text.includes('include') || text.includes('extra') ||
+                     text.includes('also get') || text.includes('add on') || text.includes('revisit') ||
+                     text.includes('unlimited') || text.includes('net-90') || text.includes('net 90') ||
+                     text.includes('maybe get') || text.includes('could we also') || text.includes('and also') ||
+                     (text.includes('reduce') && (text.includes('also') || text.includes('and')))) {
+                result.tactics.push({ name: 'NIBBLING', desc: 'Asking for extras after seeming to agree' });
+                result.phrase = "I can consider adjusting one term if you're flexible on another. Which is more important to you — the payment terms or the revision limit?";
+                result.context = "Never give two things — make them choose";
+            }
+            // FLINCHING - surprise at price
+            else if (text.includes('wow') || text.includes('that much') || text.includes('expensive') ||
+                     text.includes('too high') || text.includes('steep') || text.includes('really?')) {
+                result.tactics.push({ name: 'FLINCHING', desc: 'Exaggerated surprise to make you doubt your price' });
+                result.phrase = "I hear that reaction often initially. Once clients see the ROI, they understand the value. What results would make this a clear win for you?";
+                result.context = "Don't flinch back — redirect to outcomes";
+            }
+            // COMPETITION mentioned
+            else if (text.includes('other vendor') || text.includes('competitor') || text.includes('other option') ||
+                     text.includes('shopping around') || text.includes('compare')) {
+                result.tactics.push({ name: 'COMPETITION', desc: 'Leveraging alternatives to pressure you' });
+                result.phrase = "Smart to compare options. What criteria are most important? I'd love to understand what would make me the clear choice.";
+                result.context = "Don't panic — understand their priorities";
+            }
+            // BUNDLING - trying to package multiple unfavorable terms
+            else if ((text.includes('and') || text.includes('also')) &&
+                     (text.match(/net.?90|net.?60/) || text.includes('unlimited') || text.includes('reduce'))) {
+                result.tactics.push({ name: 'BUNDLING', desc: 'Packaging multiple asks to overwhelm you' });
+                result.phrase = "Let's take these one at a time. I can be flexible on payment terms OR revisions, but not both. Which matters more to you?";
+                result.context = "Unbundle — address one issue at a time";
+            }
+            // SCOPE discussion - opening
+            else if (text.includes('scope') || text.includes('what kind') || text.includes('looking for')) {
+                result.phrase = "Based on what you've described, I recommend a phased approach. Phase 1 would be $80K and delivers the core value in 8 weeks.";
+                result.context = "Anchor high with clear deliverables";
+            }
+            // Conditional agreement - they're close
+            else if (text.includes('if we') || text.includes('if you') || text.includes('would you consider') ||
+                     text.includes('what if') || text.includes('could you')) {
+                result.phrase = "I'm open to exploring that. What would you be willing to adjust on your end to make that work?";
+                result.context = "They're negotiating — always get something back";
+            }
+            // DEAL CLOSED signals — strong commitment
+            else if (text.includes('excited to get started') || text.includes('draw up the paperwork') ||
+                     text.includes("i'll send the contract") || text.includes('looking forward to working') ||
+                     text.includes("let's make it happen") || text.includes('solid foundation')) {
+                result.phrase = "Excellent! I'll send everything over today. Talk soon!";
+                result.context = "DEAL CLOSED — Confirm and wrap up gracefully";
+            }
+            // AGREEMENT signals
+            else if (text.includes('sounds good') || text.includes('agree') || text.includes('deal') ||
+                     text.includes('let\'s do it') || text.includes('works for me') || text.includes('okay')) {
+                result.phrase = "Great! Let me send over the contract today. When can you sign so we can lock in the timeline?";
+                result.context = "Close now — get commitment";
+            }
+            // Default
+            else {
+                result.phrase = "Help me understand what success looks like for you. What's the #1 outcome you need from this project?";
+                result.context = "Gather information — understand their real needs";
+            }
+
+            return result;
+        }
+
+        // Track conversation for momentum analysis
+        let conversationHistory = [];
+        let negotiationTurns = 0;
+        let stallingCount = 0;
+        let progressSignals = 0;
+        let speechRecognition = null;  // Web Speech API for user transcript
+
+        // Session recording for post-session analysis
+        let sessionRecording = {
+            startTime: null,
+            exchanges: [],      // { speaker: 'user'|'adversary', text: '', timestamp: '' }
+            tacticsDetected: [], // { name: '', desc: '', timestamp: '' }
+            coachingGiven: [],   // { phrase: '', context: '', timestamp: '' }
+            metrics: {
+                totalTurns: 0,        // Adversary turns (for tactics exposure)
+                userTurns: 0,         // User speaking turns (actual participation)
+                userAudioChunks: 0,   // Audio chunks received from user
+                tacticsUsed: {},
+                stallingInstances: 0,
+                progressInstances: 0,
+                circlingInstances: 0,
+                dealClosed: false
+            }
+        };
+
+        // Real-time cost tracking (estimated)
+        const costTracker = {
+            audioInputSeconds: 0,      // User mic audio sent
+            audioOutputSeconds: 0,     // Adversary audio received
+            screenCaptures: 0,         // Images sent
+            // Gemini Live API pricing estimates
+            RATE_AUDIO_INPUT: 0.00025,   // $/second
+            RATE_AUDIO_OUTPUT: 0.001,    // $/second
+            RATE_IMAGE: 0.001315,        // $/image
+            get totalCost() {
+                return (this.audioInputSeconds * this.RATE_AUDIO_INPUT) +
+                       (this.audioOutputSeconds * this.RATE_AUDIO_OUTPUT) +
+                       (this.screenCaptures * this.RATE_IMAGE);
+            }
+        };
+        let costUpdateInterval = null;
+
+        function analyzeNegotiationMomentum(text) {
+            const lower = text.toLowerCase();
+
+            // STALLING signals - they're not moving forward
+            const stallingPatterns = [
+                'need to think', 'let me think', 'get back to you', 'not sure',
+                'maybe', 'possibly', 'we\'ll see', 'i don\'t know',
+                'have to check', 'need to discuss', 'talk to my team',
+                'circle back', 'touch base', 'revisit later', 'not ready'
+            ];
+
+            // PROGRESS signals - they're moving toward decision
+            const progressPatterns = [
+                'sounds good', 'i like', 'that works', 'let\'s do',
+                'agree', 'deal', 'yes', 'okay let\'s', 'makes sense',
+                'can we finalize', 'send the contract', 'when can we start'
+            ];
+
+            // CIRCLING signals - repeating same objections
+            const isStalling = stallingPatterns.some(p => lower.includes(p));
+            const isProgress = progressPatterns.some(p => lower.includes(p));
+
+            // Check for repeated topics (circling)
+            const currentTopics = [];
+            if (lower.includes('budget') || lower.includes('price') || lower.includes('cost')) currentTopics.push('price');
+            if (lower.includes('time') || lower.includes('deadline') || lower.includes('when')) currentTopics.push('timeline');
+            if (lower.includes('scope') || lower.includes('deliverable')) currentTopics.push('scope');
+            if (lower.includes('payment') || lower.includes('net-')) currentTopics.push('payment');
+
+            // Track in history
+            conversationHistory.push({ text: lower, topics: currentTopics, stalling: isStalling, progress: isProgress });
+
+            if (isStalling) stallingCount++;
+            if (isProgress) progressSignals++;
+
+            // Check for circling (same topics repeating without progress)
+            let isCircling = false;
+            if (conversationHistory.length >= 3) {
+                const recentTopics = conversationHistory.slice(-3).flatMap(h => h.topics);
+                const topicCounts = {};
+                recentTopics.forEach(t => topicCounts[t] = (topicCounts[t] || 0) + 1);
+                isCircling = Object.values(topicCounts).some(count => count >= 3);
+            }
+
+            return { isStalling, isProgress, isCircling, stallingCount, progressSignals, turns: conversationHistory.length };
+        }
+
+        function handlePracticeMessage(data) {
+            // Ignore messages if session has ended
+            if (sessionEnded) return;
+
+            if (data.type === 'adversary_says') {
+                const timestamp = timer.textContent;
+
+                // Record adversary exchange
+                sessionRecording.exchanges.push({
+                    speaker: 'adversary',
+                    text: data.content,
+                    timestamp
+                });
+
+                // Show what the adversary said
+                const speakerEl = document.getElementById('transcript-speaker');
+                if (speakerEl) {
+                    speakerEl.textContent = '🎭 ADVERSARY';
+                    speakerEl.className = 'transcript-speaker adversary';
+                }
+                transcript.textContent = data.content;
+
+                // Play buffered audio now that turn is complete
+                playBufferedAudio();
+
+                // Detect closing signals — auto-end session
+                const textLower = data.content.toLowerCase().trim();
+                const isClosingPhrase = /\b(bye|goodbye|good-bye|bye-bye|farewell)\b/i.test(textLower) ||
+                    textLower.startsWith('bye') || textLower.endsWith('bye');
+                const isClosingSignal = textLower.includes('excited to get started') ||
+                    textLower.includes('draw up the paperwork') ||
+                    textLower.includes("i'll send the contract") ||
+                    textLower.includes("let's make it happen") ||
+                    textLower.includes('look forward to working') ||
+                    textLower.includes('deal is done') ||
+                    (textLower.includes('thank you') && textLower.includes('look forward'));
+
+                if (isClosingPhrase || isClosingSignal) {
+                    // Record deal closed
+                    sessionRecording.metrics.dealClosed = true;
+                    sessionRecording.metrics.progressInstances++;
+
+                    // Update coaching to reflect closed deal
+                    if (isClosingPhrase) {
+                        updateCoachPanel(
+                            "Session complete! Great job closing the conversation.",
+                            "DEAL COMPLETE — Review your performance below"
+                        );
+                        addIntervention({
+                            urgency: 'note',
+                            content: 'Session ending — "goodbye" detected'
+                        });
+
+                        // Auto-end session after brief delay
+                        setTimeout(() => {
+                            endSession();
+                        }, 1500);
+                        return;
+                    } else {
+                        // Deal closed but not goodbye yet
+                        updateCoachPanel(
+                            "DEAL CLOSED! Confirm next steps and timeline. End with gratitude.",
+                            "CLOSE — Lock in the commitment with clear next actions"
+                        );
+                        sessionRecording.coachingGiven.push({
+                            phrase: "DEAL CLOSED! Confirm next steps and timeline.",
+                            context: "CLOSE — Lock in commitment",
+                            timestamp
+                        });
+                        return;
+                    }
+                }
+
+                // Analyze momentum
+                const momentum = analyzeNegotiationMomentum(data.content);
+
+                // Analyze for tactics and generate coaching
+                let analysis = analyzeAndCoach(data.content);
+
+                // Override coaching based on momentum
+                if (momentum.isCircling && momentum.turns > 4) {
+                    analysis.tactics.push({ name: 'CIRCLING', desc: 'Same topics repeating — no progress being made' });
+                    analysis.phrase = "We've covered this ground. Let's schedule a follow-up once you've had time to review internally. When works for a 15-minute call next week?";
+                    analysis.context = "CLOSE THE LOOP — Schedule follow-up, don't keep circling";
+                    sessionRecording.metrics.circlingInstances++;
+                }
+                else if (momentum.stallingCount >= 2 && momentum.turns > 3) {
+                    analysis.tactics.push({ name: 'STALLING', desc: 'They\'re avoiding commitment' });
+                    analysis.phrase = "I sense some hesitation. What specific concern is holding you back? Let's address it directly or schedule time when you're ready to decide.";
+                    analysis.context = "FORCE CLARITY — Get the real objection or end the call";
+                    sessionRecording.metrics.stallingInstances++;
+                }
+                else if (momentum.turns >= 6 && momentum.progressSignals === 0) {
+                    analysis.phrase = "We've had a good discussion. I have another call in 10 minutes. Are you ready to move forward today, or should we schedule a decision call for later this week?";
+                    analysis.context = "TIME PRESSURE — Create urgency to decide";
+                }
+                else if (momentum.isProgress) {
+                    analysis.phrase = "Great! Let's lock this in. I'll send the contract today — can you sign by end of week so we can start on Monday?";
+                    analysis.context = "CLOSE NOW — They're ready, get the commitment";
+                    sessionRecording.metrics.progressInstances++;
+                }
+
+                // Record tactics and add alerts
+                for (const tactic of analysis.tactics) {
+                    sessionRecording.tacticsDetected.push({ ...tactic, timestamp });
+                    sessionRecording.metrics.tacticsUsed[tactic.name] = (sessionRecording.metrics.tacticsUsed[tactic.name] || 0) + 1;
+
+                    addIntervention({
+                        urgency: tactic.name === 'CIRCLING' || tactic.name === 'STALLING' ? 'watch' : 'urgent',
+                        content: `TACTIC: ${tactic.name} — ${tactic.desc}`
+                    });
+                }
+
+                // Record coaching
+                sessionRecording.coachingGiven.push({
+                    phrase: analysis.phrase,
+                    context: analysis.context,
+                    timestamp
+                });
+                sessionRecording.metrics.totalTurns++;
+
+                // Update coaching panel
+                updateCoachPanel(analysis.phrase, analysis.context);
+
+                // Update metrics
+                updateVoiceMetrics(momentum);
+
+            } else if (data.type === 'adversary_audio') {
+                // Buffer audio chunks until turn complete
+                bufferAudioChunk(data.data);
+            } else if (data.type === 'warning') {
+                // Show timeout warning
+                showTimeoutWarning(data.content);
+            } else if (data.type === 'timeout') {
+                // Session timed out - end gracefully
+                addIntervention({ urgency: 'note', content: data.content });
+                endSession();
+            } else if (data.type === 'error') {
+                console.error('Practice error:', data.content);
+            }
+        }
+
+        // Show timeout warning banner
+        function showTimeoutWarning(message) {
+            let warning = document.getElementById('timeout-warning');
+            if (!warning) {
+                warning = document.createElement('div');
+                warning.id = 'timeout-warning';
+                warning.className = 'timeout-warning';
+                document.body.appendChild(warning);
+            }
+            warning.textContent = '⏱️ ' + message;
+            warning.style.display = 'block';
+        }
+
+        // Start cost tracking display
+        function startCostTracking() {
+            // Reset cost tracker
+            costTracker.audioInputSeconds = 0;
+            costTracker.audioOutputSeconds = 0;
+            costTracker.screenCaptures = 0;
+
+            // Update display every 5 seconds
+            costUpdateInterval = setInterval(updateCostDisplay, 5000);
+            updateCostDisplay(); // Initial display
+        }
+
+        // Update cost display
+        function updateCostDisplay() {
+            const costEl = document.getElementById('cost-display');
+            if (!costEl) return;
+
+            const cost = costTracker.totalCost;
+            costEl.textContent = '$' + cost.toFixed(3);
+
+            // Warning if cost is high
+            if (cost > 0.50) {
+                costEl.classList.add('warning');
+            } else {
+                costEl.classList.remove('warning');
+            }
+        }
+
+        // Stop cost tracking
+        function stopCostTracking() {
+            if (costUpdateInterval) {
+                clearInterval(costUpdateInterval);
+                costUpdateInterval = null;
+            }
+        }
+
+        // Update voice coaching metrics
+        function updateVoiceMetrics(momentum) {
+            negotiationTurns++;
+
+            // Confidence based on progress vs stalling
+            const progressRatio = momentum ? (momentum.progressSignals / Math.max(1, momentum.turns)) : 0.5;
+            const confidence = Math.min(95, Math.max(20, 50 + (progressRatio * 50) - (stallingCount * 10)));
+            const pace = 50 + Math.random() * 30;
+
+            document.getElementById('confidence-bar').style.width = confidence + '%';
+            document.getElementById('pace-bar').style.width = pace + '%';
+
+            // Context-aware tips
+            let tip = "Pause before responding — silence is power";
+            if (momentum) {
+                if (momentum.isCircling) tip = "They're circling — time to close or schedule follow-up";
+                else if (momentum.stallingCount >= 2) tip = "Stalling detected — ask for the real objection";
+                else if (momentum.isProgress) tip = "They're moving! Push for commitment now";
+                else if (momentum.turns > 5) tip = "Long conversation — create urgency to decide";
+            }
+            document.getElementById('voice-tip').textContent = tip;
+        }
 
         function displayContext(config) {
             let html = '';
@@ -776,11 +2164,127 @@
 
         function handleMessage(data) {
             if (data.type === 'intervention') {
-                addIntervention(data);
+                processCoachingMessage(data);
             } else if (data.type === 'transcript') {
-                transcript.textContent = data.content;
+                const speaker = data.speaker === 'counterparty' ? '🗣️ Them: ' : '🎤 You: ';
+                transcript.textContent = speaker + data.content;
+            } else if (data.type === 'signal') {
+                addSignal(data);
+            } else if (data.type === 'audio') {
+                updateAudioIndicator(true);
+            } else if (data.type === 'warning') {
+                showTimeoutWarning(data.content);
+            } else if (data.type === 'timeout') {
+                addIntervention({ urgency: 'note', content: data.content });
+                endSession();
             } else if (data.type === 'error') {
                 console.error('Server error:', data.content);
+            }
+        }
+
+        function processCoachingMessage(data) {
+            const content = data.content || '';
+
+            // Check for "SAY THIS:" coaching prompt
+            if (content.includes('SAY THIS:')) {
+                const match = content.match(/SAY THIS:\s*['"]?([^'"]+)['"]?/i);
+                if (match) {
+                    updateCoachPanel(match[1], 'Suggested response');
+                    return;
+                }
+            }
+
+            // Check for voice coaching
+            if (content.includes('CONFIDENCE:') || content.includes('TONE:') || content.includes('PACE:')) {
+                updateVoiceTip(content);
+                return;
+            }
+
+            // Check for TACTIC alerts
+            if (content.includes('TACTIC:')) {
+                data.urgency = 'urgent';
+                addIntervention(data);
+                return;
+            }
+
+            // Check for DRIFT alerts
+            if (content.includes('DRIFT:')) {
+                data.urgency = 'watch';
+                addIntervention(data);
+                return;
+            }
+
+            // Filter out NOTE-level noise
+            if (data.urgency === 'note' || content.startsWith('NOTE:')) {
+                // Skip most notes - only show if actionable
+                if (content.includes('Reiterate') || content.includes('Introduce') || content.includes('Ask')) {
+                    addIntervention(data);
+                }
+                return;
+            }
+
+            // Show URGENT and WATCH
+            if (data.urgency === 'urgent' || data.urgency === 'watch') {
+                addIntervention(data);
+            }
+        }
+
+        function updateCoachPanel(phrase, context) {
+            const coachPhrase = document.getElementById('coach-phrase');
+            const coachContext = document.getElementById('coach-context');
+            const coachPanel = document.getElementById('coach-panel');
+
+            coachPhrase.textContent = `"${phrase}"`;
+            coachContext.textContent = context;
+
+            // Animate to draw attention
+            coachPanel.style.animation = 'none';
+            coachPanel.offsetHeight; // Trigger reflow
+            coachPanel.style.animation = 'pulse-coach 0.5s ease';
+        }
+
+        function updateVoiceTip(content) {
+            const voiceTip = document.getElementById('voice-tip');
+            // Extract the tip after the colon
+            const tip = content.split(':').slice(1).join(':').trim();
+            voiceTip.textContent = tip || content;
+        }
+
+        function addSignal(data) {
+            // Add signal to interventions as a special card
+            const emptyState = interventionsList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            const card = document.createElement('div');
+            card.className = 'intervention-card signal';
+
+            let icon = '📊';
+            if (data.signal_type === 'silence') icon = '🤫';
+            else if (data.signal_type === 'tone') icon = '🎭';
+            else if (data.signal_type === 'pace') icon = '⏱️';
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+
+            card.innerHTML = `
+                <div class="intervention-header">
+                    <span class="intervention-type signal-type">${icon} ${data.signal_type.toUpperCase()}</span>
+                    <span class="intervention-time">${mins}:${secs}</span>
+                </div>
+                <div class="intervention-content">${data.message}</div>
+            `;
+
+            interventionsList.insertBefore(card, interventionsList.firstChild);
+        }
+
+        function updateAudioIndicator(active) {
+            // Flash VU meter when agent is speaking
+            if (active) {
+                document.getElementById('vu-meter').classList.add('agent-speaking');
+                setTimeout(() => {
+                    document.getElementById('vu-meter').classList.remove('agent-speaking');
+                }, 500);
             }
         }
 
@@ -789,9 +2293,12 @@
             const emptyState = interventionsList.querySelector('.empty-state');
             if (emptyState) emptyState.remove();
 
-            // Update counts
-            counts[data.urgency]++;
-            document.getElementById(`${data.urgency}-count`).textContent = counts[data.urgency];
+            // Update counts (only for urgency types that have count elements)
+            if (data.urgency && counts[data.urgency] !== undefined) {
+                counts[data.urgency]++;
+                const countEl = document.getElementById(`${data.urgency}-count`);
+                if (countEl) countEl.textContent = counts[data.urgency];
+            }
 
             // Create card
             const card = document.createElement('div');
@@ -850,30 +2357,228 @@
                     audioContext = new AudioContext({ sampleRate: 16000 });
                     const source = audioContext.createMediaStreamSource(mediaStream);
 
-                    // Create analyzer for VU meter
+                    // Create analyzer for VU meter AND emotion detection
                     const analyzer = audioContext.createAnalyser();
-                    analyzer.fftSize = 64;
+                    analyzer.fftSize = 2048; // Higher for better pitch detection
+                    analyzer.smoothingTimeConstant = 0.8;
                     source.connect(analyzer);
 
-                    // VU meter animation
-                    const dataArray = new Uint8Array(analyzer.frequencyBinCount);
-                    function updateVU() {
+                    // Emotion detection state
+                    let emotionState = {
+                        pitchHistory: [],
+                        volumeHistory: [],
+                        lastEmotion: 'neutral',
+                        speechStartTime: null,
+                        silenceDuration: 0
+                    };
+
+                    // VU meter and emotion analysis
+                    const freqData = new Uint8Array(analyzer.frequencyBinCount);
+                    const timeData = new Float32Array(analyzer.fftSize);
+
+                    function updateVUAndEmotion() {
                         if (!mediaStream) return;
-                        analyzer.getByteFrequencyData(dataArray);
+
+                        analyzer.getByteFrequencyData(freqData);
+                        analyzer.getFloatTimeDomainData(timeData);
+
+                        // VU meter
                         const bars = vuMeter.querySelectorAll('.vu-bar');
                         for (let i = 0; i < bars.length; i++) {
-                            const value = dataArray[i] || 0;
+                            const value = freqData[i] || 0;
                             bars[i].style.height = `${Math.max(10, value / 2.55)}%`;
                         }
-                        requestAnimationFrame(updateVU);
+
+                        // Calculate audio features for emotion
+                        const volume = calculateRMS(timeData);
+                        const pitch = estimatePitch(freqData, 16000);
+                        const isSpeaking = volume > 0.02;
+
+                        if (isSpeaking) {
+                            emotionState.pitchHistory.push(pitch);
+                            emotionState.volumeHistory.push(volume);
+                            emotionState.silenceDuration = 0;
+
+                            // Keep last 50 samples (~3 seconds)
+                            if (emotionState.pitchHistory.length > 50) {
+                                emotionState.pitchHistory.shift();
+                                emotionState.volumeHistory.shift();
+                            }
+
+                            // Analyze emotion every 20 frames
+                            if (emotionState.pitchHistory.length % 20 === 0) {
+                                analyzeEmotionalTone(emotionState);
+                            }
+                        } else {
+                            emotionState.silenceDuration++;
+                            // Detect long pauses
+                            if (emotionState.silenceDuration === 60) { // ~1 second
+                                updateEmotionFeedback('pause', 'Good use of pause - shows confidence');
+                            }
+                        }
+
+                        requestAnimationFrame(updateVUAndEmotion);
                     }
-                    updateVU();
+
+                    // Calculate RMS volume
+                    function calculateRMS(data) {
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            sum += data[i] * data[i];
+                        }
+                        return Math.sqrt(sum / data.length);
+                    }
+
+                    // Estimate pitch from frequency data
+                    function estimatePitch(freqData, sampleRate) {
+                        let maxIndex = 0;
+                        let maxValue = 0;
+                        // Look in speech range (85-400 Hz)
+                        const minBin = Math.floor(85 * analyzer.fftSize / sampleRate);
+                        const maxBin = Math.floor(400 * analyzer.fftSize / sampleRate);
+
+                        for (let i = minBin; i < maxBin && i < freqData.length; i++) {
+                            if (freqData[i] > maxValue) {
+                                maxValue = freqData[i];
+                                maxIndex = i;
+                            }
+                        }
+                        return maxIndex * sampleRate / analyzer.fftSize;
+                    }
+
+                    // Analyze emotional tone from audio features
+                    function analyzeEmotionalTone(state) {
+                        if (state.pitchHistory.length < 10) return;
+
+                        const pitches = state.pitchHistory;
+                        const volumes = state.volumeHistory;
+
+                        // Calculate statistics
+                        const avgPitch = pitches.reduce((a, b) => a + b, 0) / pitches.length;
+                        const pitchVariance = pitches.reduce((sum, p) => sum + Math.pow(p - avgPitch, 2), 0) / pitches.length;
+                        const pitchStd = Math.sqrt(pitchVariance);
+
+                        const avgVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+                        const volumeVariance = volumes.reduce((sum, v) => sum + Math.pow(v - avgVolume, 2), 0) / volumes.length;
+
+                        // Emotion detection heuristics
+                        let emotion = 'neutral';
+                        let recommendation = '';
+                        let confidence = 50;
+
+                        // High pitch + high variance = nervous/anxious
+                        if (avgPitch > 200 && pitchStd > 30) {
+                            emotion = 'nervous';
+                            recommendation = 'Lower your pitch and slow down - breathe deeply';
+                            confidence = 35;
+                        }
+                        // High pitch + low variance = excited/enthusiastic
+                        else if (avgPitch > 180 && pitchStd < 20) {
+                            emotion = 'excited';
+                            recommendation = 'Good energy! Channel it into clear points';
+                            confidence = 70;
+                        }
+                        // Low pitch + steady = confident/authoritative
+                        else if (avgPitch < 150 && pitchStd < 25 && avgVolume > 0.03) {
+                            emotion = 'confident';
+                            recommendation = 'Great! You sound authoritative';
+                            confidence = 85;
+                        }
+                        // Low volume + hesitant = uncertain
+                        else if (avgVolume < 0.02) {
+                            emotion = 'hesitant';
+                            recommendation = 'Speak up! Project your voice with conviction';
+                            confidence = 40;
+                        }
+                        // High volume variance = emotional/passionate
+                        else if (volumeVariance > 0.001) {
+                            emotion = 'passionate';
+                            recommendation = 'Strong emotion - steady your delivery for impact';
+                            confidence = 60;
+                        }
+                        // Moderate everything = calm
+                        else {
+                            emotion = 'calm';
+                            recommendation = 'Steady tone - good for building trust';
+                            confidence = 70;
+                        }
+
+                        state.lastEmotion = emotion;
+                        updateEmotionFeedback(emotion, recommendation, confidence);
+                    }
+
+                    // Update the UI with emotion feedback
+                    function updateEmotionFeedback(emotion, recommendation, confidence) {
+                        const emotionIcons = {
+                            nervous: '😰',
+                            excited: '🔥',
+                            confident: '💪',
+                            hesitant: '🤔',
+                            passionate: '💥',
+                            calm: '😌',
+                            pause: '⏸️',
+                            neutral: '😐'
+                        };
+
+                        const emotionColors = {
+                            nervous: '#f59e0b',
+                            excited: '#10b981',
+                            confident: '#10b981',
+                            hesitant: '#ef4444',
+                            passionate: '#8b5cf6',
+                            calm: '#3b82f6',
+                            pause: '#6b7280',
+                            neutral: '#6b7280'
+                        };
+
+                        // Update confidence bar
+                        if (confidence !== undefined) {
+                            document.getElementById('confidence-bar').style.width = confidence + '%';
+                            document.getElementById('confidence-bar').style.background = emotionColors[emotion] || 'var(--primary)';
+                        }
+
+                        // Update voice tip with emotion
+                        const tip = `${emotionIcons[emotion] || ''} ${emotion.toUpperCase()}: ${recommendation}`;
+                        document.getElementById('voice-tip').textContent = tip;
+
+                        // Record emotion in session
+                        if (sessionRecording && emotion !== 'neutral' && emotion !== 'pause') {
+                            if (!sessionRecording.emotions) sessionRecording.emotions = [];
+                            sessionRecording.emotions.push({
+                                emotion,
+                                timestamp: timer.textContent,
+                                confidence
+                            });
+                        }
+                    }
+
+                    updateVUAndEmotion();
 
                     // Process audio with ScriptProcessor (AudioWorklet would be better)
                     const processor = audioContext.createScriptProcessor(4096, 1, 1);
                     processor.onaudioprocess = (e) => {
+                        // Don't send audio while adversary is speaking (prevent echo/feedback)
+                        if (isAdversarySpeaking) return;
+
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             const inputData = e.inputBuffer.getChannelData(0);
+
+                            // Check if user is actually speaking (not silence)
+                            let maxLevel = 0;
+                            for (let i = 0; i < inputData.length; i++) {
+                                const abs = Math.abs(inputData[i]);
+                                if (abs > maxLevel) maxLevel = abs;
+                            }
+
+                            // Track user audio activity (threshold 0.01 = actual speech)
+                            if (maxLevel > 0.01 && isPracticeMode) {
+                                sessionRecording.metrics.userAudioChunks++;
+                                // Count as a "turn" every ~50 chunks of speech (~2.5 seconds)
+                                if (sessionRecording.metrics.userAudioChunks % 50 === 0) {
+                                    sessionRecording.metrics.userTurns++;
+                                }
+                            }
+
                             // Convert to 16-bit PCM
                             const pcm = new Int16Array(inputData.length);
                             for (let i = 0; i < inputData.length; i++) {
@@ -882,6 +2587,8 @@
                             // Send as base64
                             const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm.buffer)));
                             ws.send(JSON.stringify({ type: 'audio', data: base64 }));
+                            // Track cost: PCM samples at 16kHz = seconds
+                            costTracker.audioInputSeconds += inputData.length / 16000;
                         }
                     };
                     source.connect(processor);
@@ -962,25 +2669,1307 @@
         // End session
         endBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to end this session?')) {
-                // Cleanup
-                if (ws) {
-                    ws.send(JSON.stringify({ type: 'end' }));
-                    ws.close();
-                }
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(t => t.stop());
-                }
-                if (screenStream) {
-                    screenStream.getTracks().forEach(t => t.stop());
-                }
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                }
-
-                // Reset UI
-                location.reload();
+                endSession();
             }
         });
+
+        function endSession() {
+            if (sessionEnded) return;
+            sessionEnded = true;
+
+            // Stop cost tracking
+            stopCostTracking();
+
+            // Stop listening to websocket messages
+            if (ws) {
+                ws.onmessage = null; // Stop processing messages
+                ws.send(JSON.stringify({ type: 'end' }));
+                ws.close();
+                ws = null;
+            }
+
+            // Stop all audio playback immediately
+            if (playbackAudioContext) {
+                playbackAudioContext.close();
+                playbackAudioContext = null;
+            }
+            audioChunksBuffer = []; // Clear any pending audio
+
+            // Stop microphone
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+
+            // Stop speech recognition
+            stopSpeechRecognition();
+
+            // Stop screen share
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Stop visual coaching
+            stopVisualCoaching();
+
+            // Show session analysis instead of reloading
+            if (isPracticeMode && sessionRecording.metrics.totalTurns > 0) {
+                showSessionAnalysis();
+            } else {
+                location.reload();
+            }
+        }
+
+        // Generate and display session analysis
+        function showSessionAnalysis() {
+            const metrics = sessionRecording.metrics;
+            const tactics = sessionRecording.tacticsDetected;
+            const duration = timer.textContent;
+
+            // Send session data to learning system for analysis
+            const sessionData = {
+                session: { duration, mode: 'practice', date: new Date().toISOString() },
+                metrics: sessionRecording.metrics,
+                exchanges: sessionRecording.exchanges,
+                tacticsDetected: sessionRecording.tacticsDetected,
+                coachingGiven: sessionRecording.coachingGiven,
+                visualPresence: getVisualMetricsSummary()
+            };
+            fetch('/learnings/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sessionData)
+            }).then(r => r.json()).then(analysis => {
+                console.log('Session analysis stored:', analysis);
+            }).catch(e => console.warn('Could not store learnings:', e));
+
+            // Calculate scores
+            const tacticCount = Object.values(metrics.tacticsUsed).reduce((a, b) => a + b, 0);
+            const uniqueTactics = Object.keys(metrics.tacticsUsed).length;
+
+            // Performance scoring based on ACTUAL USER participation (not adversary)
+            let score = 0;
+
+            // Use USER turns, not adversary turns
+            const userParticipation = metrics.userTurns || 0;
+            const userSpoke = userParticipation > 0 || (metrics.userAudioChunks || 0) > 100;
+
+            // 1. Engagement score: Did USER actually speak? (0-40 points)
+            const turnScore = userSpoke ? Math.min(40, userParticipation * 10) : 0;
+
+            // 2. Emotional confidence score (0-30 points) - from audio + visual
+            let emotionScore = 0;
+            if (sessionRecording.emotions && sessionRecording.emotions.length > 0) {
+                const avgConfidence = sessionRecording.emotions.reduce((sum, e) => sum + e.confidence, 0) / sessionRecording.emotions.length;
+                emotionScore = Math.round(avgConfidence * 0.3);
+            }
+
+            // 2b. Visual presence score (bonus points from MediaPipe) - only if user participated
+            let visualScore = 0;
+            const visualSummary = getVisualMetricsSummary();
+            if (visualSummary && userSpoke) {
+                visualScore = Math.round((visualSummary.avgEyeContact + visualSummary.avgPosture) / 20);
+                // Penalize high tension
+                if (visualSummary.avgTension > 50) visualScore -= 5;
+            }
+
+            // 3. Progress score: Did they move the negotiation forward? (0-20 points)
+            const progressScore = userSpoke ? Math.min(20, metrics.progressInstances * 10) : 0;
+
+            // 4. Handling tactics: Did they face and handle tactics? (0-10 points)
+            const tacticScore = Math.min(10, uniqueTactics * 3);
+
+            // 5. Penalties for stalling/circling
+            const penalties = (metrics.stallingInstances * 3) + (metrics.circlingInstances * 3);
+
+            // Calculate final score
+            score = turnScore + emotionScore + visualScore + progressScore + tacticScore - penalties;
+
+            // Cap score based on USER participation level
+            if (!userSpoke) {
+                score = Math.min(score, 15); // Didn't speak at all
+            } else if (userParticipation < 2) {
+                score = Math.min(score, 35); // Barely participated
+            } else if (userParticipation < 4) {
+                score = Math.min(score, 60); // Short session
+            }
+
+            score = Math.max(10, Math.min(100, score));
+
+            // Generate feedback
+            let feedback = [];
+            let strengths = [];
+            let improvements = [];
+
+            // Participation-based feedback
+            if (!userSpoke) {
+                improvements.push("You need to actually speak! The adversary can't negotiate alone.");
+            } else if (userParticipation < 3) {
+                improvements.push("Practice longer sessions - aim for 5+ exchanges to build momentum");
+            }
+            if (uniqueTactics >= 3) {
+                strengths.push("Encountered diverse negotiation tactics - great practice exposure");
+            }
+            if (metrics.dealClosed && userSpoke) {
+                strengths.push("Successfully closed the deal!");
+                score = Math.max(score, 75); // Minimum score for closing a deal
+            } else if (metrics.dealClosed && !userSpoke) {
+                // Don't count as closed if user didn't participate
+                improvements.push("The adversary ended the call, but you didn't engage");
+            }
+            if (metrics.progressInstances > 0 && userSpoke) {
+                strengths.push("Made progress toward agreement at least once");
+            }
+            if (userParticipation >= 5) {
+                strengths.push("Sustained a meaningful negotiation conversation");
+            }
+            if (emotionScore >= 20) {
+                strengths.push("Maintained good vocal confidence throughout");
+            } else if (sessionRecording.emotions && sessionRecording.emotions.length > 0) {
+                improvements.push("Work on vocal confidence - practice power poses and deep breathing before calls");
+            }
+
+            // Visual presence feedback
+            if (visualSummary) {
+                if (visualSummary.avgEyeContact >= 70) {
+                    strengths.push("Excellent eye contact — great presence on camera");
+                } else if (visualSummary.avgEyeContact < 40) {
+                    improvements.push("Maintain eye contact — look at the camera more consistently");
+                }
+                if (visualSummary.avgPosture >= 70) {
+                    strengths.push("Strong, confident posture throughout");
+                } else if (visualSummary.avgPosture < 50) {
+                    improvements.push("Work on posture — sit up straight and open your shoulders");
+                }
+                if (visualSummary.avgTension > 60) {
+                    improvements.push("Relax your face — you showed signs of tension (jaw, brow)");
+                }
+                if (visualSummary.dominantEmotion === 'confident') {
+                    strengths.push("Appeared confident and composed on camera");
+                } else if (visualSummary.dominantEmotion === 'stressed' || visualSummary.dominantEmotion === 'tense') {
+                    improvements.push("Practice staying relaxed — try breathing exercises before calls");
+                }
+            }
+
+            if (metrics.stallingInstances >= 2) {
+                improvements.push("Work on breaking through stalling - ask direct questions about concerns");
+            }
+            if (metrics.circlingInstances >= 2) {
+                improvements.push("Recognize circling earlier - set deadlines or schedule follow-ups");
+            }
+            if (metrics.tacticsUsed['NIBBLING'] >= 2) {
+                improvements.push("Practice responding to nibbling - always trade, never give free concessions");
+            }
+            if (metrics.tacticsUsed['ANCHORING']) {
+                improvements.push("Counter-anchor confidently - state your value before discussing their budget");
+            }
+
+            // Tactic breakdown
+            const tacticSummary = Object.entries(metrics.tacticsUsed)
+                .map(([name, count]) => `${name}: ${count}x`)
+                .join(', ');
+
+            // Analyze actual transcript for specific feedback
+            const userExchanges = sessionRecording.exchanges.filter(e => e.speaker === 'user');
+            const adversaryExchanges = sessionRecording.exchanges.filter(e => e.speaker === 'adversary');
+
+            // Generate transcript-based feedback
+            if (userExchanges.length > 0) {
+                const allUserText = userExchanges.map(e => e.text.toLowerCase()).join(' ');
+
+                // Check for specific negotiation behaviors
+                if (!allUserText.includes('my rate') && !allUserText.includes('my price') && !allUserText.includes('i charge')) {
+                    improvements.push("State your price confidently early — don't let them anchor first");
+                }
+                if (allUserText.includes('maybe') || allUserText.includes('i guess') || allUserText.includes('i think so')) {
+                    improvements.push("Avoid hedging words like 'maybe' and 'I guess' — be assertive");
+                }
+                if (allUserText.includes('what do you think') || allUserText.includes('is that okay')) {
+                    improvements.push("Don't seek approval — make statements, not questions about your terms");
+                }
+                if (allUserText.includes('sorry') || allUserText.includes('apologize')) {
+                    improvements.push("No need to apologize in negotiations — your value is your value");
+                }
+
+                // Positive transcript behaviors
+                if (allUserText.includes('based on') || allUserText.includes('given that') || allUserText.includes('considering')) {
+                    strengths.push("Good use of justification — you backed up your position");
+                }
+                if (allUserText.includes('if you') || allUserText.includes('in exchange') || allUserText.includes('trade')) {
+                    strengths.push("Used trading language effectively — never give without getting");
+                }
+                if (allUserText.includes('walk away') || allUserText.includes('other options') || allUserText.includes('alternatives')) {
+                    strengths.push("Referenced your BATNA — shows you have leverage");
+                }
+            } else if (userParticipation === 0) {
+                improvements.push("You didn't speak during the session — practice mode requires active participation");
+            }
+
+            // Build analysis HTML
+            const analysisHTML = `
+                <div class="session-analysis-overlay" id="session-analysis">
+                    <div class="session-analysis-modal">
+                        <h2>📊 Session Analysis</h2>
+                        <div class="analysis-score">
+                            <div class="score-circle ${score >= 70 ? 'good' : score >= 50 ? 'ok' : 'needs-work'}">
+                                <span class="score-number">${score}</span>
+                                <span class="score-label">/ 100</span>
+                            </div>
+                            <div class="score-text">${score >= 80 ? 'Excellent negotiation!' : score >= 60 ? 'Good practice session' : 'Keep practicing!'}</div>
+                        </div>
+
+                        <div class="analysis-stats">
+                            <div class="stat"><span class="stat-value">${duration}</span><span class="stat-label">Duration</span></div>
+                            <div class="stat"><span class="stat-value">${userParticipation}</span><span class="stat-label">Your Turns</span></div>
+                            <div class="stat"><span class="stat-value">${metrics.totalTurns}</span><span class="stat-label">Adversary</span></div>
+                            <div class="stat"><span class="stat-value">${tacticCount}</span><span class="stat-label">Tactics</span></div>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h3>🎯 Tactics Encountered</h3>
+                            <p>${tacticSummary || 'None detected'}</p>
+                        </div>
+
+                        ${userExchanges.length > 0 ? `
+                        <div class="analysis-section">
+                            <h3>🗣️ Your Key Statements</h3>
+                            <div class="transcript-excerpts">
+                                ${userExchanges.slice(-4).map(e => `
+                                    <div class="transcript-excerpt">
+                                        <span class="excerpt-time">${e.timestamp}</span>
+                                        <span class="excerpt-text">"${e.text}"</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="analysis-section">
+                            <h3>✅ What Went Well</h3>
+                            <ul>${strengths.length ? strengths.map(s => `<li>${s}</li>`).join('') : '<li>Complete more turns for detailed feedback</li>'}</ul>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h3>📈 Areas to Improve</h3>
+                            <ul>${improvements.length ? improvements.map(i => `<li>${i}</li>`).join('') : '<li>Great job! Keep practicing to refine your skills</li>'}</ul>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h3>💡 Key Coaching Moments</h3>
+                            <div class="coaching-timeline">
+                                ${sessionRecording.coachingGiven.slice(-5).map(c => `
+                                    <div class="coaching-moment">
+                                        <span class="coaching-time">${c.timestamp}</span>
+                                        <span class="coaching-context">${c.context}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${sessionRecording.emotions && sessionRecording.emotions.length > 0 ? `
+                        <div class="analysis-section">
+                            <h3>🎭 Emotional Tone Analysis</h3>
+                            <div class="emotion-summary">
+                                ${(() => {
+                                    const emotions = sessionRecording.emotions;
+                                    const emotionCounts = {};
+                                    emotions.forEach(e => emotionCounts[e.emotion] = (emotionCounts[e.emotion] || 0) + 1);
+                                    const dominant = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
+                                    const avgConfidence = Math.round(emotions.reduce((sum, e) => sum + e.confidence, 0) / emotions.length);
+
+                                    const emotionAdvice = {
+                                        nervous: "Practice power poses before calls. Breathe deeply. Remember: they need you too.",
+                                        hesitant: "Prepare your key points in advance. Use silence strategically instead of fillers.",
+                                        confident: "Great presence! Maintain this energy while staying open to the other side.",
+                                        excited: "Good enthusiasm! Channel it into clear, structured points.",
+                                        passionate: "Strong conviction is good. Balance with active listening.",
+                                        calm: "Excellent composure. This builds trust and credibility."
+                                    };
+
+                                    return `
+                                        <div class="emotion-stat">
+                                            <span class="emotion-label">Dominant Tone:</span>
+                                            <span class="emotion-value">${dominant ? dominant[0].toUpperCase() : 'Neutral'}</span>
+                                        </div>
+                                        <div class="emotion-stat">
+                                            <span class="emotion-label">Avg Confidence:</span>
+                                            <span class="emotion-value">${avgConfidence}%</span>
+                                        </div>
+                                        <div class="emotion-advice">
+                                            <strong>Recommendation:</strong> ${dominant ? emotionAdvice[dominant[0]] || 'Keep practicing!' : 'Keep practicing!'}
+                                        </div>
+                                        <div class="emotion-breakdown">
+                                            ${Object.entries(emotionCounts).map(([emotion, count]) =>
+                                                `<span class="emotion-tag">${emotion}: ${count}x</span>`
+                                            ).join('')}
+                                        </div>
+                                    `;
+                                })()}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${visualSummary ? `
+                        <div class="analysis-section">
+                            <h3>📹 Visual Presence Analysis</h3>
+                            <div class="visual-summary">
+                                <div class="visual-stat-row">
+                                    <div class="visual-stat">
+                                        <span class="visual-stat-label">Eye Contact</span>
+                                        <div class="visual-stat-bar">
+                                            <div class="visual-stat-fill" style="width: ${visualSummary.avgEyeContact}%; background: ${visualSummary.avgEyeContact >= 60 ? '#10b981' : '#f59e0b'}"></div>
+                                        </div>
+                                        <span class="visual-stat-value">${visualSummary.avgEyeContact}%</span>
+                                    </div>
+                                    <div class="visual-stat">
+                                        <span class="visual-stat-label">Posture</span>
+                                        <div class="visual-stat-bar">
+                                            <div class="visual-stat-fill" style="width: ${visualSummary.avgPosture}%; background: ${visualSummary.avgPosture >= 60 ? '#10b981' : '#f59e0b'}"></div>
+                                        </div>
+                                        <span class="visual-stat-value">${visualSummary.avgPosture}%</span>
+                                    </div>
+                                </div>
+                                <div class="visual-presence-emotion">
+                                    <span>Dominant Visual Emotion:</span>
+                                    <strong>${visualSummary.dominantEmotion.toUpperCase()}</strong>
+                                </div>
+                                <p class="visual-tip-summary">
+                                    ${visualSummary.avgTension > 50
+                                        ? 'Tip: Practice relaxation techniques — your face showed signs of tension'
+                                        : visualSummary.avgEyeContact < 50
+                                        ? 'Tip: Work on maintaining eye contact with the camera'
+                                        : 'Great visual presence! You appeared confident and engaged'}
+                                </p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="analysis-actions">
+                            <button class="btn btn-primary" onclick="location.reload()">Practice Again</button>
+                            <button class="btn" onclick="downloadSessionReport()">Download Report</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add styles and show
+            const style = document.createElement('style');
+            style.textContent = `
+                .session-analysis-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.9); z-index: 1000;
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 2rem;
+                }
+                .session-analysis-modal {
+                    background: var(--bg-secondary); border-radius: 16px;
+                    max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;
+                    padding: 2rem;
+                }
+                .session-analysis-modal h2 { margin: 0 0 1.5rem; text-align: center; }
+                .analysis-score { text-align: center; margin-bottom: 2rem; }
+                .score-circle {
+                    width: 120px; height: 120px; border-radius: 50%;
+                    display: inline-flex; flex-direction: column;
+                    align-items: center; justify-content: center;
+                    margin-bottom: 0.5rem;
+                }
+                .score-circle.good { background: rgba(16, 185, 129, 0.2); border: 3px solid var(--primary); }
+                .score-circle.ok { background: rgba(245, 158, 11, 0.2); border: 3px solid #f59e0b; }
+                .score-circle.needs-work { background: rgba(239, 68, 68, 0.2); border: 3px solid var(--urgent); }
+                .score-number { font-size: 2.5rem; font-weight: 700; }
+                .score-label { font-size: 0.875rem; color: var(--text-secondary); }
+                .score-text { font-size: 1.125rem; color: var(--text-secondary); }
+                .analysis-stats {
+                    display: flex; justify-content: space-around;
+                    background: var(--bg-tertiary); border-radius: 12px;
+                    padding: 1rem; margin-bottom: 1.5rem;
+                }
+                .stat { text-align: center; }
+                .stat-value { display: block; font-size: 1.5rem; font-weight: 600; }
+                .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+                .analysis-section { margin-bottom: 1.5rem; }
+                .analysis-section h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+                .analysis-section ul { margin: 0; padding-left: 1.25rem; }
+                .analysis-section li { margin-bottom: 0.25rem; color: var(--text-secondary); }
+                .coaching-timeline { display: flex; flex-direction: column; gap: 0.5rem; }
+                .coaching-moment {
+                    background: var(--bg-tertiary); padding: 0.5rem 0.75rem;
+                    border-radius: 8px; font-size: 0.875rem;
+                }
+                .coaching-time { color: var(--text-secondary); margin-right: 0.5rem; }
+                .transcript-excerpts { display: flex; flex-direction: column; gap: 0.5rem; }
+                .transcript-excerpt {
+                    background: var(--bg-tertiary); padding: 0.5rem 0.75rem;
+                    border-radius: 8px; font-size: 0.875rem;
+                    border-left: 3px solid var(--primary);
+                }
+                .excerpt-time { color: var(--text-secondary); margin-right: 0.5rem; font-size: 0.75rem; }
+                .excerpt-text { color: var(--text-primary); font-style: italic; }
+                .emotion-summary { background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; }
+                .emotion-stat { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+                .emotion-label { color: var(--text-secondary); }
+                .emotion-value { font-weight: 600; }
+                .emotion-advice { margin: 1rem 0; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-size: 0.875rem; }
+                .emotion-breakdown { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+                .emotion-tag { background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+                .visual-summary { background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; }
+                .visual-stat-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+                .visual-stat { flex: 1; }
+                .visual-stat-label { font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem; }
+                .visual-stat-bar { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; margin-bottom: 0.25rem; }
+                .visual-stat-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+                .visual-stat-value { font-size: 0.875rem; font-weight: 600; }
+                .visual-presence-emotion { display: flex; justify-content: space-between; margin: 0.75rem 0; padding: 0.5rem; background: var(--bg-secondary); border-radius: 6px; }
+                .visual-tip-summary { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.75rem; font-style: italic; }
+                .analysis-actions {
+                    display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.insertAdjacentHTML('beforeend', analysisHTML);
+        }
+
+        // Download session report
+        function downloadSessionReport() {
+            const visualSummary = getVisualMetricsSummary();
+            const report = {
+                session: {
+                    duration: timer.textContent,
+                    mode: 'practice',
+                    date: new Date().toISOString()
+                },
+                metrics: sessionRecording.metrics,
+                exchanges: sessionRecording.exchanges,
+                tacticsDetected: sessionRecording.tacticsDetected,
+                coachingGiven: sessionRecording.coachingGiven,
+                visualPresence: visualSummary || null
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `secondus-session-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+    <!-- MediaPipe for visual emotion/pose/hand detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+    <script>
+    // ========================================
+    // MediaPipe Visual Coaching System
+    // ========================================
+
+    let faceMesh = null;
+    let pose = null;
+    let hands = null;
+    let webcamStream = null;
+    let visualCoachingActive = false;
+    let lastVisualEmotion = { state: 'neutral', confidence: 50 };
+    let visualMetricsHistory = [];
+    let lastHandsResults = null;
+    let lastFaceMeshResults = null;
+
+    // Visual coaching state
+    const visualState = {
+        eyeContact: 50,
+        facialTension: 0,
+        headTilt: 0,
+        shoulderPosture: 50,
+        armsCrossed: false,
+        faceVisible: true,
+        handsVisible: false,
+        leaningBack: false,
+        tooClose: false,
+        tooFar: false,
+        lastTip: '',
+        lastWarning: '',
+        emotions: [],
+        // Negotiation gesture states
+        steepling: false,        // Confidence signal - fingertips together
+        openPalms: false,        // Honesty signal - palms facing outward
+        faceTouching: false,     // Stress signal - hands near face
+        gestureScore: 50         // Overall gesture quality score
+    };
+
+    // Initialize MediaPipe Face Mesh
+    async function initFaceMesh() {
+        if (typeof FaceMesh === 'undefined') {
+            console.warn('MediaPipe FaceMesh not loaded');
+            return null;
+        }
+
+        faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults(onFaceMeshResults);
+        return faceMesh;
+    }
+
+    // Initialize MediaPipe Pose
+    async function initPose() {
+        if (typeof Pose === 'undefined') {
+            console.warn('MediaPipe Pose not loaded');
+            return null;
+        }
+
+        pose = new Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(onPoseResults);
+        return pose;
+    }
+
+    // Initialize MediaPipe Hands
+    async function initHands() {
+        if (typeof Hands === 'undefined') {
+            console.warn('MediaPipe Hands not loaded');
+            return null;
+        }
+
+        hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onHandsResults);
+        return hands;
+    }
+
+    // Process Hands results
+    function onHandsResults(results) {
+        // Store for drawing in face mesh callback
+        lastHandsResults = results;
+    }
+
+    // Process Face Mesh results
+    function onFaceMeshResults(results) {
+        lastFaceMeshResults = results; // Store for gesture analysis
+        const canvas = document.getElementById('webcam-canvas');
+        const video = document.getElementById('webcam-video');
+
+        if (canvas && video) {
+            // Set canvas size to match video
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+
+                // Draw face mesh (simplified - key points only)
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+                ctx.lineWidth = 1;
+
+                // Draw key landmark points (face outline, eyes, mouth)
+                const keyPoints = [
+                    // Face oval
+                    10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
+                    397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136,
+                    172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
+                    // Eyes
+                    33, 133, 160, 159, 158, 144, 145, 153, 154, 155, 263, 362,
+                    387, 386, 385, 373, 374, 380, 381, 382,
+                    // Mouth
+                    61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291,
+                    375, 321, 405, 314, 17, 84, 181, 91, 146
+                ];
+
+                // Draw points
+                for (const idx of keyPoints) {
+                    if (landmarks[idx]) {
+                        const x = landmarks[idx].x * canvas.width;
+                        const y = landmarks[idx].y * canvas.height;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+
+                // Draw connections for face outline
+                ctx.beginPath();
+                const faceOutline = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10];
+                for (let i = 0; i < faceOutline.length; i++) {
+                    const idx = faceOutline[i];
+                    if (landmarks[idx]) {
+                        const x = landmarks[idx].x * canvas.width;
+                        const y = landmarks[idx].y * canvas.height;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw hands if available
+                if (lastHandsResults && lastHandsResults.multiHandLandmarks) {
+                    ctx.fillStyle = 'rgba(255, 165, 0, 0.8)'; // Orange for hands
+                    ctx.strokeStyle = 'rgba(255, 165, 0, 0.6)';
+                    ctx.lineWidth = 2;
+
+                    for (const handLandmarks of lastHandsResults.multiHandLandmarks) {
+                        // Draw hand landmarks
+                        for (const landmark of handLandmarks) {
+                            const x = landmark.x * canvas.width;
+                            const y = landmark.y * canvas.height;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                            ctx.fill();
+                        }
+
+                        // Draw hand connections
+                        const connections = [
+                            [0, 1], [1, 2], [2, 3], [3, 4],     // Thumb
+                            [0, 5], [5, 6], [6, 7], [7, 8],     // Index
+                            [0, 9], [9, 10], [10, 11], [11, 12], // Middle
+                            [0, 13], [13, 14], [14, 15], [15, 16], // Ring
+                            [0, 17], [17, 18], [18, 19], [19, 20], // Pinky
+                            [5, 9], [9, 13], [13, 17]           // Palm
+                        ];
+
+                        ctx.beginPath();
+                        for (const [start, end] of connections) {
+                            const x1 = handLandmarks[start].x * canvas.width;
+                            const y1 = handLandmarks[start].y * canvas.height;
+                            const x2 = handLandmarks[end].x * canvas.width;
+                            const y2 = handLandmarks[end].y * canvas.height;
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                        }
+                        ctx.stroke();
+                    }
+                }
+
+                // Analyze facial features
+                analyzeFacialExpression(landmarks);
+                analyzeEyeContact(landmarks);
+                analyzeHeadPosition(landmarks);
+
+                // Update visual coaching UI
+                visualState.faceVisible = true;
+                updateVisualCoachingUI();
+            } else {
+                // No face detected
+                visualState.faceVisible = false;
+                showUrgentWarning('⚠️ FACE NOT VISIBLE — Look at the camera!');
+            }
+        } else {
+            // No face landmarks
+            visualState.faceVisible = false;
+            showUrgentWarning('⚠️ FACE NOT VISIBLE — Look at the camera!');
+        }
+    }
+
+    // Show urgent visual warning
+    function showUrgentWarning(message) {
+        const visualTipEl = document.getElementById('visual-tip');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (visualTipEl) {
+            visualTipEl.textContent = message;
+            visualTipEl.classList.add('warning');
+        }
+        if (visualPanel) {
+            visualPanel.style.borderColor = '#ef4444';
+            visualPanel.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.4)';
+        }
+
+        // Reset after face detected again
+        visualState.lastWarning = message;
+    }
+
+    // Clear warning state
+    function clearWarning() {
+        const visualTipEl = document.getElementById('visual-tip');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (visualTipEl) visualTipEl.classList.remove('warning');
+        if (visualPanel) {
+            visualPanel.style.borderColor = '';
+            visualPanel.style.boxShadow = '';
+        }
+        visualState.lastWarning = '';
+    }
+
+    // Process Pose results
+    function onPoseResults(results) {
+        if (!results.poseLandmarks) {
+            return;
+        }
+
+        const landmarks = results.poseLandmarks;
+
+        // Analyze body language
+        analyzePosture(landmarks);
+        analyzeArmPosition(landmarks);
+        analyzeHandGestures();
+
+        // Update visual coaching UI
+        updateVisualCoachingUI();
+    }
+
+    // Analyze facial expression for stress/confidence
+    function analyzeFacialExpression(landmarks) {
+        // Key landmarks for expression analysis
+        // Eyebrows: 70, 63 (left), 300, 293 (right)
+        // Eyes: 159, 145 (left), 386, 374 (right)
+        // Mouth corners: 61, 291
+        // Jaw: 152
+
+        // Eyebrow raise (stress indicator)
+        const leftBrowHeight = landmarks[70].y - landmarks[159].y;
+        const rightBrowHeight = landmarks[300].y - landmarks[386].y;
+        const browRaise = (leftBrowHeight + rightBrowHeight) / 2;
+
+        // Mouth tension (stress indicator)
+        const mouthWidth = Math.abs(landmarks[61].x - landmarks[291].x);
+        const mouthOpenness = Math.abs(landmarks[13].y - landmarks[14].y);
+
+        // Eye openness (alertness/stress)
+        const leftEyeOpen = Math.abs(landmarks[159].y - landmarks[145].y);
+        const rightEyeOpen = Math.abs(landmarks[386].y - landmarks[374].y);
+        const eyeOpenness = (leftEyeOpen + rightEyeOpen) / 2;
+
+        // Calculate facial tension (0-100) - more forgiving thresholds
+        let tension = 0;
+        // Furrowed brow (brows pulled together/down) indicates stress
+        if (browRaise < -0.035) tension += 25;
+        // Very wide eyes (startled look) indicates stress
+        if (eyeOpenness > 0.035) tension += 20;
+        // Very tight/pursed mouth indicates stress
+        if (mouthWidth < 0.06) tension += 20;
+        // Clenched jaw - mouth very closed
+        if (mouthOpenness < 0.005 && mouthWidth < 0.07) tension += 15;
+
+        visualState.facialTension = Math.min(100, tension);
+
+        // Determine emotional state - default to neutral more often
+        let emotion = 'neutral';
+        let confidence = 60;
+
+        if (tension >= 65) {
+            emotion = 'stressed';
+            confidence = 40;
+        } else if (tension >= 50) {
+            emotion = 'tense';
+            confidence = 50;
+        } else if (tension < 25 && mouthWidth > 0.09) {
+            emotion = 'confident';
+            confidence = 75;
+        } else if (mouthOpenness > 0.015 && mouthWidth > 0.11) {
+            emotion = 'engaged';
+            confidence = 70;
+        }
+
+        lastVisualEmotion = { state: emotion, confidence };
+    }
+
+    // Analyze eye contact (looking at camera)
+    function analyzeEyeContact(landmarks) {
+        // Check if eyes are looking forward (at camera)
+        // Left eye: 468, Right eye: 473 (iris centers with refineLandmarks)
+        // Face center: 1
+
+        const leftIris = landmarks[468] || landmarks[159];
+        const rightIris = landmarks[473] || landmarks[386];
+        const nose = landmarks[1];
+
+        // Calculate eye direction relative to face center
+        const leftOffset = Math.abs(leftIris.x - nose.x);
+        const rightOffset = Math.abs(rightIris.x - nose.x);
+
+        // Good eye contact = eyes centered
+        const eyeContactScore = Math.max(0, 100 - (leftOffset + rightOffset) * 500);
+        visualState.eyeContact = Math.round(eyeContactScore);
+    }
+
+    // Analyze head position/tilt
+    function analyzeHeadPosition(landmarks) {
+        // Check for head tilt (shoulders should be level with chin)
+        const leftCheek = landmarks[234];
+        const rightCheek = landmarks[454];
+
+        const tiltAngle = Math.atan2(rightCheek.y - leftCheek.y, rightCheek.x - leftCheek.x);
+        const tiltDegrees = tiltAngle * (180 / Math.PI);
+
+        visualState.headTilt = tiltDegrees;
+    }
+
+    // Analyze posture from pose landmarks - meaningful for video calls
+    function analyzePosture(landmarks) {
+        // Key landmarks
+        const nose = landmarks[0];
+        const leftShoulder = landmarks[11];
+        const rightShoulder = landmarks[12];
+        const leftHip = landmarks[23];
+        const rightHip = landmarks[24];
+
+        if (!leftShoulder || !rightShoulder || !nose) return;
+
+        let postureScore = 50;
+        let issues = [];
+
+        // 1. Check distance from camera using shoulder width (more reliable than face position)
+        const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+        const faceX = nose.x;
+
+        // Shoulder width indicates distance: wider = closer, narrower = farther
+        if (shoulderWidth > 0.55) {
+            visualState.tooClose = true;
+            visualState.tooFar = false;
+            postureScore -= 15;
+            issues.push('too close');
+        } else if (shoulderWidth < 0.20) {
+            visualState.tooClose = false;
+            visualState.tooFar = true;
+            postureScore -= 15;
+            issues.push('too far');
+        } else {
+            visualState.tooClose = false;
+            visualState.tooFar = false;
+            postureScore += 15;
+        }
+
+        // 2. Check if centered
+        if (faceX < 0.3 || faceX > 0.7) {
+            postureScore -= 10;
+            issues.push('off-center');
+        } else {
+            postureScore += 10;
+        }
+
+        // 3. Check shoulders level
+        const shoulderDiff = Math.abs(leftShoulder.y - rightShoulder.y);
+        if (shoulderDiff < 0.05) {
+            postureScore += 10;
+        } else {
+            issues.push('shoulders uneven');
+        }
+
+        // 4. Check for leaning (nose position relative to shoulders)
+        if (leftHip && rightHip) {
+            const hipCenter = (leftHip.y + rightHip.y) / 2;
+            const shoulderCenter = (leftShoulder.y + rightShoulder.y) / 2;
+            const leanAngle = shoulderCenter - hipCenter;
+
+            // Leaning back = disengaged
+            visualState.leaningBack = leanAngle < 0.1;
+            if (visualState.leaningBack) {
+                postureScore -= 15;
+                issues.push('leaning back');
+            } else {
+                postureScore += 10;
+            }
+        }
+
+        // 5. Check if hands are visible (shows engagement)
+        if (lastHandsResults && lastHandsResults.multiHandLandmarks && lastHandsResults.multiHandLandmarks.length > 0) {
+            visualState.handsVisible = true;
+            postureScore += 5;
+        } else {
+            visualState.handsVisible = false;
+        }
+
+        visualState.shoulderPosture = Math.max(0, Math.min(100, postureScore));
+        visualState.postureIssues = issues;
+    }
+
+    // Analyze arm position (crossed arms = defensive)
+    function analyzeArmPosition(landmarks) {
+        // Wrist landmarks: 15 (left), 16 (right)
+        // Elbow landmarks: 13 (left), 14 (right)
+        const leftWrist = landmarks[15];
+        const rightWrist = landmarks[16];
+        const leftElbow = landmarks[13];
+        const rightElbow = landmarks[14];
+
+        if (!leftWrist || !rightWrist) return;
+
+        // Check if wrists are crossed (near center of body)
+        const wristDistance = Math.abs(leftWrist.x - rightWrist.x);
+        const wristsCrossed = wristDistance < 0.15;
+
+        // Check if arms are in front of body
+        const armsInFront = leftWrist.z < -0.1 && rightWrist.z < -0.1;
+
+        visualState.armsCrossed = wristsCrossed && armsInFront;
+    }
+
+    // Analyze hand gestures for negotiation signals
+    function analyzeHandGestures() {
+        if (!lastHandsResults || !lastHandsResults.multiHandLandmarks || lastHandsResults.multiHandLandmarks.length === 0) {
+            visualState.steepling = false;
+            visualState.openPalms = false;
+            visualState.faceTouching = false;
+            visualState.gestureScore = 30; // Low score when no hands visible
+            return;
+        }
+
+        const hands = lastHandsResults.multiHandLandmarks;
+        let gestureScore = 50;
+
+        // Reset gesture states before analysis
+        visualState.faceTouching = false;
+
+        // Hand landmark indices:
+        // 0: wrist, 4: thumb tip, 8: index tip, 12: middle tip, 16: ring tip, 20: pinky tip
+        // 5,6,7,8: index finger, 9,10,11,12: middle finger, etc.
+
+        // Check for steepling (two hands, fingertips close together, pointing up)
+        if (hands.length === 2) {
+            const hand1 = hands[0];
+            const hand2 = hands[1];
+
+            // Get fingertips (indices 4, 8, 12, 16, 20)
+            const tips1 = [hand1[4], hand1[8], hand1[12], hand1[16], hand1[20]];
+            const tips2 = [hand2[4], hand2[8], hand2[12], hand2[16], hand2[20]];
+
+            // Calculate average distance between fingertips
+            let totalDist = 0;
+            let fingersPointingUp = 0;
+
+            for (let i = 0; i < 5; i++) {
+                const dx = tips1[i].x - tips2[i].x;
+                const dy = tips1[i].y - tips2[i].y;
+                totalDist += Math.sqrt(dx * dx + dy * dy);
+
+                // Check if fingers are pointing up (tips above knuckles)
+                // Knuckles are at indices 5, 9, 13, 17 for fingers
+                const knuckle1Idx = [2, 5, 9, 13, 17][i]; // MCP joints
+                const knuckle2Idx = [2, 5, 9, 13, 17][i];
+                if (hand1[knuckle1Idx] && tips1[i].y < hand1[knuckle1Idx].y) {
+                    fingersPointingUp++;
+                }
+            }
+
+            const avgDist = totalDist / 5;
+
+            // Steepling: hands close together, fingers pointing up
+            visualState.steepling = avgDist < 0.15 && fingersPointingUp >= 3;
+            if (visualState.steepling) {
+                gestureScore += 25; // Strong confidence signal
+            }
+        } else {
+            visualState.steepling = false;
+        }
+
+        // Check for open palms (palm landmarks visible, wrist below fingers)
+        let openPalmCount = 0;
+        for (const hand of hands) {
+            const wrist = hand[0];
+            const middleTip = hand[12];
+            const indexTip = hand[8];
+            const pinkyTip = hand[20];
+
+            // Palm facing camera if wrist is below fingers (y increases downward)
+            // and fingers are spread (distance between tips)
+            const palmOpen = wrist.y > middleTip.y;
+            const fingerSpread = Math.abs(indexTip.x - pinkyTip.x) > 0.1;
+
+            if (palmOpen && fingerSpread) {
+                openPalmCount++;
+            }
+        }
+        visualState.openPalms = openPalmCount > 0;
+        if (visualState.openPalms) {
+            gestureScore += 15; // Honesty/openness signal
+        }
+
+        // Check for face touching (hand near face - stress signal)
+        // Need face landmarks for this - use lastFaceMeshResults
+        if (lastFaceMeshResults && lastFaceMeshResults.multiFaceLandmarks && lastFaceMeshResults.multiFaceLandmarks.length > 0) {
+            const faceLandmarks = lastFaceMeshResults.multiFaceLandmarks[0];
+            const nose = faceLandmarks[1]; // Nose tip
+            const chin = faceLandmarks[152]; // Chin
+
+            for (const hand of hands) {
+                const wrist = hand[0];
+                const indexTip = hand[8];
+
+                // Check if any hand point is near face
+                const distToNose = Math.sqrt(
+                    Math.pow(indexTip.x - nose.x, 2) + Math.pow(indexTip.y - nose.y, 2)
+                );
+                const distToChin = Math.sqrt(
+                    Math.pow(indexTip.x - chin.x, 2) + Math.pow(indexTip.y - chin.y, 2)
+                );
+
+                if (distToNose < 0.15 || distToChin < 0.15) {
+                    visualState.faceTouching = true;
+                    gestureScore -= 20; // Stress signal
+                    break;
+                }
+            }
+        }
+
+        // Hands visible is positive
+        gestureScore += 10;
+
+        visualState.gestureScore = Math.max(0, Math.min(100, gestureScore));
+    }
+
+    // Update visual coaching UI with tips
+    function updateVisualCoachingUI() {
+        const visualTipEl = document.getElementById('visual-tip');
+        const eyeContactBar = document.getElementById('eye-contact-bar');
+        const postureBar = document.getElementById('posture-bar');
+        const gesturesBar = document.getElementById('gestures-bar');
+        const visualEmotionEl = document.getElementById('visual-emotion');
+        const eyeContactPct = document.getElementById('eye-contact-pct');
+        const posturePct = document.getElementById('posture-pct');
+        const gesturesPct = document.getElementById('gestures-pct');
+
+        if (!visualTipEl) return;
+
+        // Helper function for color coding
+        function getBarColor(value) {
+            if (value >= 70) return 'linear-gradient(90deg, #22c55e, #16a34a)'; // Green
+            if (value >= 40) return 'linear-gradient(90deg, #eab308, #ca8a04)'; // Yellow
+            return 'linear-gradient(90deg, #ef4444, #dc2626)'; // Red
+        }
+
+        // Update bars with color coding and percentages
+        if (eyeContactBar) {
+            const val = Math.round(visualState.eyeContact);
+            eyeContactBar.style.width = val + '%';
+            eyeContactBar.style.background = getBarColor(val);
+            if (eyeContactPct) eyeContactPct.textContent = val + '%';
+        }
+        if (postureBar) {
+            const val = Math.round(visualState.shoulderPosture);
+            postureBar.style.width = val + '%';
+            postureBar.style.background = getBarColor(val);
+            if (posturePct) posturePct.textContent = val + '%';
+        }
+        if (gesturesBar) {
+            const val = Math.round(visualState.gestureScore);
+            gesturesBar.style.width = val + '%';
+            gesturesBar.style.background = getBarColor(val);
+            if (gesturesPct) gesturesPct.textContent = val + '%';
+        }
+
+        // Update emotion indicator
+        if (visualEmotionEl) {
+            const emotionEmoji = {
+                'confident': '😎',
+                'engaged': '🙂',
+                'neutral': '😐',
+                'tense': '😬',
+                'stressed': '😰'
+            };
+            visualEmotionEl.textContent = `${emotionEmoji[lastVisualEmotion.state] || '😐'} ${lastVisualEmotion.state}`;
+        }
+
+        // Clear warning if face is visible
+        if (visualState.faceVisible && visualState.lastWarning) {
+            clearWarning();
+        }
+
+        // Generate coaching tip - prioritize by urgency
+        let tip = '';
+        let isWarning = false;
+
+        if (!visualState.faceVisible) {
+            tip = '⚠️ FACE NOT VISIBLE — Look at the camera!';
+            isWarning = true;
+        } else if (visualState.tooClose) {
+            tip = '📏 Too close to camera — move back for better framing';
+            isWarning = true;
+        } else if (visualState.tooFar) {
+            tip = '📏 Too far from camera — move closer to fill the frame';
+            isWarning = true;
+        } else if (visualState.faceTouching) {
+            tip = '🤚 Hands near face — signals stress, keep hands lower';
+            isWarning = true;
+        } else if (visualState.leaningBack) {
+            tip = '🪑 Leaning back — lean in slightly to show engagement';
+        } else if (visualState.armsCrossed) {
+            tip = '🙅 Arms crossed — open your posture, use hand gestures';
+        } else if (visualState.eyeContact < 40) {
+            tip = '👀 Look at the camera lens — maintain eye contact';
+        } else if (visualState.facialTension > 60) {
+            tip = '😤 Facial tension detected — relax jaw, soften brow';
+        } else if (Math.abs(visualState.headTilt) > 15) {
+            tip = '📐 Level your head — tilting ' + (visualState.headTilt > 0 ? 'right' : 'left');
+        } else if (!visualState.handsVisible) {
+            tip = '🤲 Show your hands — gestures build trust';
+        } else if (visualState.steepling) {
+            tip = '🙏 Steepling detected — excellent confidence signal!';
+        } else if (visualState.openPalms) {
+            tip = '✋ Open palms — great! Signals honesty and openness';
+        } else if (visualState.eyeContact > 70 && visualState.facialTension < 30 && !visualState.leaningBack) {
+            tip = '✅ Great presence — confident posture, good eye contact';
+        } else {
+            tip = '👍 Good body language — stay relaxed and confident';
+        }
+
+        // Apply warning style if needed
+        if (isWarning && visualTipEl) {
+            visualTipEl.classList.add('warning');
+        } else if (visualTipEl) {
+            visualTipEl.classList.remove('warning');
+        }
+
+        if (tip !== visualState.lastTip) {
+            visualState.lastTip = tip;
+            visualTipEl.textContent = tip;
+        }
+
+        // Record for session analysis
+        if (visualCoachingActive) {
+            visualMetricsHistory.push({
+                timestamp: Date.now(),
+                eyeContact: visualState.eyeContact,
+                posture: visualState.shoulderPosture,
+                emotion: lastVisualEmotion.state,
+                tension: visualState.facialTension,
+                steepling: visualState.steepling,
+                openPalms: visualState.openPalms,
+                faceTouching: visualState.faceTouching,
+                gestureScore: visualState.gestureScore
+            });
+        }
+    }
+
+    function updateVisualTip(tip) {
+        const visualTipEl = document.getElementById('visual-tip');
+        if (visualTipEl && tip !== visualState.lastTip) {
+            visualState.lastTip = tip;
+            visualTipEl.textContent = tip;
+        }
+    }
+
+    // Start visual coaching with webcam
+    async function startVisualCoaching() {
+        const videoEl = document.getElementById('webcam-video');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (!videoEl) {
+            console.warn('Webcam video element not found');
+            return;
+        }
+
+        try {
+            // Initialize MediaPipe
+            await initFaceMesh();
+            await initPose();
+            await initHands();
+
+            // Get webcam stream
+            webcamStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: 'user' }
+            });
+
+            videoEl.srcObject = webcamStream;
+            await videoEl.play();
+
+            // Show visual coaching panel
+            if (visualPanel) visualPanel.style.display = 'block';
+
+            visualCoachingActive = true;
+
+            // Process frames
+            processVideoFrame(videoEl);
+
+        } catch (err) {
+            console.error('Failed to start visual coaching:', err);
+            updateVisualTip('Camera access denied — enable for visual coaching');
+        }
+    }
+
+    // Process video frames for analysis
+    async function processVideoFrame(videoEl) {
+        if (!visualCoachingActive || !videoEl.srcObject) return;
+
+        try {
+            if (faceMesh) await faceMesh.send({ image: videoEl });
+            if (pose) await pose.send({ image: videoEl });
+            if (hands) await hands.send({ image: videoEl });
+        } catch (err) {
+            console.warn('Frame processing error:', err);
+        }
+
+        // Process at ~10fps for performance
+        setTimeout(() => processVideoFrame(videoEl), 100);
+    }
+
+    // Stop visual coaching
+    function stopVisualCoaching() {
+        visualCoachingActive = false;
+
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(t => t.stop());
+            webcamStream = null;
+        }
+
+        const videoEl = document.getElementById('webcam-video');
+        if (videoEl) videoEl.srcObject = null;
+    }
+
+    // Get visual metrics summary for session analysis
+    function getVisualMetricsSummary() {
+        if (visualMetricsHistory.length === 0) {
+            return null;
+        }
+
+        const avgEyeContact = visualMetricsHistory.reduce((s, m) => s + m.eyeContact, 0) / visualMetricsHistory.length;
+        const avgPosture = visualMetricsHistory.reduce((s, m) => s + m.posture, 0) / visualMetricsHistory.length;
+        const avgTension = visualMetricsHistory.reduce((s, m) => s + m.tension, 0) / visualMetricsHistory.length;
+
+        // Count emotions
+        const emotionCounts = {};
+        visualMetricsHistory.forEach(m => {
+            emotionCounts[m.emotion] = (emotionCounts[m.emotion] || 0) + 1;
+        });
+        const dominantEmotion = Object.entries(emotionCounts)
+            .sort((a, b) => b[1] - a[1])[0];
+
+        return {
+            avgEyeContact: Math.round(avgEyeContact),
+            avgPosture: Math.round(avgPosture),
+            avgTension: Math.round(avgTension),
+            dominantEmotion: dominantEmotion ? dominantEmotion[0] : 'neutral',
+            totalSamples: visualMetricsHistory.length
+        };
+    }
     </script>
 </body>
 </html>
