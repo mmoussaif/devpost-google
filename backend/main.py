@@ -471,7 +471,7 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                                         )
                                     ),
                                     types.Part(
-                                        text="[Screen capture update — analyze for term drift or relevant details]"
+                                        text="[Screen capture from user. This is likely a contract or scope document. Extract key terms like price, payment schedule, timeline, revisions, and liability. CRITICAL: Analyze this against the counterparty's verbal offers. If they verbally offer terms worse than what is in this document, immediately issue a 'DRIFT: [Contract says X, they said Y]' alert.]"
                                     ),
                                 ]
                             )

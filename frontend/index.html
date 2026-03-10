@@ -549,9 +549,9 @@
         }
 
         .intervention-card {
-            padding: 1rem;
+            padding: 0.5rem 0.75rem;
             background: var(--bg-card);
-            border-radius: 8px;
+            border-radius: 6px;
             border-left: 3px solid;
             animation: slideIn 0.3s ease;
         }
@@ -584,7 +584,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .intervention-type {
@@ -877,12 +877,44 @@
             font-size: 1rem;
             color: var(--text-primary);
             line-height: 1.6;
-            min-height: 3rem;
+            max-height: 200px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
         }
 
-        .transcript-panel.live-transcript .transcript-text {
-            font-size: 1.125rem;
-            font-weight: 500;
+        .transcript-entry {
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .transcript-entry:last-child { border-bottom: none; }
+
+        .transcript-entry .speaker-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .transcript-entry .speaker-tag.adversary {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .transcript-entry .speaker-tag.user {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .transcript-entry .entry-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
         }
 
         .side-panel {
@@ -1290,6 +1322,7 @@
                         <div class="coach-header">
                             <span class="coach-icon">🎯</span>
                             <span class="coach-title">SAY THIS</span>
+                            <button class="btn-copy" id="copy-phrase-btn" title="Copy phrase" style="margin-left:auto;background:rgba(255,255,255,0.15);border:none;color:white;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">📋 Copy</button>
                         </div>
                         <div class="coach-phrase" id="coach-phrase">
                             Waiting for conversation to start...
@@ -1297,7 +1330,7 @@
                         <div class="coach-context" id="coach-context"></div>
                     </div>
 
-                    <!-- LIVE TRANSCRIPT - Prominent position -->
+                    <!-- LIVE TRANSCRIPT - Multi-turn history -->
                     <div class="transcript-panel live-transcript" id="transcript-panel">
                         <div class="transcript-header">
                             <span class="panel-title">💬 LIVE CONVERSATION</span>
@@ -1308,7 +1341,9 @@
                                 <span id="turn-label">Waiting...</span>
                             </div>
                         </div>
-                        <p class="transcript-text" id="transcript">Waiting for conversation to start...</p>
+                        <div class="transcript-text" id="transcript">
+                            <div class="transcript-entry" style="color:#94a3b8;font-style:italic;">Waiting for conversation to start...</div>
+                        </div>
                     </div>
 
                     <!-- Voice Coaching Bar -->
@@ -1398,12 +1433,7 @@
                         </div>
                     </div>
 
-                    <div class="context-panel">
-                        <div class="panel-header">
-                            <span class="panel-title">Session Context</span>
-                        </div>
-                        <div id="context-display"></div>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -1762,10 +1792,7 @@
 
                         // Update UI to show user speech
                         setTurnState('user');
-                        const transcriptEl = document.getElementById('transcript');
-                        if (transcriptEl) {
-                            transcriptEl.textContent = transcript;
-                        }
+                        addTranscriptEntry('user', transcript);
 
                         // Analyze user response for tactics handling
                         analyzeUserResponse(transcript, timestamp);
@@ -1866,6 +1893,44 @@
         }
 
         // ===== Turn state management =====
+        function addTranscriptEntry(speaker, text) {
+            const transcriptEl = document.getElementById('transcript');
+            if (!transcriptEl) return;
+            // Clear the initial waiting message
+            const waitingMsg = transcriptEl.querySelector('[style*="italic"]');
+            if (waitingMsg) waitingMsg.remove();
+
+            const entry = document.createElement('div');
+            entry.className = 'transcript-entry';
+
+            const tag = document.createElement('span');
+            tag.className = `speaker-tag ${speaker === 'adversary' ? 'adversary' : 'user'}`;
+            tag.textContent = speaker === 'adversary' ? '🎭 THEM' : '🎙️ YOU';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'entry-text';
+            textSpan.textContent = text;
+
+            entry.appendChild(tag);
+            entry.appendChild(textSpan);
+            transcriptEl.appendChild(entry);
+
+            // Auto-scroll to bottom
+            transcriptEl.scrollTop = transcriptEl.scrollHeight;
+        }
+
+        // Copy button handler
+        document.getElementById('copy-phrase-btn')?.addEventListener('click', () => {
+            const phrase = document.getElementById('coach-phrase')?.textContent;
+            if (phrase) {
+                navigator.clipboard.writeText(phrase.trim()).then(() => {
+                    const btn = document.getElementById('copy-phrase-btn');
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => { btn.textContent = '📋 Copy'; }, 1500);
+                });
+            }
+        });
+
         function setTurnState(state) {
             const indicator = document.getElementById('turn-indicator');
             const label = document.getElementById('turn-label');
@@ -2189,7 +2254,7 @@
 
                 // Show what the adversary said
                 setTurnState('adversary');
-                transcript.textContent = data.content;
+                addTranscriptEntry('adversary', data.content);
 
                 // Play buffered audio now that turn is complete
                 playBufferedAudio();
@@ -2445,8 +2510,8 @@
             if (data.type === 'intervention') {
                 processCoachingMessage(data);
             } else if (data.type === 'transcript') {
-                const speaker = data.speaker === 'counterparty' ? '🗣️ Them: ' : '🎤 You: ';
-                transcript.textContent = speaker + data.content;
+                const speaker = data.speaker === 'counterparty' ? 'adversary' : 'user';
+                addTranscriptEntry(speaker, data.content);
             } else if (data.type === 'signal') {
                 addSignal(data);
             } else if (data.type === 'audio') {
@@ -2944,6 +3009,7 @@
                     screenStream = null;
                 }
                 screenPreview.innerHTML = 'Click "Screen" to share your document';
+                screenPreview.classList.remove('active-share');
                 screenBtn.classList.remove('active');
             } else {
                 // Start screen share
@@ -2971,11 +3037,15 @@
                         canvas.height = video.videoHeight;
                         ctx.drawImage(video, 0, 0);
 
-                        // Update preview
-                        const previewImg = document.createElement('img');
-                        previewImg.src = canvas.toDataURL('image/jpeg', 0.5);
-                        screenPreview.innerHTML = '';
-                        screenPreview.appendChild(previewImg);
+                        // Update preview with "Contract Loaded" indicator
+                        screenPreview.innerHTML = `
+                            <div style="text-align: center; color: #10b981;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                                <div style="font-weight: 600;">Contract Loaded</div>
+                                <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">Vision analysis active</div>
+                            </div>
+                        `;
+                        screenPreview.classList.add('active-share');
 
                         // Send to backend
                         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -2990,6 +3060,7 @@
                     screenStream.getVideoTracks()[0].onended = () => {
                         screenBtn.classList.remove('active');
                         screenPreview.innerHTML = 'Click "Screen" to share your document';
+                        screenPreview.classList.remove('active-share');
                     };
 
                     screenBtn.classList.add('active');

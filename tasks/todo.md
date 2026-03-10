@@ -25,10 +25,21 @@
 - [x] Scoring based on user participation
 - [x] Auto-end session on "goodbye" detection
 - [x] Proper session cleanup (stops audio immediately)
-
-### In Progress
 - [x] Improved gesture detection (steepling, open palms, face touching)
 - [x] Color-coded visual feedback bars
+- **UI/UX Refinements:**
+  - [x] Dual-channel labeled audio levels (Mic vs Adversary)
+  - [x] Animated turn-taking indicators with pulsing borders
+  - [x] Multi-turn scrollable transcript history
+  - [x] Synchronized server/client deal closing logic
+  - [x] Fixed empty session reports (variable scoping bugs)
+- **Contract Drift Vision Demo:**
+  - [x] Fake contract generation (`contract.html`) with driftable terms
+  - [x] Enhanced Gemini vision prompt for term extraction & comparison
+  - [x] Screen share UI updates ("Contract loaded" indicator)
+
+### In Progress
+- [ ] Test end-to-end contract drift flow
 - [ ] Test locally with `python main.py`
 - [ ] Deploy to Cloud Run
 - [ ] Record GCP console proof video (mp4 in repo)
