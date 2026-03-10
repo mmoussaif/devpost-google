@@ -126,7 +126,16 @@ RULES:
 5. If they mention equity, respond about equity
 6. Do NOT mention topics they didn't bring up
 
+CRITICAL — AGREEMENT DETECTION:
+If the counterparty is AGREEING, ACCEPTING, or saying "let's move forward":
+- Do NOT push back or demand more
+- CLOSE THE DEAL immediately
+- Example: "Great, let's lock that in. I'll send the contract today."
+- If terms are close to user goals, ACCEPT and confirm next steps
+- Saying "could work", "move forward", "let's do it", "sounds good" = AGREEMENT
+
 SAY THIS:"""
+
 
 
 async def generate_coaching(adversary_text: str, goals: str, batna: str, user_history: str = "") -> dict:

@@ -1845,6 +1845,39 @@
             const text = adversaryText.toLowerCase();
             const result = { phrase: '', context: '', tactics: [] };
 
+            // ═══ AGREEMENT DETECTION (CHECK FIRST — before tactics) ═══
+            // When they're agreeing or moving forward, CLOSE THE DEAL
+            const agreementPatterns = [
+                'could work', 'can work', 'works for me', 'move forward',
+                'let\'s move', 'let\'s go ahead', 'let\'s do it', 'let\'s do this',
+                'sounds good', 'sounds fair', 'sounds reasonable',
+                'i agree', 'we agree', 'agreed', 'i accept', 'that works',
+                'i\'m okay with', 'i\'m fine with', 'i can do',
+                'deal', 'we have a deal', 'let\'s get started'
+            ];
+
+            // Deal-closed signals — strong commitment
+            const dealClosedPatterns = [
+                'excited to get started', 'draw up the paperwork',
+                "i'll send the contract", 'looking forward to working',
+                "let's make it happen", 'solid foundation',
+                'send over the contract', 'get the ball rolling'
+            ];
+
+            if (dealClosedPatterns.some(p => text.includes(p))) {
+                result.phrase = "Excellent! I'll send everything over today. Talk soon!";
+                result.context = "DEAL CLOSED — Confirm and wrap up gracefully";
+                return result;
+            }
+
+            if (agreementPatterns.some(p => text.includes(p))) {
+                result.phrase = "Great! Let's lock that in. I'll send the contract today — when can you sign so we can start?";
+                result.context = "They're AGREEING — close the deal NOW";
+                sessionRecording.metrics.progressInstances++;
+                return result;
+            }
+
+            // ═══ TACTIC DETECTION (only if NOT agreeing) ═══
             // ANCHORING - low price mentioned
             if (text.includes('$30') || text.includes('$40') || text.includes('$50') ||
                 text.match(/budget.*(tight|limited|only|around)/)) {
@@ -1908,16 +1941,8 @@
                 result.phrase = "I'm open to exploring that. What would you be willing to adjust on your end to make that work?";
                 result.context = "They're negotiating — always get something back";
             }
-            // DEAL CLOSED signals — strong commitment
-            else if (text.includes('excited to get started') || text.includes('draw up the paperwork') ||
-                     text.includes("i'll send the contract") || text.includes('looking forward to working') ||
-                     text.includes("let's make it happen") || text.includes('solid foundation')) {
-                result.phrase = "Excellent! I'll send everything over today. Talk soon!";
-                result.context = "DEAL CLOSED — Confirm and wrap up gracefully";
-            }
-            // AGREEMENT signals
-            else if (text.includes('sounds good') || text.includes('agree') || text.includes('deal') ||
-                     text.includes('let\'s do it') || text.includes('works for me') || text.includes('okay')) {
+            // AGREEMENT signals (fallback for patterns not caught above)
+            else if (text.includes('okay') || text.includes('alright')) {
                 result.phrase = "Great! Let me send over the contract today. When can you sign so we can lock in the timeline?";
                 result.context = "Close now — get commitment";
             }
@@ -2046,7 +2071,7 @@
 
                 // Detect closing signals — auto-end session
                 const textLower = data.content.toLowerCase().trim();
-                const isClosingPhrase = /\b(bye|goodbye|good-bye|bye-bye|farewell)\b/i.test(textLower) ||
+                const isClosingPhrase = /\b(bye|goodbye|good-bye|bye-bye|farewell|talk soon|take care)\b/i.test(textLower) ||
                     textLower.startsWith('bye') || textLower.endsWith('bye');
                 const isClosingSignal = textLower.includes('excited to get started') ||
                     textLower.includes('draw up the paperwork') ||
@@ -2054,7 +2079,11 @@
                     textLower.includes("let's make it happen") ||
                     textLower.includes('look forward to working') ||
                     textLower.includes('deal is done') ||
-                    (textLower.includes('thank you') && textLower.includes('look forward'));
+                    textLower.includes('send over the contract') ||
+                    textLower.includes('get the ball rolling') ||
+                    textLower.includes('pleasure doing business') ||
+                    (textLower.includes('thank') && textLower.includes('forward')) ||
+                    (textLower.includes('great') && textLower.includes('working with'));
 
                 if (isClosingPhrase || isClosingSignal) {
                     // Record deal closed
