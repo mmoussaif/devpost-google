@@ -1902,9 +1902,7 @@
             audioChunksBuffer = []; // Empty the queue
             isAdversarySpeaking = false;
             
-            // Release the UI lock so the user can speak freely
-            const micBtn = document.getElementById('mic-btn');
-            if (micBtn) micBtn.classList.remove('muted-during-playback');
+            // Release the UI state
             setTurnState('user');
             
             const vuMeter = document.getElementById('vu-meter');
@@ -2027,9 +2025,8 @@
                 source.connect(playbackAudioContext.destination);
                 currentAudioSource = source;
 
-                // Mute user mic during adversary playback to prevent echo/feedback
+                // Mute UI removed explicitly; full-duplex enabled.
                 isAdversarySpeaking = true;
-                micBtn.classList.add('muted-during-playback');
                 setTurnState('adversary');
                 // Animate adversary VU meter
                 if (vuMeter) vuMeter.classList.add('agent-speaking');
@@ -2037,7 +2034,6 @@
 
                 source.onended = () => {
                     isAdversarySpeaking = false;
-                    micBtn.classList.remove('muted-during-playback');
                     setTurnState('user');
                     if (vuMeter) vuMeter.classList.remove('agent-speaking');
                     if (vuAgent) vuAgent.style.width = '0%';
@@ -2952,9 +2948,6 @@
                     // Process audio with ScriptProcessor (AudioWorklet would be better)
                     const processor = audioContext.createScriptProcessor(4096, 1, 1);
                     processor.onaudioprocess = (e) => {
-                        // Don't send audio while adversary is speaking (prevent echo/feedback)
-                        if (isAdversarySpeaking) return;
-
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             const inputData = e.inputBuffer.getChannelData(0);
 

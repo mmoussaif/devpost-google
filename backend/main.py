@@ -816,11 +816,17 @@ Say this opening NOW, then wait for their response.""")]
                         trans = event.input_transcription
                         
                         # Detect interruption: If user starts speaking while adversary is generating
-                        if hasattr(trans, "text") and trans.text:
+                        if hasattr(trans, "text") and trans.text and trans.text.strip():
                             # Send a signal to frontend to clear the adversary's audio playback queue immediately
                             await websocket.send_json({
                                 "type": "clear_audio"
                             })
+                            if accumulated_text.strip():
+                                # Send what was generated right before the interruption so it shows in the transcript
+                                await websocket.send_json({
+                                    "type": "adversary_says",
+                                    "content": accumulated_text.strip() + " -- [interrupted]"
+                                })
                             accumulated_text = "" # Reset accumulated trans as they were interrupted
                             
                         if hasattr(trans, "text") and trans.text and trans.text.strip():
@@ -866,8 +872,8 @@ Say this opening NOW, then wait for their response.""")]
                             # 3. Send coaching to frontend
                             await websocket.send_json({
                                 "type": "say_this",
-                                "phrase": coaching["say_this"],
-                                "context": coaching["context"],
+                                "phrase": coaching.get("phrase", coaching.get("say_this", "")),
+                                "context": coaching.get("context", ""),
                             })
 
                             accumulated_text = ""
