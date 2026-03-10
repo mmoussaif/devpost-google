@@ -1326,6 +1326,7 @@
         let sessionEnded = false;
         let voiceEnrolled = false;
         let voiceSampleBase64 = null;
+        let clientDetectedAgreement = false; // Suppress server coaching when client detects agreement
 
         // Load saved voice sample from localStorage
         const savedVoiceSample = localStorage.getItem('secondus_voice_sample');
@@ -1867,6 +1868,7 @@
             if (dealClosedPatterns.some(p => text.includes(p))) {
                 result.phrase = "Excellent! I'll send everything over today. Talk soon!";
                 result.context = "DEAL CLOSED — Confirm and wrap up gracefully";
+                clientDetectedAgreement = true;
                 return result;
             }
 
@@ -1874,6 +1876,7 @@
                 result.phrase = "Great! Let's lock that in. I'll send the contract today — when can you sign so we can start?";
                 result.context = "They're AGREEING — close the deal NOW";
                 sessionRecording.metrics.progressInstances++;
+                clientDetectedAgreement = true;
                 return result;
             }
 
@@ -2176,7 +2179,12 @@
                 updateVoiceMetrics(momentum);
 
             } else if (data.type === 'say_this') {
-                // Coaching from Secondus - what to say next
+                // Coaching from Secondus server — but SKIP if client already detected agreement
+                if (clientDetectedAgreement) {
+                    console.log('Suppressing server coaching — client detected agreement');
+                    clientDetectedAgreement = false; // Reset for next turn
+                    return;
+                }
                 const timestamp = timer.textContent;
 
                 // Update the coach panel with the suggested phrase
