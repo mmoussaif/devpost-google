@@ -2117,6 +2117,20 @@
                 // Update metrics
                 updateVoiceMetrics(momentum);
 
+            } else if (data.type === 'say_this') {
+                // Coaching from Secondus - what to say next
+                const timestamp = timer.textContent;
+
+                // Update the coach panel with the suggested phrase
+                updateCoachPanel(data.phrase, data.context);
+
+                // Record coaching given
+                sessionRecording.coachingGiven.push({
+                    phrase: data.phrase,
+                    context: data.context,
+                    timestamp
+                });
+
             } else if (data.type === 'adversary_audio') {
                 // Buffer audio chunks until turn complete
                 bufferAudioChunk(data.data);

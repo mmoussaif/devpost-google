@@ -25,7 +25,7 @@ from google.genai import types
 from google import genai
 from pydantic import BaseModel
 
-from agent import root_agent
+from agent import root_agent, SECONDUS_PERSONA
 from adversary import adversary_agent
 from learnings import analyze_session, get_pre_session_briefing, get_quick_tip
 
@@ -94,6 +94,73 @@ async def health_check():
         "model": "gemini-live-2.5-flash-native-audio",
         "project": PROJECT_ID,
     }
+
+
+# ============ Real-Time Coaching Generator ============
+
+# Initialize Gemini client for coaching
+coaching_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+
+COACHING_PROMPT = """You are Secondus, a real-time negotiation coach.
+The counterparty just said something. Give the user an IMMEDIATE response to say.
+
+RULES:
+- Output ONLY a "SAY THIS:" line with the exact phrase to say
+- Address what they JUST said, not old topics
+- Keep it to 1-2 sentences max
+- Be tactical and confident
+
+CONTEXT:
+User's goals: {goals}
+User's BATNA: {batna}
+
+COUNTERPARTY JUST SAID:
+"{adversary_text}"
+
+YOUR COACHING (one SAY THIS line only):"""
+
+
+async def generate_coaching(adversary_text: str, goals: str, batna: str) -> dict:
+    """Generate real-time coaching response to what adversary said."""
+    try:
+        prompt = COACHING_PROMPT.format(
+            goals=goals or "Close the deal",
+            batna=batna or "Walk away",
+            adversary_text=adversary_text
+        )
+
+        response = await asyncio.to_thread(
+            coaching_client.models.generate_content,
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+
+        coaching_text = response.text.strip()
+
+        # Extract the SAY THIS portion
+        if "SAY THIS:" in coaching_text.upper():
+            # Find SAY THIS and extract the phrase
+            idx = coaching_text.upper().find("SAY THIS:")
+            phrase = coaching_text[idx + 9:].strip().strip('"').strip("'")
+            return {
+                "type": "coaching",
+                "say_this": phrase,
+                "context": f"Response to: {adversary_text[:50]}..."
+            }
+        else:
+            return {
+                "type": "coaching",
+                "say_this": coaching_text,
+                "context": f"Response to: {adversary_text[:50]}..."
+            }
+
+    except Exception as e:
+        print(f"Coaching generation error: {e}")
+        return {
+            "type": "coaching",
+            "say_this": "I hear you. Let me think about the best way forward.",
+            "context": "Fallback response"
+        }
 
 
 # ============ Learning System Endpoints ============
@@ -700,13 +767,32 @@ CRITICAL INSTRUCTION: You are the counterparty in this negotiation practice.
                             if not accumulated_text.endswith(trans.text):
                                 accumulated_text += trans.text
 
-                    # Send transcript on turn complete
+                    # Send transcript on turn complete AND generate coaching
                     if hasattr(event, "turn_complete") and event.turn_complete:
                         if accumulated_text.strip():
+                            adversary_statement = accumulated_text.strip()
+
+                            # 1. Send what adversary said
                             await websocket.send_json({
                                 "type": "adversary_says",
-                                "content": accumulated_text.strip(),
+                                "content": adversary_statement,
                             })
+
+                            # 2. Generate coaching response from Secondus
+                            config = session_data.get("config", {})
+                            coaching = await generate_coaching(
+                                adversary_text=adversary_statement,
+                                goals=config.get("goals", ""),
+                                batna=config.get("batna", ""),
+                            )
+
+                            # 3. Send coaching to frontend
+                            await websocket.send_json({
+                                "type": "say_this",
+                                "phrase": coaching["say_this"],
+                                "context": coaching["context"],
+                            })
+
                             accumulated_text = ""
 
             except WebSocketDisconnect:
