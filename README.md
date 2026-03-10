@@ -190,6 +190,18 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 4. **Personalized Learning** — Improves based on your patterns
 5. **Research-Backed** — Uses proven negotiation frameworks
 
+### Official Resources Used
+
+Built following the official [hackathon resources](https://geminiliveagentchallenge.devpost.com/resources):
+
+| Resource | How We Used It |
+|----------|----------------|
+| [ADK Bidi-Streaming Dev Guide](https://google.github.io/adk-docs/streaming/dev-guide/part1/) | Implemented concurrent upstream/downstream pattern with `LiveRequestQueue` |
+| [ADK Bidi-Streaming Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo) | Reference architecture for WebSocket + `run_live()` integration |
+| [Live API Notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/multimodal-live-api) | Multimodal audio + vision patterns |
+| [ADK Visual Guide (Medium)](https://medium.com/google-cloud/adk-bidi-streaming-a-visual-guide-to-real-time-multimodal-ai-agent-development-62dd08c81399) | Agent lifecycle and session management |
+| [Google Developer Community](https://developers.google.com/community) | Build with AI Workshop — Google Cambridge 2024 |
+
 ## Documentation
 
 See [AGENTS.md](AGENTS.md) for detailed architecture documentation including:

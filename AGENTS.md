@@ -802,11 +802,27 @@ Compare final agreed terms against:
 
 ## References
 
-- [Harvard Program on Negotiation](https://www.pon.harvard.edu/)
-- [Never Split the Difference — Chris Voss](https://www.blackswanltd.com/)
-- [What Every BODY is Saying — Joe Navarro](https://www.jnforensics.com/)
+### Official Hackathon Resources
+
+- [ADK Bidi-Streaming Development Guide](https://google.github.io/adk-docs/streaming/dev-guide/part1/) — Core implementation patterns
+- [ADK Bidi-Streaming Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo) — Reference architecture
+- [ADK Visual Guide (Medium)](https://medium.com/google-cloud/adk-bidi-streaming-a-visual-guide-to-real-time-multimodal-ai-agent-development-62dd08c81399) — Agent lifecycle
+- [ADK Bidi-Streaming in 5 Minutes (YouTube)](https://www.youtube.com/watch?v=vLUkAGeLR1k) — Quick overview
+- [Live API Notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/multimodal-live-api) — Multimodal patterns
+- [Live Bidirectional Streaming Agent Codelab](https://codelabs.developers.google.com/way-back-home-level-3/instructions#0) — Step-by-step tutorial
+- [Google Developer Community](https://developers.google.com/community) — GDG network
+
+### Negotiation Research
+
+- [Harvard Program on Negotiation](https://www.pon.harvard.edu/) — Time pressure, BATNA
+- [Never Split the Difference — Chris Voss](https://www.blackswanltd.com/) — Tactical empathy, labeling
+- [What Every BODY is Saying — Joe Navarro](https://www.jnforensics.com/) — Body language signals
+
+### Technical Documentation
+
 - [Google ADK Documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/agent-builder/adk)
 - [MediaPipe Documentation](https://developers.google.com/mediapipe)
+- [Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/multimodal-live)
 
 ---
 
