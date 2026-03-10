@@ -3008,7 +3008,7 @@
             let improvements = [];
 
             // Participation-based feedback
-            if (!userSpoke) {
+            if (!userActuallySpoke) {
                 improvements.push("You need to actually speak! The adversary can't negotiate alone.");
             } else if (userParticipation < 3) {
                 improvements.push("Practice longer sessions - aim for 5+ exchanges to build momentum");
@@ -3016,20 +3016,20 @@
             if (uniqueTactics >= 3) {
                 strengths.push("Encountered diverse negotiation tactics - great practice exposure");
             }
-            if (metrics.dealClosed && userSpoke) {
+            if (metrics.dealClosed && userActuallySpoke) {
                 strengths.push("Successfully closed the deal!");
                 score = Math.max(score, 75); // Minimum score for closing a deal
-            } else if (metrics.dealClosed && !userSpoke) {
+            } else if (metrics.dealClosed && !userActuallySpoke) {
                 // Don't count as closed if user didn't participate
                 improvements.push("The adversary ended the call, but you didn't engage");
             }
-            if (metrics.progressInstances > 0 && userSpoke) {
+            if (metrics.progressInstances > 0 && userActuallySpoke) {
                 strengths.push("Made progress toward agreement at least once");
             }
             if (userParticipation >= 5) {
                 strengths.push("Sustained a meaningful negotiation conversation");
             }
-            if (emotionScore >= 20) {
+            if (visualSummary && visualSummary.avgEyeContact >= 20) {
                 strengths.push("Maintained good vocal confidence throughout");
             } else if (sessionRecording.emotions && sessionRecording.emotions.length > 0) {
                 improvements.push("Work on vocal confidence - practice power poses and deep breathing before calls");
