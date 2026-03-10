@@ -1618,8 +1618,8 @@
                 // Auto-start microphone
                 setTimeout(() => micBtn.click(), 500);
 
-                // Start speech recognition for user transcript
-                startSpeechRecognition();
+                // Start speech recognition AFTER mic is ready (avoid getUserMedia collision)
+                setTimeout(() => startSpeechRecognition(), 1500);
 
                 // Start visual coaching (MediaPipe)
                 startVisualCoaching();
@@ -1683,11 +1683,12 @@
             };
 
             speechRecognition.onerror = (event) => {
-                // Silently ignore common non-critical errors (network = temporary connectivity)
-                const ignoredErrors = ['no-speech', 'aborted', 'network'];
-                if (!ignoredErrors.includes(event.error)) {
-                    console.warn('Speech recognition error:', event.error);
+                // Log all errors for debugging — 'network' errors indicate mic conflicts
+                if (event.error === 'no-speech' || event.error === 'aborted') {
+                    // These are normal during pauses
+                    return;
                 }
+                console.warn('Speech recognition error:', event.error);
             };
 
             speechRecognition.onend = () => {
@@ -2778,6 +2779,17 @@
                                 // Count as a "turn" every ~50 chunks of speech (~2.5 seconds)
                                 if (sessionRecording.metrics.userAudioChunks % 50 === 0) {
                                     sessionRecording.metrics.userTurns++;
+
+                                    // Fallback: if speech recognition hasn't captured anything,
+                                    // record a placeholder user exchange
+                                    const userExchanges = sessionRecording.exchanges.filter(e => e.speaker === 'user');
+                                    if (userExchanges.length === 0 && sessionRecording.metrics.userTurns === 1) {
+                                        sessionRecording.exchanges.push({
+                                            speaker: 'user',
+                                            text: '[Speech detected — transcript unavailable]',
+                                            timestamp: timer.textContent
+                                        });
+                                    }
                                 }
                             }
 
