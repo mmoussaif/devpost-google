@@ -236,11 +236,11 @@ CONFIDENCE: [Voice coaching tip] — For delivery improvement
 ```mermaid
 flowchart TB
     subgraph SystemPrompt["System Prompt (agent.py)"]
-        ROLE[Role Definition<br/>"You are Secondus, a real-time negotiation COACH"]
-        CONTEXT[Context Awareness<br/>Audio, Screen, Goals, BATNA]
-        TACTICS[Tactic Counters<br/>Anchoring, Urgency, Nibbling...]
-        OUTPUT[Output Format<br/>SAY THIS, TACTIC, DRIFT]
-        VOICE[Voice Coaching<br/>Pace, Tone, Confidence]
+        ROLE["Role Definition<br/>Secondus - real-time negotiation COACH"]
+        CONTEXT["Context Awareness<br/>Audio, Screen, Goals, BATNA"]
+        TACTICS["Tactic Counters<br/>Anchoring, Urgency, Nibbling..."]
+        OUTPUT["Output Format<br/>SAY THIS, TACTIC, DRIFT"]
+        VOICE["Voice Coaching<br/>Pace, Tone, Confidence"]
     end
 
     ROLE --> CONTEXT
