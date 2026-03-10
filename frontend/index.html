@@ -484,23 +484,26 @@
 
         .live-grid {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 320px;
             gap: 1.5rem;
-            height: calc(100vh - 200px);
+            min-height: 0;
+            height: calc(100vh - 180px);
         }
 
         .main-panel {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
+            min-height: 0;
         }
 
         .interventions-panel {
-            flex: 1;
+            flex-shrink: 0;
+            max-height: 140px;
+            overflow-y: auto;
             background: var(--bg-secondary);
             border-radius: 12px;
-            padding: 1.5rem;
-            overflow-y: auto;
+            padding: 1rem 1.25rem;
         }
 
         .panel-header {
@@ -685,13 +688,13 @@
             50% { box-shadow: 0 0 20px 5px rgba(16, 185, 129, 0.3); }
         }
 
-        /* Coach Panel - Primary Focus */
+        /* Coach Panel - Compact, above transcript */
         .coach-panel {
+            flex-shrink: 0;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
         }
         .coach-header {
             display: flex;
@@ -708,7 +711,7 @@
             color: rgba(255,255,255,0.9);
         }
         .coach-phrase {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 500;
             line-height: 1.5;
             color: white;
@@ -722,12 +725,12 @@
 
         /* Voice Coaching Metrics */
         .voice-coaching {
+            flex-shrink: 0;
             background: var(--bg-secondary);
             border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1rem;
+            padding: 0.75rem 1.25rem;
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             align-items: center;
         }
         .voice-metric {
@@ -782,9 +785,12 @@
         }
 
         .transcript-panel.live-transcript {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
             border: 1px solid rgba(99, 102, 241, 0.3);
-            margin-bottom: 1rem;
         }
 
         .transcript-header {
@@ -874,10 +880,11 @@
         }
 
         .transcript-text {
+            flex: 1 1 auto;
+            min-height: 0;
             font-size: 1rem;
             color: var(--text-primary);
             line-height: 1.6;
-            max-height: 200px;
             overflow-y: auto;
             scroll-behavior: smooth;
         }
@@ -1445,6 +1452,7 @@
         let ws = null;
         let mediaStream = null;
         let screenStream = null;
+        let screenCaptureIntervalId = null;
         let audioContext = null;
         let audioWorklet = null;
         let timerInterval = null;
@@ -3017,6 +3025,10 @@
         screenBtn.addEventListener('click', async () => {
             if (screenBtn.classList.contains('active')) {
                 // Stop screen share
+                if (screenCaptureIntervalId) {
+                    clearInterval(screenCaptureIntervalId);
+                    screenCaptureIntervalId = null;
+                }
                 if (screenStream) {
                     screenStream.getTracks().forEach(t => t.stop());
                     screenStream = null;
@@ -3025,7 +3037,7 @@
                 screenPreview.classList.remove('active-share');
                 screenBtn.classList.remove('active');
             } else {
-                // Start screen share
+                // Start screen share — used for coach context only; agent hears only your voice
                 try {
                     screenStream = await navigator.mediaDevices.getDisplayMedia({
                         video: {
@@ -3042,7 +3054,6 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Capture frames periodically
                     const captureFrame = () => {
                         if (!screenStream) return;
 
@@ -3050,27 +3061,29 @@
                         canvas.height = video.videoHeight;
                         ctx.drawImage(video, 0, 0);
 
-                        // Update preview with "Contract Loaded" indicator
                         screenPreview.innerHTML = `
-                            <div style="text-align: center; color: #10b981;">
-                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
-                                <div style="font-weight: 600;">Contract Loaded</div>
-                                <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">Vision analysis active</div>
+                            <div style="text-align: center; color: #10b981; padding: 0.5rem;">
+                                <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📋</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Screen shared</div>
+                                <div style="font-size: 0.7rem; opacity: 0.9; margin-top: 0.25rem;">Coach uses it for context only.<br/>Agent hears only your voice.</div>
                             </div>
                         `;
                         screenPreview.classList.add('active-share');
 
-                        // Send to backend
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
                             ws.send(JSON.stringify({ type: 'screen', data: base64 }));
                         }
                     };
 
-                    // Capture every 2 seconds
-                    setInterval(captureFrame, 2000);
+                    captureFrame();
+                    screenCaptureIntervalId = setInterval(captureFrame, 5000);
 
                     screenStream.getVideoTracks()[0].onended = () => {
+                        if (screenCaptureIntervalId) {
+                            clearInterval(screenCaptureIntervalId);
+                            screenCaptureIntervalId = null;
+                        }
                         screenBtn.classList.remove('active');
                         screenPreview.innerHTML = 'Click "Screen" to share your document';
                         screenPreview.classList.remove('active-share');
@@ -3122,6 +3135,10 @@
             stopSpeechRecognition();
 
             // Stop screen share
+            if (screenCaptureIntervalId) {
+                clearInterval(screenCaptureIntervalId);
+                screenCaptureIntervalId = null;
+            }
             if (screenStream) {
                 screenStream.getTracks().forEach(t => t.stop());
                 screenStream = null;

@@ -719,18 +719,16 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
     state = {"accumulated_text": ""}
 
     try:
-        # Send initial scenario context - Tell adversary to BEGIN with opening
+        # Send initial scenario context — opening is a suggestion; then respond naturally to the user
         context = session_data.get("context", "Practice negotiation")
+        goals = session_data.get("config", {}).get("goals", "Close at $80K")
         live_queue.send_content(
             types.Content(
-                parts=[types.Part(text=f"""BEGIN THE NEGOTIATION NOW.
+                parts=[types.Part(text=f"""Start the call. You are Alex Chen, TechNova CTO. User's goals: {goals}
 
-You are Alex Chen, TechNova CTO. User's goals: {session_data.get('config', {}).get('goals', 'Close at $80K')}
+Open with one short pitch, e.g.: "Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
 
-START by saying your opening pitch:
-"Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
-
-Say this opening NOW, then wait for their response.""")]
+Then LISTEN. Whatever the user says next — including if they interrupt you — respond only to that. Do not stick to a script. Accept interruptions and answer what they actually said.""")]
             )
         )
 
@@ -760,11 +758,18 @@ Say this opening NOW, then wait for their response.""")]
                             active_sessions[session_id]["latest_screen"] = image_bytes
 
                     elif msg_type == "client_barge_in":
-                        # Client-side Zero-latency VAD detected speech. Flush current text as interrupted.
+                        # User started speaking; tell the agent to stop and listen so it doesn't blindly finish.
+                        live_queue.send_content(
+                            types.Content(
+                                parts=[types.Part(
+                                    text="[The user is speaking now. Stop your current response immediately. You will hear what they said next — respond only to that.]"
+                                )]
+                            )
+                        )
                         if state["accumulated_text"].strip():
                             await websocket.send_json({
                                 "type": "adversary_says",
-                                "content": state["accumulated_text"].strip() + " -- [interrupted]"
+                                "content": state["accumulated_text"].strip() + " — [interrupted]"
                             })
                         state["accumulated_text"] = ""
 

@@ -48,3 +48,17 @@
 **Rules derived**:
 - In practice/live voice flows, prefer a single source of truth for transcript (backend = what the model heard/said); avoid mixing client-side speech recognition with backend transcript.
 - When mixing modalities (audio + screen), don’t inject screen into the same stream the voice agent consumes if the goal is a clean voice conversation; use screen only in separate analysis (e.g. coach/drift).
+
+### 2026-03-10: Interruption handling + live experience redesign
+
+**Context**: User reported that once screen is shared "it's a mess"; agent should accept interruption and not follow the prompt blindly; requested a complete re-design for an elegant, straightforward live negotiation experience.
+
+**Fixes applied**:
+1. **Adversary agent**: Prompt rewritten so "INTERRUPTION & LIVE CONVERSATION" is highest priority. Explicit: when the user speaks, STOP immediately; never finish a scripted line; respond only to what they said. Opening in main.py softened from "Say this opening NOW" to "Open with one short pitch… then LISTEN. Whatever the user says next — including if they interrupt — respond only to that."
+2. **Barge-in cue**: On `client_barge_in`, backend now injects a content message into the live queue telling the model to stop and listen. Reduces the model blindly finishing when the user has already spoken.
+3. **Layout**: Transcript is the hero (flex: 1, scrollable). Coach panel and interventions are compact and shrink; voice coaching bar tightened. Side panel stays 320px; main column gets the space.
+4. **Screen share**: Capture interval changed from 2s to 5s; interval stored and cleared on stop/endSession. UI copy: "Screen shared — Coach uses it for context only. Agent hears only your voice."
+
+**Rules derived**:
+- For live voice agents, make interruption handling and "respond to what the user said" the top priority in the system prompt; soften any "do X now" opening so the model listens after.
+- On client-side barge-in, inject a short text cue to the agent so it explicitly stops and waits for the next user input.
