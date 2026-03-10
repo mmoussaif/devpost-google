@@ -1479,7 +1479,6 @@
         const timer = document.getElementById('timer');
         const screenPreview = document.getElementById('screen-preview');
         const vuMeter = document.getElementById('vu-meter');
-        const contextDisplay = document.getElementById('context-display');
 
         // VU meter fill elements
         const vuMic = document.getElementById('vu-mic');
@@ -1663,9 +1662,6 @@
                 const data = await res.json();
                 sessionId = data.session_id;
 
-                // Show context in side panel
-                displayContext(config);
-
                 // Connect WebSocket
                 connectWebSocket();
 
@@ -1717,7 +1713,6 @@
                 const data = await res.json();
                 sessionId = data.session_id;
 
-                displayContext({ ...config, key_terms: keyTerms });
                 connectPracticeWebSocket();
 
                 setupScreen.style.display = 'none';
@@ -2469,23 +2464,6 @@
                 else if (momentum.turns > 5) tip = "Long conversation — create urgency to decide";
             }
             document.getElementById('voice-tip').textContent = tip;
-        }
-
-        function displayContext(config) {
-            let html = '';
-            if (config.goals) {
-                html += `<div class="context-item"><div class="context-label">Goals</div><div class="context-value">${config.goals}</div></div>`;
-            }
-            if (config.batna) {
-                html += `<div class="context-item"><div class="context-label">BATNA</div><div class="context-value">${config.batna}</div></div>`;
-            }
-            if (config.key_terms.length) {
-                html += `<div class="context-item"><div class="context-label">Key Terms</div><div class="context-value">${config.key_terms.join(', ')}</div></div>`;
-            }
-            if (config.counterparty) {
-                html += `<div class="context-item"><div class="context-label">Counterparty</div><div class="context-value">${config.counterparty}</div></div>`;
-            }
-            contextDisplay.innerHTML = html;
         }
 
         function connectWebSocket() {
