@@ -673,9 +673,12 @@
             to { transform: translateY(0); }
         }
 
-        .vu-meter.agent-speaking {
-            background: rgba(16, 185, 129, 0.2);
-            animation: pulse-glow 0.5s ease;
+        .vu-meter.agent-speaking .vu-fill.agent {
+            animation: agent-pulse 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes agent-pulse {
+            0% { width: 40%; }
+            100% { width: 85%; }
         }
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
@@ -921,22 +924,46 @@
         }
 
         .vu-meter {
-            height: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .vu-channel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vu-channel-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 70px;
+        }
+
+        .vu-channel-label.mic { color: #10b981; }
+        .vu-channel-label.agent { color: #ef4444; }
+
+        .vu-track {
+            flex: 1;
+            height: 8px;
             background: var(--bg-card);
             border-radius: 4px;
             overflow: hidden;
-            display: flex;
-            align-items: flex-end;
-            gap: 2px;
-            padding: 4px;
         }
 
-        .vu-bar {
-            flex: 1;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: height 0.05s;
+        .vu-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.08s ease-out;
+            width: 0%;
         }
+
+        .vu-fill.mic { background: linear-gradient(90deg, #10b981, #34d399); }
+        .vu-fill.agent { background: linear-gradient(90deg, #ef4444, #f87171); }
 
         .context-panel {
             flex: 1;
@@ -1360,7 +1387,14 @@
                             <span class="panel-title">Audio Level</span>
                         </div>
                         <div class="vu-meter" id="vu-meter">
-                            <!-- Bars will be added by JS -->
+                            <div class="vu-channel">
+                                <span class="vu-channel-label mic">🎙️ Your Mic</span>
+                                <div class="vu-track"><div class="vu-fill mic" id="vu-mic"></div></div>
+                            </div>
+                            <div class="vu-channel">
+                                <span class="vu-channel-label agent">🎭 Adversary</span>
+                                <div class="vu-track"><div class="vu-fill agent" id="vu-agent"></div></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1417,13 +1451,9 @@
         const vuMeter = document.getElementById('vu-meter');
         const contextDisplay = document.getElementById('context-display');
 
-        // Initialize VU meter bars
-        for (let i = 0; i < 32; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'vu-bar';
-            bar.style.height = '10%';
-            vuMeter.appendChild(bar);
-        }
+        // VU meter fill elements
+        const vuMic = document.getElementById('vu-mic');
+        const vuAgent = document.getElementById('vu-agent');
 
         // Show enrolled state if voice already saved
         if (voiceEnrolled) {
@@ -1914,11 +1944,16 @@
                 isAdversarySpeaking = true;
                 micBtn.classList.add('muted-during-playback');
                 setTurnState('adversary');
+                // Animate adversary VU meter
+                if (vuMeter) vuMeter.classList.add('agent-speaking');
+                if (vuMic) vuMic.style.width = '2%'; // Mute mic indicator
 
                 source.onended = () => {
                     isAdversarySpeaking = false;
                     micBtn.classList.remove('muted-during-playback');
                     setTurnState('user');
+                    if (vuMeter) vuMeter.classList.remove('agent-speaking');
+                    if (vuAgent) vuAgent.style.width = '0%';
                 };
 
                 source.start();
@@ -2671,12 +2706,10 @@
                         analyzer.getByteFrequencyData(freqData);
                         analyzer.getFloatTimeDomainData(timeData);
 
-                        // VU meter
-                        const bars = vuMeter.querySelectorAll('.vu-bar');
-                        for (let i = 0; i < bars.length; i++) {
-                            const value = freqData[i] || 0;
-                            bars[i].style.height = `${Math.max(10, value / 2.55)}%`;
-                        }
+                        // VU meter — update mic level
+                        const avgLevel = Array.from(freqData.slice(0, 32)).reduce((a, b) => a + b, 0) / 32;
+                        const micLevel = Math.min(100, avgLevel / 1.5);
+                        if (vuMic) vuMic.style.width = `${Math.max(2, micLevel)}%`;
 
                         // Calculate audio features for emotion
                         const volume = calculateRMS(timeData);
