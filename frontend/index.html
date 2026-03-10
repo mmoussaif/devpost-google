@@ -805,9 +805,69 @@
             background: rgba(16, 185, 129, 0.2);
             color: #10b981;
         }
-        .transcript-speaker.user {
-            background: rgba(16, 185, 129, 0.2);
+
+        /* Turn indicator — prominent animated bar */
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .turn-indicator.adversary-turn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .turn-indicator.your-turn {
+            background: rgba(16, 185, 129, 0.15);
             color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .turn-indicator.waiting {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        /* Audio wave animation */
+        .audio-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 14px;
+        }
+        .audio-bars .bar {
+            width: 3px;
+            border-radius: 1px;
+            animation: audioWave 0.8s ease-in-out infinite;
+        }
+        .audio-bars .bar:nth-child(1) { animation-delay: 0s; height: 6px; }
+        .audio-bars .bar:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+        .audio-bars .bar:nth-child(3) { animation-delay: 0.3s; height: 14px; }
+        .audio-bars .bar:nth-child(4) { animation-delay: 0.45s; height: 8px; }
+
+        .adversary-turn .bar { background: #ef4444; }
+        .your-turn .bar { background: #10b981; }
+        .waiting .bar { background: #94a3b8; animation: none; height: 4px; }
+
+        @keyframes audioWave {
+            0%, 100% { transform: scaleY(0.4); }
+            50% { transform: scaleY(1); }
+        }
+
+        /* Transcript panel border glow during speech */
+        .transcript-panel.adversary-speaking {
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+        }
+        .transcript-panel.user-speaking {
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
         }
 
         .transcript-text {
@@ -1211,10 +1271,15 @@
                     </div>
 
                     <!-- LIVE TRANSCRIPT - Prominent position -->
-                    <div class="transcript-panel live-transcript">
+                    <div class="transcript-panel live-transcript" id="transcript-panel">
                         <div class="transcript-header">
                             <span class="panel-title">💬 LIVE CONVERSATION</span>
-                            <span class="transcript-speaker" id="transcript-speaker"></span>
+                            <div class="turn-indicator waiting" id="turn-indicator">
+                                <div class="audio-bars">
+                                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                                </div>
+                                <span id="turn-label">Waiting...</span>
+                            </div>
                         </div>
                         <p class="transcript-text" id="transcript">Waiting for conversation to start...</p>
                     </div>
@@ -1666,12 +1731,10 @@
                         });
 
                         // Update UI to show user speech
-                        const speakerEl = document.getElementById('transcript-speaker');
-                        const textEl = document.getElementById('transcript-text');
-                        if (speakerEl && textEl) {
-                            speakerEl.textContent = '🎤 YOU';
-                            speakerEl.className = 'transcript-speaker user';
-                            textEl.textContent = transcript;
+                        setTurnState('user');
+                        const transcriptEl = document.getElementById('transcript');
+                        if (transcriptEl) {
+                            transcriptEl.textContent = transcript;
                         }
 
                         // Analyze user response for tactics handling
@@ -1772,6 +1835,31 @@
             costTracker.audioOutputSeconds += bytes / 2 / 24000;
         }
 
+        // ===== Turn state management =====
+        function setTurnState(state) {
+            const indicator = document.getElementById('turn-indicator');
+            const label = document.getElementById('turn-label');
+            const panel = document.getElementById('transcript-panel');
+            if (!indicator || !label || !panel) return;
+
+            // Clear previous states
+            indicator.className = 'turn-indicator';
+            panel.classList.remove('adversary-speaking', 'user-speaking');
+
+            if (state === 'adversary') {
+                indicator.classList.add('adversary-turn');
+                label.textContent = '🎭 ADVERSARY SPEAKING';
+                panel.classList.add('adversary-speaking');
+            } else if (state === 'user') {
+                indicator.classList.add('your-turn');
+                label.textContent = '🎙️ YOUR TURN';
+                panel.classList.add('user-speaking');
+            } else {
+                indicator.classList.add('waiting');
+                label.textContent = 'Waiting...';
+            }
+        }
+
         function playBufferedAudio() {
             if (sessionEnded || audioChunksBuffer.length === 0) return;
 
@@ -1825,10 +1913,12 @@
                 // Mute user mic during adversary playback to prevent echo/feedback
                 isAdversarySpeaking = true;
                 micBtn.classList.add('muted-during-playback');
+                setTurnState('adversary');
 
                 source.onended = () => {
                     isAdversarySpeaking = false;
                     micBtn.classList.remove('muted-during-playback');
+                    setTurnState('user');
                 };
 
                 source.start();
@@ -2063,11 +2153,7 @@
                 });
 
                 // Show what the adversary said
-                const speakerEl = document.getElementById('transcript-speaker');
-                if (speakerEl) {
-                    speakerEl.textContent = '🎭 ADVERSARY';
-                    speakerEl.className = 'transcript-speaker adversary';
-                }
+                setTurnState('adversary');
                 transcript.textContent = data.content;
 
                 // Play buffered audio now that turn is complete
