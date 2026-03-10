@@ -903,6 +903,10 @@ if os.path.exists(frontend_path):
     async def serve_frontend():
         return FileResponse(os.path.join(frontend_path, "index.html"))
 
+    @app.get("/contract.html")
+    async def serve_contract():
+        return FileResponse(os.path.join(frontend_path, "contract.html"))
+
 
 if __name__ == "__main__":
     import uvicorn
