@@ -4021,24 +4021,34 @@
         // Update webcam border color based on overall score
         const webcamContainer = document.querySelector('.webcam-container');
         if (webcamContainer) {
-            // Calculate overall score (weighted average)
-            const overallScore = (visualState.eyeContact * 0.4) +
-                                 (visualState.shoulderPosture * 0.3) +
-                                 (visualState.gestureScore * 0.3);
+            // Calculate overall score - more forgiving weights
+            // Eye contact matters most, gestures are bonus
+            let overallScore = (visualState.eyeContact * 0.5) +
+                               (visualState.shoulderPosture * 0.35) +
+                               (visualState.gestureScore * 0.15);
+
+            // Bonus points for positive signals
+            if (visualState.steepling) overallScore += 10;
+            if (visualState.openPalms) overallScore += 5;
+            if (!visualState.leaningBack) overallScore += 5;
+
+            // Cap at 100
+            overallScore = Math.min(100, overallScore);
 
             // Remove all feedback classes
             webcamContainer.classList.remove('feedback-excellent', 'feedback-good', 'feedback-warning', 'feedback-poor');
 
-            // Apply appropriate class based on score and state
+            // Apply appropriate class - more achievable thresholds
             if (!visualState.faceVisible || visualState.tooClose || visualState.tooFar) {
                 webcamContainer.classList.add('feedback-poor');
-            } else if (visualState.faceTouching || visualState.facialTension > 60) {
+            } else if (visualState.faceTouching) {
                 webcamContainer.classList.add('feedback-warning');
-            } else if (overallScore >= 70) {
+            } else if (overallScore >= 55) {
+                // Green: Eye contact 50%+ and posture 50%+ gets you there
                 webcamContainer.classList.add('feedback-excellent');
-            } else if (overallScore >= 50) {
+            } else if (overallScore >= 40) {
                 webcamContainer.classList.add('feedback-good');
-            } else if (overallScore >= 30) {
+            } else if (overallScore >= 25) {
                 webcamContainer.classList.add('feedback-warning');
             } else {
                 webcamContainer.classList.add('feedback-poor');
