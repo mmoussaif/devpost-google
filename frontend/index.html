@@ -1877,6 +1877,7 @@
         let playbackAudioContext = null;
         let audioChunksBuffer = [];
         let isAdversarySpeaking = false; // Flag to mute user mic during adversary playback
+        let currentAudioSource = null; // Track current playing audio to stop it upon interruption
 
         function bufferAudioChunk(base64Data) {
             if (sessionEnded) return; // Don't buffer if session ended
@@ -1885,6 +1886,31 @@
             // Track cost: Gemini outputs at 24kHz, 16-bit PCM
             const bytes = atob(base64Data).length;
             costTracker.audioOutputSeconds += bytes / 2 / 24000;
+        }
+
+        // Instantly halt adversary audio playback on user barge-in
+        function clearAudio() {
+            if (currentAudioSource) {
+                try {
+                    currentAudioSource.stop();
+                    currentAudioSource.disconnect();
+                } catch (e) {
+                    console.warn('Error stopping current audio source', e);
+                }
+                currentAudioSource = null;
+            }
+            audioChunksBuffer = []; // Empty the queue
+            isAdversarySpeaking = false;
+            
+            // Release the UI lock so the user can speak freely
+            const micBtn = document.getElementById('mic-btn');
+            if (micBtn) micBtn.classList.remove('muted-during-playback');
+            setTurnState('user');
+            
+            const vuMeter = document.getElementById('vu-meter');
+            const vuAgent = document.getElementById('vu-agent');
+            if (vuMeter) vuMeter.classList.remove('agent-speaking');
+            if (vuAgent) vuAgent.style.width = '0%';
         }
 
         // ===== Turn state management =====
@@ -1999,6 +2025,7 @@
                 const source = playbackAudioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 source.connect(playbackAudioContext.destination);
+                currentAudioSource = source;
 
                 // Mute user mic during adversary playback to prevent echo/feedback
                 isAdversarySpeaking = true;
@@ -2382,6 +2409,9 @@
             } else if (data.type === 'adversary_audio') {
                 // Buffer audio chunks until turn complete
                 bufferAudioChunk(data.data);
+            } else if (data.type === 'clear_audio') {
+                // Instantly wipe pending playback queue and abort current audio — Barge-in recognized
+                clearAudio();
             } else if (data.type === 'warning') {
                 // Show timeout warning
                 showTimeoutWarning(data.content);

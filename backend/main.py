@@ -814,6 +814,15 @@ Say this opening NOW, then wait for their response.""")]
                     # Capture what the USER said (input transcription)
                     if hasattr(event, "input_transcription") and event.input_transcription:
                         trans = event.input_transcription
+                        
+                        # Detect interruption: If user starts speaking while adversary is generating
+                        if hasattr(trans, "text") and trans.text:
+                            # Send a signal to frontend to clear the adversary's audio playback queue immediately
+                            await websocket.send_json({
+                                "type": "clear_audio"
+                            })
+                            accumulated_text = "" # Reset accumulated trans as they were interrupted
+                            
                         if hasattr(trans, "text") and trans.text and trans.text.strip():
                             user_text = trans.text.strip()
                             # Add to history if not duplicate
