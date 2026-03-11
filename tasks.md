@@ -48,18 +48,29 @@ One flagship experience: **Secondus Buddy** — a seamless AI negotiation partne
 - [x] "THEM" label for counterparty (not "Buddy")
 - [x] Filtered internal messages from transcript
 
+### MediaPipe Presence Detection
+- [x] MediaPipe Face Landmarker (468 landmarks + 52 blendshapes)
+- [x] MediaPipe Pose Landmarker (33 body landmarks)
+- [x] Real-time eye contact tracking via iris position
+- [x] Posture analysis via shoulder/head alignment
+- [x] Tension detection via facial blendshapes
+- [x] Client-side ML processing (privacy-preserving)
+- [x] Live presence metrics overlay in WebcamPip
+- [x] Presence score breakdown in RecapOverlay
+- [x] 70/30 voice/presence weighted scoring
+
 ## Remaining Tasks
 
-### Demo Hardening
-- [ ] Create 2 curated demo scenarios
-  - Procurement squeeze ($50K vs $80K)
-  - Investor/founder pressure
-- [ ] Script 4-minute demo arc
-- [ ] Test full flow on Cloud Run
-- [ ] Add graceful fallbacks for degraded modes
+### GCP Deployment ✓
+- [x] Build frontend for production (`npm run build`)
+- [x] Copy dist to backend/frontend-dist
+- [x] Deploy to Cloud Run (`./deploy.sh`)
+- [x] Health check passing
+- [ ] Test full flow on Cloud Run (WebSocket + MediaPipe)
+
+**Live URL:** https://secondus-853650293423.us-central1.run.app
 
 ### Submission Deliverables
-- [ ] Deploy final version to Cloud Run
 - [ ] Record proof of live Google Cloud deployment
 - [ ] Record 4-minute demo video
 - [ ] Write Devpost submission copy
