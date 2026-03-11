@@ -9,8 +9,18 @@ import asyncio
 import base64
 import os
 import uuid
+import warnings
 from contextlib import asynccontextmanager
 from typing import Any
+
+# Suppress Pydantic serialization warning for response_modalities enum
+# This is a known issue in Google ADK's internal serialization
+warnings.filterwarnings(
+    "ignore",
+    message="Pydantic serializer warnings",
+    category=UserWarning,
+    module="pydantic.main",
+)
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -465,7 +475,7 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
             """Forward agent responses to the client."""
             try:
                 run_config = RunConfig(
-                    response_modalities=["AUDIO"],
+                    response_modalities=[types.Modality.AUDIO],
                     streaming_mode=StreamingMode.BIDI,
                     output_audio_transcription=types.AudioTranscriptionConfig(),
                     input_audio_transcription=types.AudioTranscriptionConfig(),

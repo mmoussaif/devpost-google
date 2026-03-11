@@ -17,60 +17,79 @@ function base64ToFloat32(base64: string): Float32Array {
 export function useAudioPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const bufferRef = useRef<string[]>([]);
   const ctxRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const queueRef = useRef<Float32Array[]>([]);
+  const isProcessingRef = useRef(false);
+  const nextPlayTimeRef = useRef(0);
+  const activeSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
 
-  const bufferChunk = useCallback((base64: string) => {
-    bufferRef.current.push(base64);
-  }, []);
-
-  const playBuffered = useCallback(() => {
-    const chunks = bufferRef.current;
-    if (chunks.length === 0) return;
-
-    const decoded = chunks.map(base64ToFloat32);
-    let totalLength = 0;
-    for (const d of decoded) totalLength += d.length;
-    if (totalLength === 0) return;
-
-    const merged = new Float32Array(totalLength);
-    let offset = 0;
-    for (const d of decoded) {
-      merged.set(d, offset);
-      offset += d.length;
-    }
-
-    bufferRef.current = [];
-
+  const getContext = useCallback(() => {
     if (!ctxRef.current || ctxRef.current.state === "closed") {
       ctxRef.current = new AudioContext({ sampleRate: 24000 });
     }
-    const ctx = ctxRef.current;
+    return ctxRef.current;
+  }, []);
 
-    const audioBuffer = ctx.createBuffer(1, merged.length, 24000);
-    audioBuffer.getChannelData(0).set(merged);
+  const processQueue = useCallback(() => {
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
 
-    sourceRef.current?.stop();
-    const source = ctx.createBufferSource();
-    sourceRef.current = source;
-    source.buffer = audioBuffer;
-    source.connect(ctx.destination);
+    const ctx = getContext();
 
+    while (queueRef.current.length > 0) {
+      const samples = queueRef.current.shift()!;
+      if (samples.length === 0) continue;
+
+      const audioBuffer = ctx.createBuffer(1, samples.length, 24000);
+      audioBuffer.getChannelData(0).set(samples);
+
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+
+      activeSourcesRef.current.add(source);
+      source.onended = () => {
+        activeSourcesRef.current.delete(source);
+        if (activeSourcesRef.current.size === 0 && queueRef.current.length === 0) {
+          setIsPlaying(false);
+        }
+      };
+
+      const now = ctx.currentTime;
+      const startTime = Math.max(now, nextPlayTimeRef.current);
+      source.start(startTime);
+      nextPlayTimeRef.current = startTime + audioBuffer.duration;
+    }
+
+    isProcessingRef.current = false;
+  }, [getContext]);
+
+  const bufferChunk = useCallback((base64: string) => {
+    const samples = base64ToFloat32(base64);
+    if (samples.length === 0) return;
+
+    queueRef.current.push(samples);
     setIsPlaying(true);
-    source.onended = () => {
-      setIsPlaying(false);
-      sourceRef.current = null;
-    };
-    source.start();
+    processQueue();
+  }, [processQueue]);
+
+  const playBuffered = useCallback(() => {
+    // No-op now - audio plays immediately as chunks arrive
+    // Kept for API compatibility
   }, []);
 
   const clearAudio = useCallback(() => {
-    if (sourceRef.current) {
-      sourceRef.current.onended = null;
-      sourceRef.current.stop();
-      sourceRef.current = null;
+    queueRef.current = [];
+    for (const source of activeSourcesRef.current) {
+      try {
+        source.onended = null;
+        source.stop();
+      } catch {
+        // Source may have already ended
+      }
     }
+    activeSourcesRef.current.clear();
+    nextPlayTimeRef.current = 0;
     setIsPlaying(false);
   }, []);
 

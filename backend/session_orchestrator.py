@@ -316,8 +316,10 @@ class BuddySessionOrchestrator:
             )
 
         # Only emit drift signals if screen has been shared (real contract grounding)
-        # Otherwise show as "Goal mismatch" to make it clear it's comparing against user's stated goals
+        # For goal mismatch (no screen), wait until conversation has developed (4+ turns)
         has_screen = contract_state.latest_screen is not None
+        turn_count = momentum.get("turns", 0)
+        
         for diff in compare_terms(terms, spoken_terms):
             if has_screen:
                 await self.emit_signal_alert(
@@ -326,7 +328,8 @@ class BuddySessionOrchestrator:
                     f"Contract says {diff['contract']}. They said {diff['spoken']} for {diff['field']}.",
                     "drift",
                 )
-            else:
+            elif turn_count >= 4:
+                # Only show goal mismatch after conversation develops
                 await self.emit_signal_alert(
                     "watch",
                     "Goal mismatch",
@@ -547,15 +550,40 @@ CRITICAL: You now know the contract terms. Use them naturally in negotiation. DO
 
         if hasattr(event, "input_transcription") and event.input_transcription:
             trans = event.input_transcription
+            user_text = ""
+            if hasattr(trans, "text") and trans.text:
+                user_text = trans.text.strip()
 
-            if hasattr(trans, "text") and trans.text and trans.text.strip():
+            # Strong noise filtering to prevent false interruptions
+            # Common noise patterns that get falsely transcribed
+            noise_patterns = {
+                "uh", "um", "ah", "oh", "hmm", "hm", "mm", "mhm", 
+                "yeah", "yep", "ok", "okay", "right", "sure",
+                ".", "..", "...", "-", "--", "---",
+                "the", "a", "i", "it", "is", "so", "and", "but",
+            }
+            
+            words = user_text.lower().split() if user_text else []
+            word_count = len(words)
+            char_count = len(user_text)
+            
+            # Filter out noise: must have 4+ words OR 2+ words with 15+ chars
+            # Also exclude single noise words
+            is_noise = (
+                word_count == 0 or
+                (word_count == 1 and words[0] in noise_patterns) or
+                (word_count == 2 and all(w in noise_patterns for w in words)) or
+                (word_count < 4 and char_count < 15)
+            )
+            is_real_speech = not is_noise
+
+            if is_real_speech:
                 await self.emit({"type": "audio.clear"})
                 if self.state.accumulated_text.strip():
-                    await self.emit_transcript_append("adversary", self.state.accumulated_text.strip() + " -- [interrupted]")
+                    await self.emit_transcript_append("adversary", self.state.accumulated_text.strip() + " — [interrupted]")
                 self.state.accumulated_text = ""
 
-            if hasattr(trans, "text") and trans.text and trans.text.strip():
-                user_text = trans.text.strip()
+            if is_real_speech:
                 lower = user_text.lower()
                 if "share" in lower and "screen" in lower:
                     self.live_queue.send_content(
@@ -641,7 +669,7 @@ CRITICAL: You now know the contract terms. Use them naturally in negotiation. DO
         low_cost = self.session_data.get("low_cost_mode", False)
         try:
             run_config = RunConfig(
-                response_modalities=["TEXT"] if low_cost else ["AUDIO"],
+                response_modalities=[types.Modality.TEXT] if low_cost else [types.Modality.AUDIO],
                 streaming_mode=StreamingMode.BIDI,
                 output_audio_transcription=None if low_cost else types.AudioTranscriptionConfig(),
                 input_audio_transcription=types.AudioTranscriptionConfig(),
