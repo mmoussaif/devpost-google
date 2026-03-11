@@ -221,6 +221,28 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 2. **Hybrid Detection** — LLM + deterministic signals
 3. **Manual Document Control** — User-driven sharing
 4. **Fair Scoring** — No camera penalty
+5. **Research-Backed** — Harvard PON negotiation frameworks
+
+## Research Foundation
+
+Secondus coaching is grounded in proven negotiation research:
+
+| Source | Concepts Used |
+|--------|---------------|
+| **Harvard Program on Negotiation (PON)** | BATNA, anchoring, interest-based bargaining |
+| **"Getting to Yes" (Fisher & Ury)** | Principled negotiation, separating people from problems |
+| **"Never Split the Difference" (Chris Voss)** | Tactical empathy, labeling, calibrated questions |
+| **"Bargaining for Advantage" (G. Richard Shell)** | Leverage, information exchange, ethical boundaries |
+
+### Tactics We Detect
+
+| Tactic | Source | Counter-Strategy |
+|--------|--------|------------------|
+| **Anchoring** | Harvard PON | Re-anchor on value, don't react to first offer |
+| **Artificial Urgency** | Voss | Probe the real deadline, slow down |
+| **Nibbling** | Shell | Trade, don't give away extras |
+| **Limited Authority** | Fisher & Ury | Establish decision-makers early |
+| **Good Cop/Bad Cop** | Harvard PON | Address the dynamic directly |
 
 ## Author
 

@@ -236,14 +236,23 @@ flowchart LR
 
 ### Signal Types
 
-| Signal | Urgency | Trigger |
-|--------|---------|---------|
-| **Anchoring Pressure** | urgent | "$50K budget", low price anchor |
-| **Timeline Pressure** | watch | "6 weeks", artificial urgency |
-| **Contract Drift** | urgent | Spoken terms ≠ written terms |
-| **Goal Mismatch** | watch | Offer differs from target |
-| **Conversation Circling** | note | LLM + turns ≥ 5 |
-| **Stalling Detected** | watch | 3+ stalling patterns |
+| Signal | Urgency | Trigger | Research Basis |
+|--------|---------|---------|----------------|
+| **Anchoring Pressure** | urgent | "$50K budget", low price anchor | Harvard PON |
+| **Timeline Pressure** | watch | "6 weeks", artificial urgency | Chris Voss |
+| **Contract Drift** | urgent | Spoken terms ≠ written terms | Fisher & Ury |
+| **Goal Mismatch** | watch | Offer differs from target | BATNA theory |
+| **Conversation Circling** | note | LLM + turns ≥ 5 | G. Richard Shell |
+| **Stalling Detected** | watch | 3+ stalling patterns | Tactical empathy |
+
+### Research Foundation
+
+Coaching recommendations are grounded in established negotiation research:
+
+- **Harvard Program on Negotiation (PON)** — BATNA, anchoring, interest-based bargaining
+- **"Getting to Yes" (Fisher & Ury)** — Principled negotiation, separating positions from interests
+- **"Never Split the Difference" (Chris Voss)** — Tactical empathy, calibrated questions
+- **"Bargaining for Advantage" (G. Richard Shell)** — Leverage, ethical boundaries
 
 ### Rate Limiting
 Signals are rate-limited to prevent spam:
