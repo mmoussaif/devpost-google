@@ -190,6 +190,17 @@ def build_buddy_recap(session_data: dict[str, Any]) -> dict[str, Any]:
         "deal_closed": deal_closed,
     }
 
+    # Build visual_summary in the format frontend expects
+    visual_summary = None
+    if camera_enabled and visual:
+        visual_summary = {
+            "avgEyeContact": visual.get("avgEyeContact", 50),
+            "avgPosture": visual.get("avgPosture", 50),
+            "avgTension": visual.get("avgTension", 30),
+            "dominantEmotion": visual.get("dominantEmotion", "neutral"),
+            "totalSamples": visual.get("totalSamples", 0),
+        }
+
     return {
         "score": score,
         "scoring_breakdown": scoring_breakdown,
@@ -203,7 +214,7 @@ def build_buddy_recap(session_data: dict[str, Any]) -> dict[str, Any]:
         "next_focus": improvements[0] if improvements else "Keep sessions longer and respond directly to pressure.",
         "strengths": strengths[:5] or ["Complete a few more turns for sharper feedback."],
         "moments": coaching[-3:],
-        "visual_summary": visual or None,
+        "visual_summary": visual_summary,
         "camera_enabled": camera_enabled,
         "improvements": improvements[:6],
     }

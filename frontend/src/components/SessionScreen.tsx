@@ -14,6 +14,7 @@ import { useAudioCapture } from "../hooks/useAudioCapture";
 import { useAudioPlayback } from "../hooks/useAudioPlayback";
 import { useScreenShare } from "../hooks/useScreenShare";
 import { useCamera } from "../hooks/useCamera";
+import type { PresenceMetrics } from "../hooks/usePresenceDetection";
 import SessionControls from "./SessionControls";
 import ChatMessage from "./ChatMessage";
 import WebcamPip from "./WebcamPip";
@@ -63,6 +64,13 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
   const lastAdversaryTextRef = useRef("");
   const lastUserTextRef = useRef("");
   const cameraActiveRef = useRef(false);
+  
+  // Accumulate presence metrics for averaging
+  const presenceMetricsRef = useRef<{
+    eyeContact: number[];
+    posture: number[];
+    tension: number[];
+  }>({ eyeContact: [], posture: [], tension: [] });
 
   const { bufferChunk, playBuffered, clearAudio, isPlaying } = useAudioPlayback();
   isAdversarySpeakingRef.current = isPlaying;
@@ -286,7 +294,28 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
   });
 
   const screenShare = useScreenShare();
-  const camera = useCamera();
+  
+  const lastMetricsSentRef = useRef<number>(0);
+  const handlePresenceMetrics = useCallback(
+    (metrics: PresenceMetrics) => {
+      // Accumulate for averaging
+      presenceMetricsRef.current.eyeContact.push(metrics.eye_contact);
+      presenceMetricsRef.current.posture.push(metrics.posture);
+      presenceMetricsRef.current.tension.push(metrics.tension);
+      
+      // Rate-limit sending to backend
+      const now = Date.now();
+      if (now - lastMetricsSentRef.current < 2000) return;
+      lastMetricsSentRef.current = now;
+      session.send({ type: "presence_metrics", data: metrics });
+    },
+    [session]
+  );
+  
+  const camera = useCamera({
+    onPresenceMetrics: handlePresenceMetrics,
+    onError: handleError,
+  });
   const camVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Create session on mount
@@ -378,6 +407,18 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     screenShare.stop();
     camera.stop();
     setPhase("ended");
+    
+    // Calculate presence averages if camera was used
+    const pm = presenceMetricsRef.current;
+    if (pm.eyeContact.length > 0) {
+      const avg = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+      recordingRef.current.visualPresence = {
+        avgEyeContact: avg(pm.eyeContact),
+        avgPosture: avg(pm.posture),
+        avgTension: avg(pm.tension),
+      };
+    }
+    
     onSessionEnd(recordingRef.current);
   };
 
@@ -529,6 +570,8 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
       <WebcamPip
         visible={camera.isOn}
         onVideoRef={useCallback((el: HTMLVideoElement) => { camVideoRef.current = el; }, [])}
+        metrics={camera.latestMetrics}
+        presenceReady={camera.presenceReady}
       />
 
       {/* Coach card */}

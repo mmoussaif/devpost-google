@@ -15,14 +15,16 @@ The product should feel:
 ### Frontend
 - **Framework:** React 18 + TypeScript + Vite
 - **Styling:** Tailwind CSS v4
-- **Components:** SessionScreen, DocumentAnalysis, CoachCard, SignalToast, WebcamPip
+- **ML:** MediaPipe Tasks Vision (Face + Pose Landmarker)
+- **Components:** SessionScreen, DocumentAnalysis, CoachCard, SignalToast, WebcamPip, RecapOverlay
 
 ### Backend
 - **Framework:** FastAPI + Python 3.13
 - **Orchestrator:** session_orchestrator.py (state machine)
 - **Coach:** coach_engine.py (LLM-powered with CLOSING/CIRCLING detection)
 - **Contract:** contract_state.py (term extraction and drift detection)
-- **Recap:** recap_engine.py (dynamic scoring)
+- **Recap:** recap_engine.py (dynamic scoring with presence)
+- **Presence:** presence_engine.py (MediaPipe metrics structure)
 
 ### Key Features Working
 - LLM-based deal closure detection
@@ -30,8 +32,11 @@ The product should feel:
 - Manual document capture and share flow
 - Contract drift detection with evidence
 - Signal rate limiting
+- **MediaPipe presence detection** (eye contact, posture, tension)
 - Camera-aware scoring (70/30 split when enabled)
 - Session never auto-ends (user clicks End)
+- **Presence metrics displayed in WebcamPip overlay**
+- **Presence summary in RecapOverlay**
 
 ## Product Priorities
 
@@ -57,6 +62,13 @@ Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 - User clicks "Share" to send context to counterpart
 - Context sent to AI only once per explicit share
 
+### 4. Real-Time Presence Analysis
+- MediaPipe Face Landmarker (468 landmarks + 52 blendshapes)
+- MediaPipe Pose Landmarker (33 body landmarks)
+- All processing client-side (privacy-preserving)
+- Metrics: eye_contact, posture, tension (0-100 each)
+- Accumulated during session, averaged for recap
+
 ## Workflow
 
 ### Plan Before Large Changes
@@ -74,6 +86,7 @@ Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 - Test interruption handling when touching audio.
 - Test transcript accuracy when touching voice pipelines.
 - Test signal rate limiting when touching detection.
+- Test presence detection when touching camera/MediaPipe.
 
 ## Architecture Rules
 
@@ -82,6 +95,7 @@ Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 - Signal emission with rate limiting
 - Transcript accumulation
 - Deal closure tracking
+- Presence snapshot updates
 
 ### LLM Detection Piggybacks on Coaching
 - Same API call returns coaching + detection signals
@@ -94,24 +108,81 @@ Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 | Disabled | 100% | 0% |
 | Enabled | 70% | 30% |
 
+### Presence Detection Is Client-Side
+- MediaPipe runs entirely in browser
+- No video sent to server (privacy)
+- Only aggregated metrics sent via WebSocket
+- Metrics accumulated and averaged on session end
+
 ### Signals Are Rate Limited
 - Track last emission time per signal type
 - 30s cooldown for urgent signals
 - 45s cooldown for watch/note signals
+
+## Scoring Formula
+
+### Voice Score (0-100)
+```
+turns = min(30, userTurns * 10)
+tactics = min(25, uniqueTactics * 8)
+progress = min(20, progressInstances * 10)
+outcome = 25 if dealClosed else 0
+penalties = stallingInstances * 5 + circlingInstances * 3
+
+voiceScore = clamp(turns + tactics + progress + outcome - penalties, 0, 100)
+```
+
+### Presence Score (0-100, camera only)
+```
+eye = min(40, avgEyeContact * 0.4)
+posture = min(35, avgPosture * 0.35)
+tension = min(25, (100 - avgTension) * 0.25)
+
+presenceScore = clamp(eye + posture + tension, 0, 100)
+```
+
+### Final Score
+```
+if cameraEnabled:
+    final = voiceScore * 0.70 + presenceScore * 0.30
+else:
+    final = voiceScore
+
+# Gates
+if !userSpoke: final = 0
+elif userTurns < 2: final = min(final, 30)
+elif userTurns < 4: final = min(final, 60)
+
+# Deal bonus
+if dealClosed && userSpoke: final = max(final, 75)
+
+final = clamp(final, 10, 100)
+```
 
 ## UX Rules
 
 ### Session Flow
 1. Launch → Click "Start Negotiation"
 2. Session → Transcript + Coach Card + Signals
-3. Recap → User clicks "End" → Score + Summary
+3. Recap → User clicks "End" → Score + Presence + Summary
 
 ### Session UI Zones
 - **Left:** Document Scanner (when screen sharing)
 - **Center:** Transcript with YOUR TURN indicator
 - **Bottom:** Coach Card with "Say this now"
 - **Top Right:** Signal toasts (auto-dismiss)
-- **Bottom Right:** Webcam PiP (when camera on)
+- **Bottom Right:** Webcam PiP with presence metrics overlay
+
+### Webcam PiP Overlay
+- Shows real-time eye contact, posture, relaxation bars
+- Color-coded: green (≥70), amber (40-69), red (<40)
+- "Loading AI..." while MediaPipe initializes
+
+### Recap Presence Section
+- Eye Contact bar with score
+- Posture bar with score
+- Relaxation bar (100 - tension)
+- Feedback in strengths/improvements based on averages
 
 ### Signal Display
 - One signal type visible at a time (rate limited)
@@ -139,6 +210,13 @@ Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 - LLM detection for semantic concepts (closure, circling)
 - Deterministic for patterns (anchoring, timeline)
 - Hybrid when both must agree
+
+### MediaPipe Presence
+- Face Landmarker: 468 landmarks + 52 blendshapes
+- Pose Landmarker: 33 landmarks (lite model)
+- Process at 5 FPS to balance performance
+- Send metrics to backend every 2s (rate-limited)
+- Accumulate all metrics, average on session end
 
 ## Local Development
 
@@ -179,9 +257,13 @@ This builds frontend, copies to backend, and deploys to Cloud Run.
 | `backend/coach_engine.py` | LLM coaching + detection |
 | `backend/contract_state.py` | Term extraction + drift |
 | `backend/recap_engine.py` | Scoring + recap generation |
+| `backend/presence_engine.py` | Presence metrics structure |
 | `backend/adversary.py` | AI counterparty agent |
 | `frontend/src/components/SessionScreen.tsx` | Main session UI |
-| `frontend/src/components/RecapOverlay.tsx` | Session recap display |
+| `frontend/src/components/WebcamPip.tsx` | Camera PiP + presence overlay |
+| `frontend/src/components/RecapOverlay.tsx` | Session recap + presence display |
 | `frontend/src/components/DocumentAnalysis.tsx` | Document scanner panel |
 | `frontend/src/hooks/useSession.ts` | WebSocket management |
+| `frontend/src/hooks/useCamera.ts` | Webcam + presence integration |
+| `frontend/src/hooks/usePresenceDetection.ts` | MediaPipe Face + Pose |
 | `frontend/src/hooks/useScreenShare.ts` | Screen capture + scanning |

@@ -8,6 +8,7 @@
 [![Gemini](https://img.shields.io/badge/Model-Gemini%20Live%202.5%20Flash-orange)]()
 [![Cloud Run](https://img.shields.io/badge/Hosted-Google%20Cloud%20Run-green)]()
 [![ADK](https://img.shields.io/badge/Framework-Google%20ADK-yellow)]()
+[![MediaPipe](https://img.shields.io/badge/ML-MediaPipe%20Vision-purple)]()
 
 ## The Problem
 
@@ -22,8 +23,9 @@ Secondus is a **real-time negotiation copilot** that:
 | **Real-Time Coaching** | "Say this now" recommendations in context |
 | **Contract Drift Detection** | Catches when spoken terms differ from written |
 | **Tactic Detection** | Identifies anchoring, timeline pressure, etc. |
+| **Presence Analysis** | MediaPipe tracks eye contact, posture, tension |
 | **LLM-Powered Detection** | Semantic understanding of deal closure and circling |
-| **Dynamic Scoring** | Fair evaluation with or without camera |
+| **Dynamic Scoring** | Fair 70/30 voice/presence weighting with camera |
 
 ## Demo
 
@@ -37,6 +39,8 @@ Secondus is a **real-time negotiation copilot** that:
 │  💬 SAY THIS NOW                                             │
 │  "Thanks for sharing. Our engagements typically start at    │
 │   $80K to ensure comprehensive results."                    │
+│  ───────────────────────────────────────────────────────────│
+│  👁 Eye Contact: 77  |  🧍 Posture: 77  |  😌 Relaxed: 65    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -48,12 +52,14 @@ flowchart LR
         React[React UI]
         Audio[Mic 16kHz]
         Screen[Screen Capture]
+        MediaPipe[MediaPipe<br/>Presence Detection]
     end
     
     subgraph Backend
         Orch[Orchestrator]
         Coach[Coach Engine]
         Contract[Contract State]
+        Recap[Recap Engine]
     end
     
     subgraph Google
@@ -64,16 +70,42 @@ flowchart LR
     React <-->|WebSocket| Orch
     Audio --> Orch
     Screen --> Contract
+    MediaPipe -->|metrics| Orch
     Orch --> Coach
     Coach --> Live
     Contract --> Vision
+    Orch --> Recap
 ```
 
 See [AGENTS.md](AGENTS.md) for detailed architecture documentation.
 
 ## Key Features
 
-### 1. LLM-Powered Detection
+### 1. Real-Time Presence Detection (MediaPipe)
+
+Secondus uses **MediaPipe Tasks Vision** running entirely in the browser:
+
+```mermaid
+flowchart LR
+    Webcam[Webcam<br/>640x480] --> Face[Face Landmarker<br/>468 landmarks]
+    Webcam --> Pose[Pose Landmarker<br/>33 landmarks]
+    Face --> Eye[Eye Contact<br/>Iris tracking]
+    Face --> Tension[Tension<br/>52 blendshapes]
+    Pose --> Posture[Posture<br/>Shoulder alignment]
+    Eye --> Score[Presence Score]
+    Tension --> Score
+    Posture --> Score
+```
+
+| Metric | How It's Calculated |
+|--------|---------------------|
+| **Eye Contact** | Iris position relative to eye corners (gaze direction) |
+| **Posture** | Shoulder tilt + head alignment |
+| **Tension** | Brow furrow + jaw clench + squinting - smiling |
+
+**Privacy-First:** All analysis runs client-side. No video leaves your browser.
+
+### 2. LLM-Powered Detection
 
 The coaching engine returns structured signals:
 
@@ -83,7 +115,7 @@ CIRCLING: YES/NO - Is conversation stuck?
 SAY THIS: [phrase]
 ```
 
-### 2. Contract Drift Detection
+### 3. Contract Drift Detection
 
 Visual + audio comparison:
 
@@ -93,7 +125,7 @@ Visual + audio comparison:
 ⚠️ DRIFT: Payment terms conflict
 ```
 
-### 3. Document Scanner
+### 4. Document Scanner
 
 Manual capture and share flow:
 
@@ -102,20 +134,84 @@ Manual capture and share flow:
 3. **Click "Done Scanning"** → Review extracted terms
 4. **Click "Share"** → Send context to counterpart
 
-### 4. Dynamic Scoring
+### 5. Dynamic Scoring System
 
 | Camera State | Voice Weight | Presence Weight |
 |--------------|--------------|-----------------|
 | Disabled | 100% | 0% |
 | Enabled | 70% | 30% |
 
-No penalty for disabled camera.
+**No penalty for disabled camera.** See [Scoring System](#scoring-system) for details.
+
+## Scoring System
+
+### How Your Score is Calculated
+
+The final score is a weighted composite of **voice performance** and **presence metrics**.
+
+#### Voice Score (0-100 points)
+
+| Component | Max Points | How It's Earned |
+|-----------|------------|-----------------|
+| Turn Participation | 30 | 10 pts per turn you take |
+| Tactics Encountered | 25 | 8 pts per unique tactic faced |
+| Progress Made | 20 | 10 pts per progress signal |
+| Deal Closure | 25 | Full points if deal closed |
+| *Penalties* | -5/-3 | Stalling (-5), Circling (-3) |
+
+#### Presence Score (0-100 points, camera only)
+
+| Component | Max Points | How It's Earned |
+|-----------|------------|-----------------|
+| Eye Contact | 40 | `avgEyeContact × 0.4` |
+| Posture | 35 | `avgPosture × 0.35` |
+| Low Tension | 25 | `(100 - avgTension) × 0.25` |
+
+#### Final Calculation
+
+```
+If camera enabled:
+    Final = (Voice × 0.70) + (Presence × 0.30)
+Else:
+    Final = Voice × 1.00
+
+// Participation gates
+If no speech: Final = 0
+If < 2 turns: Final = min(Final, 30)
+If < 4 turns: Final = min(Final, 60)
+
+// Deal bonus
+If deal closed: Final = max(Final, 75)
+```
+
+### Example Score Breakdown
+
+```
+Session: 4 turns, 3 tactics, 1 progress, deal closed
+Camera: Eye 77, Posture 77, Tension 35
+
+Voice Score:
+  Turns:    30 (4 × 10, capped)
+  Tactics:  24 (3 × 8)
+  Progress: 10 (1 × 10)
+  Outcome:  25 (deal closed)
+  Total:    89/100
+
+Presence Score:
+  Eye:      31 (77 × 0.4)
+  Posture:  27 (77 × 0.35)
+  Tension:  16 ((100-35) × 0.25)
+  Total:    74/100
+
+Final: 89×0.7 + 74×0.3 = 85/100
+```
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | Frontend | React 18, TypeScript, Tailwind CSS v4, Vite |
+| ML | MediaPipe Tasks Vision (Face + Pose Landmarker) |
 | Backend | FastAPI, Python 3.13 |
 | AI | Gemini Live 2.5 Flash, Gemini 2.0 Flash (Vision) |
 | Deployment | Google Cloud Run |
@@ -166,13 +262,19 @@ secondus/
 │   ├── coach_engine.py         # LLM coaching + detection
 │   ├── contract_state.py       # Contract term management
 │   ├── recap_engine.py         # Scoring and recap
-│   ├── presence_engine.py      # Presence metrics
+│   ├── presence_engine.py      # Presence metrics structure
 │   └── adversary.py            # AI counterparty
 ├── frontend/
 │   ├── src/
 │   │   ├── components/         # React components
-│   │   ├── hooks/              # Custom hooks
-│   │   └── types.ts            # TypeScript types
+│   │   │   ├── SessionScreen.tsx
+│   │   │   ├── WebcamPip.tsx   # Presence overlay
+│   │   │   └── RecapOverlay.tsx
+│   │   ├── hooks/
+│   │   │   ├── useSession.ts
+│   │   │   ├── useCamera.ts
+│   │   │   └── usePresenceDetection.ts  # MediaPipe integration
+│   │   └── types.ts
 │   └── index.html
 ├── AGENTS.md                   # Architecture docs
 ├── CLAUDE.md                   # Development guidelines
@@ -189,6 +291,7 @@ secondus/
 | `{ type: "start" }` | Begin negotiation |
 | `{ type: "audio", data }` | Send audio chunk |
 | `{ type: "screen", data }` | Send screen frame |
+| `{ type: "presence_metrics", data }` | Send presence data |
 | `{ type: "share_contract" }` | Share terms with counterpart |
 | `{ type: "end" }` | End session |
 
@@ -210,7 +313,7 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 
 | Requirement | Implementation |
 |-------------|----------------|
-| Live Agent | Real-time voice + vision |
+| Live Agent | Real-time voice + vision + presence |
 | Gemini Live API | Native audio via ADK |
 | Google Cloud | Cloud Run deployment |
 | Beyond Text Box | Proactive coaching, not Q&A |
@@ -219,8 +322,8 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 
 1. **Coach, Not Commentator** — Exact phrases to say
 2. **Hybrid Detection** — LLM + deterministic signals
-3. **Manual Document Control** — User-driven sharing
-4. **Fair Scoring** — No camera penalty
+3. **Client-Side ML** — MediaPipe runs in browser (privacy)
+4. **Fair Scoring** — 70/30 voice/presence, no camera penalty
 5. **Research-Backed** — Harvard PON negotiation frameworks
 
 ## Research Foundation

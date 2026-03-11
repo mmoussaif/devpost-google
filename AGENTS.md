@@ -1,6 +1,6 @@
 # Secondus — Architecture & System Design
 
-> Secondus is a real-time negotiation copilot. It hears the exchange, sees written terms, detects pressure tactics, and gives the user the best next line to say.
+> Secondus is a real-time negotiation copilot. It hears the exchange, sees written terms, detects pressure tactics, analyzes your visual presence, and gives the user the best next line to say.
 
 ## Product Overview
 
@@ -8,6 +8,7 @@ Secondus is an AI-powered negotiation practice partner that:
 - **Speaks** as a tough counterparty (Alex Chen, TechNova CTO)
 - **Listens** to your responses with real-time transcription
 - **Sees** shared contract documents via screen capture
+- **Watches** your presence via MediaPipe (eye contact, posture, tension)
 - **Detects** pressure tactics, contract drift, and deal closure
 - **Coaches** you with contextual "Say this now" recommendations
 
@@ -20,7 +21,7 @@ flowchart TB
         Audio[Mic Capture<br/>16kHz PCM]
         Playback[Audio Playback<br/>24kHz PCM]
         Screen[Screen Capture<br/>JPEG Frames]
-        Camera[Webcam PiP<br/>Self-view]
+        Camera[Webcam + MediaPipe<br/>Presence Detection]
     end
 
     subgraph Backend["Backend (FastAPI/Python)"]
@@ -30,6 +31,7 @@ flowchart TB
         Contract[Contract State]
         Signals[Signal Detection]
         Recap[Recap Engine]
+        Presence[Presence Engine]
     end
 
     subgraph Google["Google Cloud"]
@@ -40,10 +42,12 @@ flowchart TB
 
     Audio -->|audio chunks| WS
     Screen -->|capture frames| WS
+    Camera -->|presence metrics| WS
     WS --> Orchestrator
     Orchestrator --> Coach
     Orchestrator --> Contract
     Orchestrator --> Signals
+    Orchestrator --> Presence
     Coach --> Live
     Contract --> Vision
     Orchestrator -->|transcript, coaching, signals| UI
@@ -57,6 +61,7 @@ flowchart TB
 sequenceDiagram
     participant User
     participant UI as React UI
+    participant MediaPipe as MediaPipe
     participant WS as WebSocket
     participant Orch as Orchestrator
     participant Coach as Coach Engine
@@ -69,6 +74,17 @@ sequenceDiagram
     Gemini-->>Orch: Adversary speaks
     Orch-->>UI: transcript.append + media.audio
     
+    User->>UI: Enable camera
+    UI->>MediaPipe: Start presence detection
+    
+    loop Every 200ms (5 FPS)
+        MediaPipe->>MediaPipe: Analyze face + pose
+        MediaPipe-->>UI: { eye_contact, posture, tension }
+    end
+    
+    UI->>WS: { type: "presence_metrics", data }
+    WS->>Orch: Update presence snapshot
+    
     User->>UI: Speaks into mic
     UI->>WS: { type: "audio", data: base64 }
     WS->>Orch: Process audio
@@ -80,9 +96,253 @@ sequenceDiagram
     Orch-->>UI: signal.alert (if detected)
     
     User->>UI: Click "End"
+    UI->>UI: Calculate presence averages
     UI->>WS: { type: "end" }
-    Orch->>Recap: Generate summary
+    Orch->>Recap: Generate summary with presence
     Orch-->>UI: session.complete
+```
+
+## Presence Detection System (MediaPipe)
+
+### Overview
+
+Secondus uses **MediaPipe Tasks Vision** to analyze the user's webcam feed in real-time, extracting:
+- **Eye Contact** (0-100): Gaze direction relative to camera
+- **Posture** (0-100): Shoulder alignment and head position
+- **Tension** (0-100): Facial muscle indicators (brow, jaw, squinting)
+
+```mermaid
+flowchart LR
+    subgraph Frontend["Browser (Client-Side)"]
+        Video[Webcam Feed<br/>640x480]
+        Face[Face Landmarker<br/>468 landmarks]
+        Pose[Pose Landmarker<br/>33 landmarks]
+        Calc[Metric Calculator]
+        Accum[Accumulator]
+    end
+    
+    subgraph Backend
+        WS[WebSocket]
+        Presence[PresenceSnapshot]
+        Recap[Recap Engine]
+    end
+    
+    Video --> Face
+    Video --> Pose
+    Face --> Calc
+    Pose --> Calc
+    Calc -->|5 FPS| Accum
+    Accum -->|every 2s| WS
+    WS --> Presence
+    Accum -->|on session end| Recap
+```
+
+### Eye Contact Calculation
+
+Uses iris landmarks (468-477) relative to eye corners:
+
+```
+leftIrisPosition = (leftIrisCenter.x - leftOuter.x) / leftEyeWidth
+rightIrisPosition = (rightIrisCenter.x - rightInner.x) / rightEyeWidth
+avgPosition = (leftIrisPosition + rightIrisPosition) / 2
+
+horizontalDeviation = |avgPosition - 0.5|  // 0 = center, 0.5 = fully away
+verticalDeviation = |avgIrisY - noseTip.y| * 2
+
+eyeContact = (100 - horizontalDeviation * 200) * 0.7 + 
+             (100 - verticalDeviation * 100) * 0.3
+```
+
+### Posture Calculation
+
+Uses pose landmarks for shoulders (11, 12) and nose (0):
+
+```
+shoulderTilt = atan2(|leftShoulder.y - rightShoulder.y|, 
+                     |leftShoulder.x - rightShoulder.x|) * (180/π)
+
+headOffset = |nose.x - shoulderMidpoint.x|
+
+posture = (100 - shoulderTilt * 5) * 0.6 +
+          (100 - headOffset * 200) * 0.4
+```
+
+### Tension Calculation
+
+Uses 52 face blendshapes for facial expression analysis:
+
+```
+browDown = (browDownLeft + browDownRight) / 2
+eyeSquint = (eyeSquintLeft + eyeSquintRight) / 2
+jawClench = 1 - jawOpen
+smiling = (mouthSmileLeft + mouthSmileRight) / 2
+frowning = (mouthFrownLeft + mouthFrownRight) / 2
+
+tensionSignals = browDown * 30 + eyeSquint * 25 + jawClench * 25 + frowning * 20
+relaxationBonus = smiling * 30
+
+tension = clamp(tensionSignals - relaxationBonus, 0, 100)
+```
+
+### Frontend Implementation
+
+```typescript
+// usePresenceDetection.ts
+const presence = usePresenceDetection({
+  onMetrics: (metrics) => {
+    // Accumulate for averaging
+    presenceMetricsRef.current.eyeContact.push(metrics.eye_contact);
+    presenceMetricsRef.current.posture.push(metrics.posture);
+    presenceMetricsRef.current.tension.push(metrics.tension);
+    
+    // Rate-limited send to backend
+    session.send({ type: "presence_metrics", data: metrics });
+  },
+  fps: 5,
+});
+```
+
+### Backend Integration
+
+```python
+# presence_engine.py
+@dataclass
+class PresenceSnapshot:
+    eye_contact: int | None = None
+    posture: int | None = None
+    tension: int | None = None
+    dominant_emotion: str | None = None
+    
+    def has_data(self) -> bool:
+        return self.eye_contact is not None or self.tension is not None
+```
+
+## Scoring System
+
+### Score Calculation Formula
+
+The final session score uses a **weighted composite** based on camera state:
+
+```mermaid
+flowchart TD
+    subgraph Voice["Voice Score (0-100 base)"]
+        Turns[Turn Participation<br/>0-30 pts]
+        Tactics[Tactics Encountered<br/>0-25 pts]
+        Progress[Progress Made<br/>0-20 pts]
+        Outcome[Deal Closure<br/>0-25 pts]
+        Penalties[Stalling/Circling<br/>-3 to -5 each]
+    end
+    
+    subgraph Presence["Presence Score (0-100 base)"]
+        Eye[Eye Contact<br/>0-40 pts]
+        Post[Posture<br/>0-35 pts]
+        Relax[Low Tension<br/>0-25 pts]
+    end
+    
+    subgraph Final["Final Score"]
+        CamOff[Camera OFF<br/>100% Voice]
+        CamOn[Camera ON<br/>70% Voice + 30% Presence]
+    end
+    
+    Turns --> Voice
+    Tactics --> Voice
+    Progress --> Voice
+    Outcome --> Voice
+    Penalties --> Voice
+    
+    Eye --> Presence
+    Post --> Presence
+    Relax --> Presence
+    
+    Voice --> CamOff
+    Voice --> CamOn
+    Presence --> CamOn
+```
+
+### Detailed Score Breakdown
+
+#### Voice/Negotiation Score (Base 100 Points)
+
+| Component | Points | Calculation |
+|-----------|--------|-------------|
+| **Turn Participation** | 0-30 | `min(30, userTurns * 10)` |
+| **Tactics Encountered** | 0-25 | `min(25, uniqueTactics * 8)` |
+| **Progress Made** | 0-20 | `min(20, progressInstances * 10)` |
+| **Deal Closure** | 0-25 | `25 if dealClosed else 0` |
+| **Stalling Penalty** | -5 each | Per stalling instance |
+| **Circling Penalty** | -3 each | Per circling instance |
+
+```python
+voice_score = turn_score + tactic_score + progress_score + outcome_score - penalties
+voice_score = clamp(voice_score, 0, 100)
+```
+
+#### Presence Score (Base 100 Points, Camera Only)
+
+| Component | Points | Calculation |
+|-----------|--------|-------------|
+| **Eye Contact** | 0-40 | `min(40, avgEyeContact * 0.4)` |
+| **Posture** | 0-35 | `min(35, avgPosture * 0.35)` |
+| **Low Tension** | 0-25 | `min(25, (100 - avgTension) * 0.25)` |
+
+```python
+presence_score = eye_points + posture_points + tension_points
+presence_score = clamp(presence_score, 0, 100)
+```
+
+#### Final Score Calculation
+
+```python
+if camera_enabled and has_visual_data:
+    final_score = voice_score * 0.70 + presence_score * 0.30
+else:
+    final_score = voice_score  # No penalty for missing camera
+
+# Participation gates
+if not user_actually_spoke:
+    final_score = 0
+elif user_participation < 2:
+    final_score = min(final_score, 30)
+elif user_participation < 4:
+    final_score = min(final_score, 60)
+
+# Deal closure bonus
+if deal_closed and user_actually_spoke:
+    final_score = max(final_score, 75)
+
+final_score = clamp(final_score, 10, 100)
+```
+
+### Scoring Example
+
+```
+Session Data:
+- User turns: 4
+- Unique tactics: 3
+- Progress instances: 1
+- Deal closed: Yes
+- Stalling: 0, Circling: 0
+- Camera enabled: Yes
+- Avg eye contact: 77, Avg posture: 77, Avg tension: 35
+
+Voice Score:
+- Turns: min(30, 4 * 10) = 30
+- Tactics: min(25, 3 * 8) = 24
+- Progress: min(20, 1 * 10) = 10
+- Outcome: 25 (deal closed)
+- Voice Total: 30 + 24 + 10 + 25 = 89
+
+Presence Score:
+- Eye: min(40, 77 * 0.4) = 30.8 → 31
+- Posture: min(35, 77 * 0.35) = 26.95 → 27
+- Tension: min(25, (100-35) * 0.25) = 16.25 → 16
+- Presence Total: 31 + 27 + 16 = 74
+
+Final Score:
+- 89 * 0.70 + 74 * 0.30 = 62.3 + 22.2 = 84.5 → 85
+- But deal closed + spoke → max(85, 75) = 85
+
+Final: 85/100
 ```
 
 ## Backend Modules
@@ -96,6 +356,7 @@ Central runtime controller for each session.
 - WebSocket message routing
 - Signal emission and rate limiting
 - Transcript accumulation
+- Presence metrics tracking
 
 **Key Classes:**
 ```python
@@ -123,6 +384,7 @@ LLM-powered coaching and detection engine.
 - **LLM-based deal closure detection** (CLOSING: YES/NO)
 - **LLM-based conversation circling detection** (CIRCLING: YES/NO)
 - Document term extraction via Gemini Vision
+- Presence-aware coaching (factors in user tension/stress)
 
 **Prompt Output Format:**
 ```
@@ -174,16 +436,26 @@ Generates session summary with dynamic scoring.
 - Penalties: stalling, circling (-3 to -5 pts each)
 
 ### `presence_engine.py`
-Defines presence metrics structure (future MediaPipe integration).
+Defines presence metrics structure for MediaPipe integration.
 
 ```python
+@dataclass
 class PresenceSnapshot:
-    eye_contact: int | None
-    posture: int | None
-    tension: int | None
+    eye_contact: int | None = None
+    posture: int | None = None
+    tension: int | None = None
+    dominant_emotion: str | None = None
     
     def has_data(self) -> bool:
-        return any([self.eye_contact, self.posture, self.tension])
+        return self.eye_contact is not None or self.tension is not None
+    
+    def summary(self) -> dict:
+        return {
+            "eye_contact": self.eye_contact or 0,
+            "posture": self.posture or 0,
+            "tension": self.tension or 0,
+            "dominant_emotion": self.dominant_emotion or "neutral",
+        }
 ```
 
 ### `adversary.py`
@@ -308,6 +580,7 @@ sequenceDiagram
 | `client_barge_in` | — | User interruption |
 | `mic_state` | `{ muted: bool }` | Mic toggle |
 | `camera_state` | `{ active: bool }` | Camera toggle |
+| `presence_metrics` | `{ eye_contact, posture, tension, dominant_emotion }` | MediaPipe metrics |
 | `end` | — | End session |
 
 ### Server → Client Messages
@@ -330,6 +603,7 @@ sequenceDiagram
 - **Styling:** Tailwind CSS v4
 - **Build:** Vite
 - **Icons:** Lucide React
+- **ML:** MediaPipe Tasks Vision (Face + Pose Landmarker)
 
 ### Component Hierarchy
 ```
@@ -340,11 +614,14 @@ App
 │   ├── SessionControls (top bar)
 │   ├── Transcript (chat messages)
 │   ├── DocumentAnalysis (left panel)
-│   ├── WebcamPip (bottom right)
+│   ├── WebcamPip (bottom right, with presence metrics overlay)
 │   ├── CoachCard (bottom center)
 │   └── SignalToast (top right)
 └── RecapOverlay
-    └── Score, outcome, strengths, improvements
+    ├── Score (with breakdown)
+    ├── Presence Metrics (eye contact, posture, relaxation bars)
+    ├── Outcome, strengths, improvements
+    └── Download Report
 ```
 
 ### Key Hooks
@@ -352,7 +629,8 @@ App
 - `useAudioCapture` - Mic input, 16kHz resampling
 - `useAudioPlayback` - Audio buffering, playback queue
 - `useScreenShare` - Screen capture, scanning control
-- `useCamera` - Webcam access
+- `useCamera` - Webcam access + presence detection integration
+- `usePresenceDetection` - MediaPipe Face + Pose Landmarker, metric calculation
 
 ## Deployment
 
@@ -398,13 +676,19 @@ The deploy script:
 - Presence contributes 30% only when enabled
 - Voice/negotiation always primary (70-100%)
 
+### Client-Side ML (MediaPipe)
+- All face/pose analysis runs in browser
+- No video sent to server (privacy-preserving)
+- Only aggregated metrics sent via WebSocket
+- Models loaded from CDN (~8MB total)
+
 ## Session Recording Format
 
 Sessions are recorded as JSON for recap and analysis:
 
 ```json
 {
-  "startTime": 1773192655328,
+  "startTime": 1773247771320,
   "exchanges": [
     { "speaker": "adversary", "text": "...", "timestamp": "00:05" },
     { "speaker": "user", "text": "...", "timestamp": "00:21" }
@@ -416,14 +700,19 @@ Sessions are recorded as JSON for recap and analysis:
     { "phrase": "...", "context": "Response to: ...", "timestamp": "00:07" }
   ],
   "metrics": {
-    "totalTurns": 15,
-    "userTurns": 12,
+    "totalTurns": 8,
+    "userTurns": 4,
     "userAudioChunks": 0,
     "stallingInstances": 0,
     "progressInstances": 0,
     "circlingInstances": 0,
     "dealClosed": true
   },
-  "cameraEnabled": false
+  "cameraEnabled": true,
+  "visualPresence": {
+    "avgEyeContact": 77,
+    "avgPosture": 77,
+    "avgTension": 35
+  }
 }
 ```

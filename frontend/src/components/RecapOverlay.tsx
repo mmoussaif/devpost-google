@@ -21,7 +21,8 @@ export default function RecapOverlay({ recording, onRestart }: RecapOverlayProps
       exchanges: recording.exchanges,
       tacticsDetected: recording.tacticsDetected,
       coachingGiven: recording.coachingGiven,
-      visualPresence: {},
+      cameraEnabled: recording.cameraEnabled ?? false,
+      visualPresence: recording.visualPresence ?? {},
     };
 
     fetch("/session/buddy/recap", {
@@ -104,6 +105,29 @@ export default function RecapOverlay({ recording, onRestart }: RecapOverlayProps
         <Section title="Biggest Risk Caught" text={recap.biggest_risk} />
         <Section title="Next Focus" text={recap.next_focus} />
 
+        {/* Visual Presence Summary */}
+        {recap.visual_summary && (
+          <div className="mb-4 rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-indigo-300">
+              Presence Metrics
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <PresenceMetric
+                label="Eye Contact"
+                value={recap.visual_summary.avgEyeContact}
+              />
+              <PresenceMetric
+                label="Posture"
+                value={recap.visual_summary.avgPosture}
+              />
+              <PresenceMetric
+                label="Relaxation"
+                value={100 - recap.visual_summary.avgTension}
+              />
+            </div>
+          </div>
+        )}
+
         {recap.strengths.length > 0 && (
           <div className="mb-4 rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-indigo-300">
@@ -142,6 +166,24 @@ function Stat({ value, label }: { value: string; label: string }) {
     <div className="text-center">
       <span className="block text-lg font-semibold text-white">{value}</span>
       <span className="text-[0.6875rem] text-slate-500">{label}</span>
+    </div>
+  );
+}
+
+function PresenceMetric({ label, value }: { label: string; value: number }) {
+  const color = value >= 70 ? "bg-emerald-400" : value >= 40 ? "bg-amber-400" : "bg-red-400";
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-xs text-slate-400">{label}</span>
+        <span className="text-xs font-medium text-white">{value}</span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-white/10">
+        <div
+          className={`h-full rounded-full transition-all ${color}`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
     </div>
   );
 }
