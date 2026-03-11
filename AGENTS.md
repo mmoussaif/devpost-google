@@ -1,871 +1,420 @@
-# Secondus — Agent Architecture & System Design
+# Secondus — Architecture & System Design
 
-> Your trusted second in high-stakes deals — like the advisor who stands behind you in a duel, knowing your strategy and protecting your interests.
+> Secondus is a real-time negotiation copilot. It hears the exchange, sees written terms, detects pressure tactics, and gives the user the best next line to say.
 
-## Table of Contents
-1. [System Overview](#system-overview)
-2. [Architecture Diagrams](#architecture-diagrams)
-3. [Agent Design](#agent-design)
-4. [Visual Intelligence Pipeline](#visual-intelligence-pipeline)
-5. [Learning System](#learning-system)
-6. [Practice Mode](#practice-mode)
-7. [API Reference](#api-reference)
-8. [Cost Management](#cost-management)
-9. [Deployment Architecture](#deployment-architecture)
+## Product Overview
 
----
+Secondus is an AI-powered negotiation practice partner that:
+- **Speaks** as a tough counterparty (Alex Chen, TechNova CTO)
+- **Listens** to your responses with real-time transcription
+- **Sees** shared contract documents via screen capture
+- **Detects** pressure tactics, contract drift, and deal closure
+- **Coaches** you with contextual "Say this now" recommendations
 
-## System Overview
-
-Secondus is a **real-time negotiation intelligence agent** built for the Gemini Live Agent Challenge 2026. It breaks the traditional "text box" paradigm by proactively coaching users during live negotiations.
-
-### Core Capabilities
-
-| Capability | Description | Technology |
-|------------|-------------|------------|
-| **Drift Detection** | Spots contradictions between spoken and written terms | Gemini Live multimodal |
-| **Tactic Recognition** | Identifies manipulation tactics with counters | ADK streaming |
-| **Visual Coaching** | Real-time body language feedback | MediaPipe |
-| **Personalized Learning** | Tracks patterns, provides research-backed advice | Pattern analysis |
-| **Barge-In** | Interrupts conversation at critical moments | ADK bidi-streaming |
-
----
-
-## Architecture Diagrams
-
-### High-Level System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Client["Frontend (Browser)"]
+    subgraph Browser["Browser (React/TypeScript)"]
         UI[Session UI]
-        WS[WebSocket Client]
-        MP[MediaPipe<br/>Face/Pose/Hands]
-        MIC[Microphone<br/>16kHz PCM]
-        SCR[Screen Capture<br/>JPEG frames]
+        Audio[Mic Capture<br/>16kHz PCM]
+        Playback[Audio Playback<br/>24kHz PCM]
+        Screen[Screen Capture<br/>JPEG Frames]
+        Camera[Webcam PiP<br/>Self-view]
     end
 
-    subgraph Backend["Backend (Cloud Run)"]
-        FP[FastAPI Server]
-        ADK[Google ADK<br/>Runner.run_live]
-        LS[Learning System]
-        SS[Session Service]
+    subgraph Backend["Backend (FastAPI/Python)"]
+        WS[WebSocket Handler]
+        Orchestrator[Session Orchestrator]
+        Coach[Coach Engine<br/>Gemini 2.0 Flash]
+        Contract[Contract State]
+        Signals[Signal Detection]
+        Recap[Recap Engine]
     end
 
     subgraph Google["Google Cloud"]
-        GL[Gemini Live API<br/>gemini-live-2.5-flash]
-        FS[Cloud Firestore]
-        VA[Vertex AI]
+        Live[Gemini Live API<br/>2.5 Flash Native Audio]
+        Vision[Gemini Vision<br/>Document Analysis]
+        Run[Cloud Run]
     end
 
-    MIC --> WS
-    SCR --> WS
-    MP --> UI
-    WS <--> FP
-    FP <--> ADK
-    ADK <--> GL
-    LS <--> FS
-    GL --> VA
-    FP --> LS
-
-    style GL fill:#4285F4,color:white
-    style ADK fill:#34A853,color:white
-    style MP fill:#EA4335,color:white
+    Audio -->|audio chunks| WS
+    Screen -->|capture frames| WS
+    WS --> Orchestrator
+    Orchestrator --> Coach
+    Orchestrator --> Contract
+    Orchestrator --> Signals
+    Coach --> Live
+    Contract --> Vision
+    Orchestrator -->|transcript, coaching, signals| UI
+    Live -->|adversary audio| Playback
+    Orchestrator --> Recap
 ```
 
-### Component Diagram
-
-```mermaid
-flowchart LR
-    subgraph Frontend
-        direction TB
-        A1[index.html]
-        A2[WebSocket Handler]
-        A3[MediaPipe Processor]
-        A4[Audio Processor]
-        A5[Cost Tracker]
-        A6[Learning UI]
-    end
-
-    subgraph Backend
-        direction TB
-        B1[main.py<br/>FastAPI]
-        B2[agent.py<br/>Secondus Agent]
-        B3[learnings.py<br/>Pattern Tracker]
-        B4[adversary.py<br/>Practice Adversary]
-    end
-
-    subgraph External
-        direction TB
-        C1[Gemini Live API]
-        C2[Local JSON Storage]
-    end
-
-    A1 --> A2
-    A1 --> A3
-    A1 --> A4
-    A1 --> A5
-    A1 --> A6
-    A2 <--> B1
-    B1 --> B2
-    B1 --> B3
-    B1 --> B4
-    B2 <--> C1
-    B4 <--> C1
-    B3 <--> C2
-```
-
-### Data Flow — Practice Session
+## Core Flow
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant F as Frontend
-    participant B as Backend
-    participant G as Gemini Live
-    participant L as Learning System
+    participant User
+    participant UI as React UI
+    participant WS as WebSocket
+    participant Orch as Orchestrator
+    participant Coach as Coach Engine
+    participant Gemini as Gemini Live
 
-    Note over U,L: Session Setup
-    U->>F: Enter goals, BATNA, terms
-    F->>B: POST /session/practice
-    B->>L: GET briefing
-    L-->>B: Focus areas, past patterns
-    B-->>F: Session ready + briefing
-
-    Note over U,L: Live Practice (5 min max)
-    loop Every frame
-        F->>F: MediaPipe analysis
-        F->>F: Update visual coaching UI
-    end
-
-    loop Real-time audio
-        U->>F: Speak
-        F->>B: Audio chunk (16kHz PCM)
-        B->>G: Send audio
-        G-->>B: Adversary response
-        B-->>F: Audio + coaching
-        F-->>U: Play audio + show tactics
-    end
-
-    Note over U,L: Session End
-    U->>F: End session
-    F->>B: Session data
-    B->>L: POST /learnings/analyze
-    L-->>B: Patterns + recommendations
-    B-->>F: Session report
-    F-->>U: Display analysis
+    User->>UI: Click "Start Negotiation"
+    UI->>WS: { type: "start" }
+    WS->>Orch: Initialize session
+    Orch->>Gemini: Send opening prompt
+    Gemini-->>Orch: Adversary speaks
+    Orch-->>UI: transcript.append + media.audio
+    
+    User->>UI: Speaks into mic
+    UI->>WS: { type: "audio", data: base64 }
+    WS->>Orch: Process audio
+    Orch->>Gemini: Forward to Live API
+    Gemini-->>Orch: Adversary response
+    Orch->>Coach: Generate coaching
+    Coach-->>Orch: { say_this, is_closing, is_circling }
+    Orch-->>UI: coach.recommendation
+    Orch-->>UI: signal.alert (if detected)
+    
+    User->>UI: Click "End"
+    UI->>WS: { type: "end" }
+    Orch->>Recap: Generate summary
+    Orch-->>UI: session.complete
 ```
 
-### Real-Time Audio Pipeline
+## Backend Modules
 
-```mermaid
-flowchart LR
-    subgraph Input["User Input"]
-        MIC[Microphone] --> WA[Web Audio API<br/>16kHz PCM]
-        WA --> B64E[Base64 Encode]
-    end
+### `session_orchestrator.py`
+Central runtime controller for each session.
 
-    subgraph Transport["WebSocket"]
-        B64E --> WS[WebSocket Frame]
-        WS --> ADK[ADK Runner]
-    end
+**Responsibilities:**
+- Session lifecycle management
+- Turn-taking and state transitions
+- WebSocket message routing
+- Signal emission and rate limiting
+- Transcript accumulation
 
-    subgraph Gemini["Gemini Live"]
-        ADK --> GL[Gemini Live API]
-        GL --> RESP[Response Audio<br/>24kHz PCM]
-    end
+**Key Classes:**
+```python
+class BuddyRuntimeState:
+    accumulated_text: str
+    user_history: list[str]
+    conversation_history: list[dict]
+    stalling_count: int
+    progress_signals: int
+    last_signal_times: dict[str, float]  # Rate limiting
 
-    subgraph Output["User Output"]
-        RESP --> B64D[Base64 Decode]
-        B64D --> SPK[Speaker]
-    end
-
-    style GL fill:#4285F4,color:white
+class BuddySessionOrchestrator:
+    async def handle_client_message(msg_type, data)
+    async def handle_adversary_event(event)
+    async def emit_backend_signals(statement, momentum)
+    async def emit_coach_recommendation(phrase, context)
+    async def emit_signal_alert(urgency, title, message, signal_type)
 ```
 
-### Contract Drift Detection (Vision + Audio)
+### `coach_engine.py`
+LLM-powered coaching and detection engine.
 
-```mermaid
-flowchart TB
-    subgraph Frontend["Session UI"]
-        DOC[contract.html<br/>Shared Tab] --> SS[Screen Share API]
-        SS --> |JPEG frames| WS[WebSocket]
-        MIC[Microphone] --> |16kHz PCM| WS
-    end
+**Capabilities:**
+- Generates contextual "Say this now" recommendations
+- **LLM-based deal closure detection** (CLOSING: YES/NO)
+- **LLM-based conversation circling detection** (CIRCLING: YES/NO)
+- Document term extraction via Gemini Vision
 
-    subgraph Backend["Secondus Server"]
-        WS --> SM[Session Manager]
-        SM --> |Audio| AA[Adversary Agent]
-        SM --> |Audio + JPEG| SA[Coach Agent]
-    end
-
-    subgraph Analysis["Gemini Live Processing"]
-        AA --> |Negotiates against terms| GL[Native Audio]
-        SA --> |Cross-references| V[Vision Model]
-        V --> |Compares verbal vs written| DD{Drift Detected?}
-    end
-
-    DD -- Yes --> ALR[Generate TACTIC Alert]
-    ALR --> WS
-    WS --> UI[Show DRIFT Card]
-
-    style V fill:#4285F4,color:white
-    style GL fill:#4285F4,color:white
-    style DD fill:#EA4335,color:white
+**Prompt Output Format:**
+```
+CLOSING: YES/NO
+CIRCLING: YES/NO
+SAY THIS: [coaching phrase]
 ```
 
----
+**Detection Logic:**
+| Signal | LLM Detects | Examples |
+|--------|-------------|----------|
+| CLOSING: YES | Deal agreement, goodbye | "That works", "We'll proceed", "Thanks, goodbye" |
+| CLOSING: NO | Questions, objections | "Can we adjust?", "What about...?" |
+| CIRCLING: YES | Stuck repeating | "As I said...", same position 3x |
+| CIRCLING: NO | Making progress | New numbers, counter-offers |
 
-## Agent Design
+### `contract_state.py`
+Manages structured contract terms extracted from screen captures.
 
-### Core Agent: Secondus
+**Extracted Fields:**
+- `price` - Dollar amount (normalized: "$75,000" → "75000")
+- `payment_terms` - Net terms (normalized: "Net-30 from invoice" → "net30")
+- `timeline` - Delivery schedule
+- `scope` - Work description
+- `revisions` - Revision rounds
+- `parties` - Contract parties
 
-| Property | Value |
-|----------|-------|
-| **Model** | `gemini-live-2.5-flash-native-audio` |
-| **Framework** | Google ADK with bidi-streaming |
-| **Mode** | Real-time multimodal (audio + vision) |
-| **Session Timeout** | 5 minutes (cost control) |
-
-### Agent State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Initialize
-    Idle --> Listening: Session Start
-    Listening --> Analyzing: Audio/Screen Input
-    Analyzing --> Coaching: Tactic Detected
-    Analyzing --> Listening: Normal Exchange
-    Coaching --> Listening: Guidance Delivered
-    Listening --> Reporting: Session End
-    Reporting --> [*]: Analysis Complete
-
-    Listening --> [*]: Timeout (5 min)
+**Drift Detection:**
+```python
+def compare_terms(contract_terms, spoken_terms) -> list[dict]:
+    # Returns differences like:
+    # { "field": "price", "contract": "$75,000", "spoken": "$50K" }
 ```
 
-### Input Streams
+### `recap_engine.py`
+Generates session summary with dynamic scoring.
 
-| Stream | Format | Frequency | Cost |
-|--------|--------|-----------|------|
-| Audio | 16kHz PCM, base64 | Continuous | ~$0.00025/sec |
-| Screen | JPEG frames, base64 | Every 2s | ~$0.001315/image |
-| Context | Text (goals, BATNA) | Session start | Minimal |
+**Scoring Weights:**
+| Camera State | Voice Weight | Presence Weight |
+|--------------|--------------|-----------------|
+| Disabled | 100% | 0% |
+| Enabled | 70% | 30% |
 
-### Output Format
+**Score Components:**
+- Turn participation (0-30 pts)
+- Tactics encountered (0-25 pts)
+- Progress made (0-20 pts)
+- Deal closure (0-25 pts)
+- Penalties: stalling, circling (-3 to -5 pts each)
 
-The agent responds with urgency-coded interventions:
+### `presence_engine.py`
+Defines presence metrics structure (future MediaPipe integration).
 
-```
-SAY THIS: [Exact phrase for user to speak] — Most important!
-TACTIC: [Name] - [One-line counter] — For manipulation tactics
-DRIFT: [Contract says X, they said Y] — For contradictions
-CONFIDENCE: [Voice coaching tip] — For delivery improvement
-```
-
-### System Prompt Architecture
-
-```mermaid
-flowchart TB
-    subgraph SystemPrompt["System Prompt (agent.py)"]
-        ROLE["Role Definition<br/>Secondus - real-time negotiation COACH"]
-        CONTEXT["Context Awareness<br/>Audio, Screen, Goals, BATNA"]
-        TACTICS["Tactic Counters<br/>Anchoring, Urgency, Nibbling..."]
-        OUTPUT["Output Format<br/>SAY THIS, TACTIC, DRIFT"]
-        VOICE["Voice Coaching<br/>Pace, Tone, Confidence"]
-    end
-
-    ROLE --> CONTEXT
-    CONTEXT --> TACTICS
-    TACTICS --> OUTPUT
-    OUTPUT --> VOICE
+```python
+class PresenceSnapshot:
+    eye_contact: int | None
+    posture: int | None
+    tension: int | None
+    
+    def has_data(self) -> bool:
+        return any([self.eye_contact, self.posture, self.tension])
 ```
 
-### Tactic Detection Library
+### `adversary.py`
+AI counterparty agent definition using Google ADK.
 
-| Tactic | Detection Signal | Counter Response |
-|--------|------------------|------------------|
-| **ANCHORING** | Low first offer | "State YOUR number first" |
-| **FLINCHING** | Price surprise reaction | "Silence for 3 seconds, then explain ROI" |
-| **NIBBLING** | Extra asks after agreement | "That's outside scope. I can add for $X" |
-| **LIMITED AUTHORITY** | "Need to check with boss" | "Let's get them on a call" |
-| **URGENCY** | Artificial deadlines | "If timing is critical, let's lock terms now" |
-| **CIRCLING** | Same topic repeated | "What's the real concern here?" |
+**Role:** Alex Chen, CTO of TechNova (fictional startup)
 
----
+**Behavior:**
+- Opens with budget constraint and timeline pressure
+- Responds to user naturally, handles interruptions
+- Uses negotiation tactics (anchoring, urgency, nibbling)
+- Can discuss price, timeline, payment terms, equity, IP
 
-## Visual Intelligence Pipeline
+## Signal Detection System
 
-### MediaPipe Integration
-
-```mermaid
-flowchart TB
-    subgraph Input["Camera Input"]
-        CAM[Webcam Stream]
-    end
-
-    subgraph MediaPipe["MediaPipe Processing"]
-        FM[Face Mesh<br/>468 landmarks]
-        PS[Pose<br/>33 landmarks]
-        HD[Hands<br/>21 landmarks x2]
-    end
-
-    subgraph Analysis["Analysis Layer"]
-        EYE[Eye Contact<br/>Gaze direction]
-        EMO[Emotion<br/>Facial tension]
-        POST[Posture<br/>Lean, distance]
-        GEST[Gestures<br/>Steepling, palms]
-    end
-
-    subgraph Output["Coaching Output"]
-        SCORE[Quality Scores<br/>0-100%]
-        COACH[Visual Coaching<br/>Tips & alerts]
-        BARS[Progress Bars<br/>Color-coded]
-    end
-
-    CAM --> FM
-    CAM --> PS
-    CAM --> HD
-    FM --> EYE
-    FM --> EMO
-    PS --> POST
-    HD --> GEST
-    EYE --> SCORE
-    EMO --> SCORE
-    POST --> SCORE
-    GEST --> SCORE
-    SCORE --> COACH
-    COACH --> BARS
-
-    style FM fill:#EA4335,color:white
-    style PS fill:#EA4335,color:white
-    style HD fill:#EA4335,color:white
-```
-
-### Landmark Detection
-
-| Model | Landmarks | What We Detect |
-|-------|-----------|----------------|
-| **Face Mesh** | 468 points | Eye contact, facial tension, head tilt |
-| **Pose** | 33 points | Forward/back lean, shoulder width, framing |
-| **Hands** | 21 x 2 points | Steepling, open palms, face touching |
-
-### Gesture Detection (Research-Based)
-
-Based on Joe Navarro's body language principles:
-
-| Gesture | MediaPipe Detection | Score Impact |
-|---------|---------------------|--------------|
-| **Steepling** | Fingertips within 30px, hands above waist | +25 points |
-| **Open Palms** | Palm angle facing camera | +15 points |
-| **Face Touching** | Hand landmarks near face landmarks | -20 points |
-
-### Visual Coaching UI
-
-```
-┌─────────────────────────────────────┐
-│ VISUAL COACH              😐 neutral │
-│ ┌─────────────────────────────────┐ │
-│ │    [Webcam + Face/Hand Mesh]    │ │
-│ └─────────────────────────────────┘ │
-│ Eye Contact [████████░░] 80%        │  ← Green (70%+)
-│ Posture     [██████░░░░] 60%        │  ← Yellow (40-70%)
-│ Gestures    [███░░░░░░░] 30%        │  ← Red (<40%)
-│ ✋ Open palms — signals honesty      │
-│                                     │
-│ Est. Cost: $0.42 | Time: 3:24/5:00  │
-└─────────────────────────────────────┘
-```
-
-**Color Coding:**
-- 🟢 Green (70%+): Excellent
-- 🟡 Yellow (40-70%): Needs attention
-- 🔴 Red (<40%): Needs improvement
-
----
-
-## Learning System
-
-### Pattern Tracking Architecture
-
-```mermaid
-flowchart TB
-    subgraph Session["Practice Session"]
-        EX[Exchanges]
-        TC[Tactics Detected]
-        VS[Visual Scores]
-        CO[Concessions Made]
-    end
-
-    subgraph Analysis["Pattern Analysis (learnings.py)"]
-        AS[analyze_session]
-        EW[Extract Weaknesses]
-        ES[Extract Strengths]
-        GR[Generate Recommendations]
-    end
-
-    subgraph Storage["Persistent Storage"]
-        FS[(user_learnings.json)]
-        PT[Patterns]
-        RC[Recommendations]
-    end
-
-    subgraph Output["Pre-Session Briefing"]
-        BR[get_pre_session_briefing]
-        FA[Focus Areas]
-        ST[Stats: Close Rate]
-    end
-
-    EX --> AS
-    TC --> AS
-    VS --> AS
-    CO --> AS
-    AS --> EW
-    AS --> ES
-    EW --> GR
-    ES --> GR
-    GR --> FS
-    FS --> PT
-    FS --> RC
-    PT --> BR
-    RC --> BR
-    BR --> FA
-    BR --> ST
-```
-
-### Tracked Patterns
-
-**Weaknesses (Auto-Detected):**
-
-| Pattern | Detection Trigger | Recommendation |
-|---------|-------------------|----------------|
-| `STALLING_TOLERANCE` | >5 stall instances | Set time limits early |
-| `GAVE_EQUITY` | Equity mentioned in concessions | Demand extended commitment |
-| `PAYMENT_TERMS_WEAKNESS` | Net-90 accepted | Counter with discount offer |
-| `LOW_EYE_CONTACT` | <40% average eye contact | Look at camera lens |
-| `NIBBLING_VULNERABILITY` | 3+ nibble tactics faced | "That's outside scope" |
-| `ALLOWED_CIRCLING` | 3+ topic repetitions | Call out directly |
-
-**Strengths (Auto-Detected):**
-
-| Pattern | Detection Trigger |
-|---------|-------------------|
-| `HELD_PRICE` | No price drops in exchanges |
-| `CLOSED_DEAL` | Deal marked as closed |
-| `STRONG_EYE_CONTACT` | >70% average eye contact |
-
-### Research-Backed Recommendations
-
-| Source | Applied To |
-|--------|------------|
-| **Harvard PON** | Time pressure, BATNA usage |
-| **Chris Voss** | Trading concessions, labeling |
-| **Joe Navarro** | Body language, eye contact |
-
-### Recommendation Engine
+### Hybrid LLM + Deterministic Approach
 
 ```mermaid
 flowchart LR
     subgraph Input
-        WK[Weaknesses<br/>sorted by frequency]
-        TC[Tactics Faced<br/>sorted by count]
+        Text[Adversary Statement]
+        History[Conversation History]
     end
-
-    subgraph Library
-        RL[RECOMMENDATION_LIBRARY<br/>weakness → action]
-        TR[TACTICS_RESPONSES<br/>tactic → counter]
+    
+    subgraph LLM["LLM Detection"]
+        Closing[CLOSING: YES/NO]
+        Circling[CIRCLING: YES/NO]
     end
-
+    
+    subgraph Deterministic
+        Keywords[Keyword Patterns]
+        TopicCount[Topic Repetition]
+        TurnCount[Turn Threshold]
+    end
+    
     subgraph Output
-        REC[Recommendations<br/>with priority]
+        Signal[Signal Alert]
+        Metrics[Session Metrics]
     end
-
-    WK --> RL
-    TC --> TR
-    RL --> REC
-    TR --> REC
+    
+    Text --> LLM
+    History --> LLM
+    Text --> Deterministic
+    History --> Deterministic
+    
+    LLM --> Signal
+    Deterministic --> Signal
+    LLM --> Metrics
 ```
 
----
+### Signal Types
 
-## Practice Mode
+| Signal | Urgency | Trigger |
+|--------|---------|---------|
+| **Anchoring Pressure** | urgent | "$50K budget", low price anchor |
+| **Timeline Pressure** | watch | "6 weeks", artificial urgency |
+| **Contract Drift** | urgent | Spoken terms ≠ written terms |
+| **Goal Mismatch** | watch | Offer differs from target |
+| **Conversation Circling** | note | LLM + turns ≥ 5 |
+| **Stalling Detected** | watch | 3+ stalling patterns |
 
-### Adversary Agent
+### Rate Limiting
+Signals are rate-limited to prevent spam:
+- Urgent signals: 30s cooldown
+- Watch/note signals: 45s cooldown
 
-```mermaid
-flowchart TB
-    subgraph Config["Practice Config"]
-        SC[Scenario<br/>SaaS Contract, etc.]
-        GO[Goals<br/>User objectives]
-        BT[BATNA<br/>Best alternative]
-        DF[Difficulty<br/>easy/medium/hard]
-        LC[Low Cost Mode<br/>TEXT vs AUDIO]
-    end
-
-    subgraph Adversary["Adversary Agent"]
-        AP[Adversary Prompt<br/>Tough counterparty role]
-        TL[Tactics Library<br/>Based on difficulty]
-        VO[Voice/Text Output]
-    end
-
-    subgraph Analysis["Real-Time Analysis"]
-        TD[Tactic Detection]
-        SP[Stalling Tracker]
-        NB[Nibble Counter]
-    end
-
-    Config --> Adversary
-    AP --> TL
-    TL --> VO
-    VO --> Analysis
-    Analysis --> Adversary
-```
-
-### Difficulty Levels
-
-| Level | Tactics Used | Frequency |
-|-------|--------------|-----------|
-| **Easy** | Anchoring, Flinching | Occasional |
-| **Medium** | + Nibbling, Urgency | Regular |
-| **Hard** | + Limited Authority, Circling, Good Cop/Bad Cop | Aggressive |
-
-### Session Flow
+## Document Scanner Flow
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant A as Adversary Agent
-    participant C as Coach System
+    participant User
+    participant UI as Document Panel
+    participant Hook as useScreenShare
+    participant WS as WebSocket
+    participant Orch as Orchestrator
+    participant Vision as Gemini Vision
 
-    Note over U,C: Opening
-    A->>U: Anchoring move
-    C-->>U: TACTIC: Counter-anchor immediately
-
-    Note over U,C: Negotiation
-    loop Until timeout or close
-        U->>A: Response
-        A->>U: Counter or tactic
-        C-->>U: Real-time coaching
+    User->>UI: Click screen share icon
+    UI->>Hook: start()
+    Hook-->>UI: Screen preview active
+    
+    User->>UI: Click "Start Analysis"
+    UI->>Hook: startScanning()
+    
+    loop Every 3 seconds while scanning
+        Hook->>WS: { type: "screen", data: base64 }
+        WS->>Orch: Process frame
+        Orch->>Vision: Extract terms
+        Vision-->>Orch: { price, timeline, payment_terms, scope }
+        Orch-->>UI: screen.analyzing { terms }
     end
-
-    Note over U,C: Closing
-    alt Deal Closed
-        U->>A: Agreement
-        A->>U: Confirmation
-    else Timeout
-        C-->>U: Time limit reached
-    end
-
-    Note over U,C: Analysis
-    C->>C: Extract patterns
-    C-->>U: Session report
+    
+    User->>UI: Click "Done Scanning"
+    UI->>Hook: stopScanning()
+    UI-->>User: Show extracted terms
+    
+    User->>UI: Click "Share with Counterpart"
+    UI->>WS: { type: "share_contract" }
+    WS->>Orch: Inject context to Gemini
+    Orch-->>UI: screen.share_result { success: true }
 ```
 
----
+## WebSocket Protocol
 
-## API Reference
+### Client → Server Messages
 
-### REST Endpoints
+| Type | Payload | Purpose |
+|------|---------|---------|
+| `start` | — | Begin negotiation |
+| `audio` | `{ data: base64 }` | User audio chunk |
+| `screen` | `{ data: base64 }` | Screen capture frame |
+| `share_contract` | — | Send terms to counterpart |
+| `client_barge_in` | — | User interruption |
+| `mic_state` | `{ muted: bool }` | Mic toggle |
+| `camera_state` | `{ active: bool }` | Camera toggle |
+| `end` | — | End session |
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check with model status |
-| `/session/create` | POST | Create a new live negotiation session |
-| `/session/practice` | POST | Start a practice session with AI adversary |
-| `/session/{session_id}/status` | GET | Get status of an active session |
-| `/voice/validate` | POST | Validate voice enrollment audio |
-| `/learnings/briefing` | GET | Pre-session personalized briefing |
-| `/learnings/analyze` | POST | Analyze session and extract patterns |
-| `/learnings/tip/{tactic}` | GET | Quick counter-tip for a tactic |
+### Server → Client Messages
 
-### WebSocket Endpoints
+| Type | Payload | Purpose |
+|------|---------|---------|
+| `session.state` | `{ state: string }` | State transition |
+| `transcript.append` | `{ speaker, content }` | Chat message |
+| `coach.recommendation` | `{ phrase, context }` | Coaching |
+| `signal.alert` | `{ urgency, title, message }` | Alert |
+| `media.audio` | `{ data: base64 }` | Adversary audio |
+| `session.deal_closed` | `{ detected_by }` | Deal detected |
+| `screen.analyzing` | `{ status, terms }` | Doc analysis |
+| `session.complete` | `{ content }` | Session ended |
 
-| Endpoint | Purpose | Message Format |
-|----------|---------|----------------|
-| `/ws/negotiate/{session_id}` | Live negotiation session | `{type, data, sessionId}` |
-| `/ws/practice/{session_id}` | Practice with AI adversary | `{type, audio, config}` |
+## Frontend Architecture
 
-### WebSocket Message Types
+### Tech Stack
+- **Framework:** React 18 + TypeScript
+- **Styling:** Tailwind CSS v4
+- **Build:** Vite
+- **Icons:** Lucide React
 
-**Client → Server:**
-```json
-{
-  "type": "audio_chunk",
-  "data": "<base64 PCM 16kHz>",
-  "sessionId": "uuid"
-}
-
-{
-  "type": "screen_capture",
-  "data": "<base64 JPEG>",
-  "sessionId": "uuid"
-}
-
-{
-  "type": "end_session",
-  "data": {
-    "metrics": {...},
-    "exchanges": [...],
-    "tacticsDetected": [...],
-    "visualPresence": {...}
-  }
-}
+### Component Hierarchy
+```
+App
+├── LandingScreen
+│   └── Scenario customization form
+├── SessionScreen
+│   ├── SessionControls (top bar)
+│   ├── Transcript (chat messages)
+│   ├── DocumentAnalysis (left panel)
+│   ├── WebcamPip (bottom right)
+│   ├── CoachCard (bottom center)
+│   └── SignalToast (top right)
+└── RecapOverlay
+    └── Score, outcome, strengths, improvements
 ```
 
-**Server → Client:**
-```json
-{
-  "type": "intervention",
-  "urgency": "URGENT|WATCH|NOTE",
-  "text": "SAY THIS: ..."
-}
+### Key Hooks
+- `useSession` - WebSocket management, message routing
+- `useAudioCapture` - Mic input, 16kHz resampling
+- `useAudioPlayback` - Audio buffering, playback queue
+- `useScreenShare` - Screen capture, scanning control
+- `useCamera` - Webcam access
 
-{
-  "type": "audio_response",
-  "audio": "<base64 PCM 24kHz>"
-}
+## Deployment
 
-{
-  "type": "session_analysis",
-  "patterns": {...},
-  "recommendations": [...]
-}
-
-{
-  "type": "timeout_warning",
-  "remaining_seconds": 60
-}
-```
-
----
-
-## Cost Management
-
-### API Pricing Model
-
-```mermaid
-pie title Session Cost Distribution
-    "Audio Output (70%)" : 70
-    "Audio Input (20%)" : 20
-    "Screen Captures (10%)" : 10
-```
-
-### Rate Structure
-
-| Resource | Rate | Per Session (5 min) |
-|----------|------|---------------------|
-| Audio Input | $0.00025/sec | ~$0.075 |
-| Audio Output | $0.001/sec | ~$0.30 |
-| Screen Captures | $0.001315/image | ~$0.20 (150 images) |
-| **Total Estimate** | | **~$0.58/session** |
-
-### Cost Control Features
-
-```mermaid
-flowchart TB
-    subgraph Controls["Cost Control Mechanisms"]
-        TO[Session Timeout<br/>5 minutes max]
-        LC[Low-Cost Mode<br/>TEXT modality]
-        CT[Real-Time Tracker<br/>UI display]
-        BA[Budget Alerts<br/>GCP billing]
-    end
-
-    subgraph Implementation
-        TO --> |"SESSION_TIMEOUT = 300"| BE[Backend]
-        LC --> |"response_modalities=['TEXT']"| BE
-        CT --> |"costTracker object"| FE[Frontend]
-        BA --> |"gcloud billing budgets"| GCP[GCP Console]
-    end
-```
-
-### Low-Cost Mode
-
-When enabled:
-- Uses `TEXT` modality instead of `AUDIO`
-- Reduces output costs by ~70%
-- Still provides real-time coaching via text
-
-### Budget Alert Setup
-
-```bash
-gcloud billing budgets create \
-  --billing-account=BILLING_ACCOUNT_ID \
-  --display-name="Secondus Budget Alert" \
-  --budget-amount=50USD \
-  --threshold-rule=percent=0.50,basis=current-spend \
-  --threshold-rule=percent=0.90,basis=current-spend \
-  --threshold-rule=percent=1.00,basis=current-spend
-```
-
----
-
-## Deployment Architecture
-
-### Cloud Run Deployment
-
-```mermaid
-flowchart TB
-    subgraph Source["Source"]
-        GH[GitHub Repo]
-    end
-
-    subgraph Build["Cloud Build"]
-        DF[Dockerfile]
-        CB[Cloud Build Trigger]
-    end
-
-    subgraph Deploy["Cloud Run"]
-        CR[Cloud Run Service<br/>secondus]
-        ENV[Environment<br/>GOOGLE_CLOUD_PROJECT]
-        SA[Service Account<br/>Vertex AI access]
-    end
-
-    subgraph Services["Google Cloud Services"]
-        VA[Vertex AI API]
-        FS[Firestore]
-        BB[Billing Budgets]
-    end
-
-    GH --> CB
-    CB --> DF
-    DF --> CR
-    CR --> ENV
-    CR --> SA
-    SA --> VA
-    SA --> FS
-    SA --> BB
-```
-
-### Deployment Script (deploy.sh)
-
-```bash
-#!/bin/bash
-gcloud run deploy secondus \
-  --source=./backend \
-  --region=us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars="GOOGLE_CLOUD_PROJECT=$PROJECT_ID" \
-  --memory=2Gi \
-  --cpu=2 \
-  --timeout=3600 \
-  --concurrency=80
-```
-
-### Environment Variables
-
-| Variable | Purpose |
-|----------|---------|
-| `GOOGLE_CLOUD_PROJECT` | GCP project ID |
-| `PORT` | Server port (default: 8080) |
-
-### Required APIs
-
-```bash
-gcloud services enable \
-  aiplatform.googleapis.com \
-  run.googleapis.com \
-  firestore.googleapis.com \
-  billingbudgets.googleapis.com
-```
-
----
-
-## Development Guide
-
-### Local Setup
-
+### Local Development
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
 export GOOGLE_CLOUD_PROJECT="your-project-id"
-gcloud auth application-default login
 python main.py
 ```
 
-### Testing
-
+### Cloud Run Deployment
 ```bash
-cd backend
-pytest tests/ -v
+./deploy.sh
 ```
 
-### Adding New Capabilities
+The deploy script:
+1. Builds React frontend (`npm run build`)
+2. Copies `dist/` to `backend/frontend-dist/`
+3. Deploys `backend/` to Cloud Run
 
-1. Update system prompt in `backend/agent.py`
-2. Add UI handling in `frontend/index.html`
-3. Update pattern tracking in `backend/learnings.py`
-4. Add tests in `backend/tests/`
-5. Update this documentation
+## Key Design Decisions
 
-### Debugging
+### Session Never Auto-Ends
+- LLM detects deal closure → `dealClosed: true` in metrics
+- User must click "End" to show recap
+- Allows continued conversation after agreement
 
-| Component | Debug Method |
-|-----------|--------------|
-| Frontend | Browser console, MediaPipe overlay |
-| WebSocket | Network tab, message logging |
-| Backend | FastAPI logs, `/health` endpoint |
-| ADK | Session service inspection |
-| Gemini | Vertex AI console, usage metrics |
+### Hybrid Detection
+- LLM provides semantic understanding
+- Deterministic checks provide guardrails
+- Both must agree for sensitive signals (circling)
 
----
+### Manual Document Sharing
+- User controls when to capture
+- User controls when to share with counterpart
+- Prevents repetitive "I see the document" responses
 
-## Future Roadmap
+### Camera-Aware Scoring
+- No penalty for disabled camera
+- Presence contributes 30% only when enabled
+- Voice/negotiation always primary (70-100%)
 
-### Planned Features
+## Session Recording Format
 
-```mermaid
-timeline
-    title Secondus Roadmap
-    section MVP (Current)
-      Practice Mode : Adversary agent, visual coaching
-      Learning System : Pattern tracking, recommendations
-    section v1.1
-      Live Mode : Real negotiation support
-      Contract Analysis : Document parsing
-    section v1.2
-      Multi-Party : Support for group negotiations
-      Mobile : PWA support
-    section v2.0
-      Enterprise : Team analytics, CRM integration
-      Custom Adversaries : Train on real counterparties
+Sessions are recorded as JSON for recap and analysis:
+
+```json
+{
+  "startTime": 1773192655328,
+  "exchanges": [
+    { "speaker": "adversary", "text": "...", "timestamp": "00:05" },
+    { "speaker": "user", "text": "...", "timestamp": "00:21" }
+  ],
+  "tacticsDetected": [
+    { "name": "ANCHORING PRESSURE", "desc": "...", "timestamp": "00:05" }
+  ],
+  "coachingGiven": [
+    { "phrase": "...", "context": "Response to: ...", "timestamp": "00:07" }
+  ],
+  "metrics": {
+    "totalTurns": 15,
+    "userTurns": 12,
+    "userAudioChunks": 0,
+    "stallingInstances": 0,
+    "progressInstances": 0,
+    "circlingInstances": 0,
+    "dealClosed": true
+  },
+  "cameraEnabled": false
+}
 ```
-
-### Contract Comparator (Planned)
-
-Compare final agreed terms against:
-- Original document
-- Industry benchmarks
-- Previous deals
-
----
-
-## References
-
-### Official Hackathon Resources
-
-- [ADK Bidi-Streaming Development Guide](https://google.github.io/adk-docs/streaming/dev-guide/part1/) — Core implementation patterns
-- [ADK Bidi-Streaming Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo) — Reference architecture
-- [ADK Visual Guide (Medium)](https://medium.com/google-cloud/adk-bidi-streaming-a-visual-guide-to-real-time-multimodal-ai-agent-development-62dd08c81399) — Agent lifecycle
-- [ADK Bidi-Streaming in 5 Minutes (YouTube)](https://www.youtube.com/watch?v=vLUkAGeLR1k) — Quick overview
-- [Live API Notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/multimodal-live-api) — Multimodal patterns
-- [Live Bidirectional Streaming Agent Codelab](https://codelabs.developers.google.com/way-back-home-level-3/instructions#0) — Step-by-step tutorial
-- [Google Developer Community](https://developers.google.com/community) — GDG network
-
-### Negotiation Research
-
-- [Harvard Program on Negotiation](https://www.pon.harvard.edu/) — Time pressure, BATNA
-- [Never Split the Difference — Chris Voss](https://www.blackswanltd.com/) — Tactical empathy, labeling
-- [What Every BODY is Saying — Joe Navarro](https://www.jnforensics.com/) — Body language signals
-
-### Technical Documentation
-
-- [Google ADK Documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/agent-builder/adk)
-- [MediaPipe Documentation](https://developers.google.com/mediapipe)
-- [Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/multimodal-live)
-
----
-
-Built for [Gemini Live Agent Challenge 2026](https://geminiliveagentchallenge.devpost.com)
-
-`#GeminiLiveAgentChallenge`

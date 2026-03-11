@@ -4,61 +4,218 @@
 
 ### 2026-03-09: Project Setup
 
-**Context**: Initial project creation for Gemini Live Agent Challenge
+**Context**: Initial project creation for Gemini Live Agent Challenge.
 
 **Corrections Applied**:
-1. Use `gemini-live-2.5-flash-native-audio` not `gemini-2.0-flash-live-001`
-2. Use Python 3.13+ not 3.11
-3. Use `python:3.13-slim` Docker image
+1. Use `gemini-live-2.5-flash-native-audio` not `gemini-2.0-flash-live-001`.
+2. Use Python 3.13+ not 3.11.
+3. Use `python:3.13-slim` Docker image.
 
 **Rules Derived**:
-- Always confirm model version before writing agent code
-- Default to latest stable Python (3.13) for new projects
-- Check user preferences for runtime versions early
+- Always confirm model version before writing agent code.
+- Default to latest stable Python (3.13) for new projects.
 
 ---
 
-*Add new lessons below as corrections are received*
+### 2026-03-10: Audio Format Requirements
 
-### 2026-03-10: Web Audio & UI Sync Lessons
+**Context**: User not being heard; Gemini returned 1007 error about invalid input audio format.
 
-**Context**: Audio detection conflicts and contradictory UI states during live tests.
+**Root Cause**: Browser's `AudioContext({ sampleRate: 16000 })` is a hint, not a guarantee. Actual sample rate varies (44.1kHz, 48kHz).
 
-**Issues Fixed**:
-1. `SpeechRecognition` and `getUserMedia` can conflict if initialized too closely together on some browsers, resulting in silent `network` errors.
-   - *Fix applied*: Added a 1500ms delay to `startSpeechRecognition` after mic stream is acquired.
-2. The AI model's coaching response (server-side) can contradict client-side heuristic logic (e.g. client sees agreement, server complains about price).
-   - *Fix applied*: Introduced `clientDetectedAgreement` flag. Client-side state overrides server coaching when closing signals are detected.
-3. Transcripts can be totally missed if Speech Recognition fails completely.
-   - *Fix applied*: Add a fallback `[Speech detected — transcript unavailable]` if raw audio volume exceeds threshold but speech API returns nothing.
+**Fix Applied**: Explicit resampling to 16kHz before sending to Gemini.
 
-### 2026-03-10: Practice Mode — Real Conversation Transcript & Screen Share
+**Rules Derived**:
+- Never trust browser sample-rate hints for strict APIs.
+- Resample explicitly and send exact required format.
 
-**Context**: User said "hello hello", adversary replied "Yes", but the live conversation UI showed other things; after sharing screen the flow was "a mess" and user hadn't spoken.
+---
 
-**Root causes**:
-1. **Transcript source conflict**: In practice mode the UI used the browser’s Web Speech API for user lines, which was failing with `Speech recognition error: network`. The backend already sent the real transcript via `user_says` (Gemini input_transcription) but it was treated as a fallback and could be overwritten or duplicated by the broken client-side recognition.
-2. **Screen share confusing the agent**: Screen frames were sent into the adversary’s live queue every 2s. The model received mixed audio + document images and reacted to the document instead of the user’s voice, breaking conversation and transcript sync.
+### 2026-03-10: Judge-First Redesign
 
-**Fixes applied**:
-1. **Backend-only transcript in practice mode**: Stopped starting Web Speech API in practice mode. The "LIVE CONVERSATION" panel now uses only backend messages: `user_says` (what Gemini heard) and `adversary_says` (what the model said). `user_says` handler now also updates `sessionRecording.exchanges`, `setTurnState('user')`, and `analyzeUserResponse()` so session analysis and UI stay in sync.
-2. **Screen for coach only**: In practice WebSocket, on `screen` message we only store `latest_screen` for the coach (drift detection). We no longer send screen content to the adversary’s `live_queue`, so the live conversation stays audio-only and transcript matches what was actually said.
-3. **Transcript entry selector**: Added speaker class to transcript entries (`transcript-entry user` / `transcript-entry adversary`) so duplicate checks for `user_says` work correctly.
+**Context**: Product became fragmented with competing features.
 
-**Rules derived**:
-- In practice/live voice flows, prefer a single source of truth for transcript (backend = what the model heard/said); avoid mixing client-side speech recognition with backend transcript.
-- When mixing modalities (audio + screen), don’t inject screen into the same stream the voice agent consumes if the goal is a clean voice conversation; use screen only in separate analysis (e.g. coach/drift).
+**What We Learned**:
+1. Judges score fluidity, multimodal naturalness, robustness, and demo clarity.
+2. A negotiation copilot should feel calm and invisible, not like a control center.
+3. One flagship live loop beats many partial features.
 
-### 2026-03-10: Interruption handling + live experience redesign
+**Rules Derived**:
+- Optimize for one memorable multimodal interaction.
+- Keep one primary recommendation on screen at a time.
+- Hide or cut features that don't improve the live loop.
 
-**Context**: User reported that once screen is shared "it's a mess"; agent should accept interruption and not follow the prompt blindly; requested a complete re-design for an elegant, straightforward live negotiation experience.
+---
 
-**Fixes applied**:
-1. **Adversary agent**: Prompt rewritten so "INTERRUPTION & LIVE CONVERSATION" is highest priority. Explicit: when the user speaks, STOP immediately; never finish a scripted line; respond only to what they said. Opening in main.py softened from "Say this opening NOW" to "Open with one short pitch… then LISTEN. Whatever the user says next — including if they interrupt — respond only to that."
-2. **Barge-in cue**: On `client_barge_in`, backend now injects a content message into the live queue telling the model to stop and listen. Reduces the model blindly finishing when the user has already spoken.
-3. **Layout**: Transcript is the hero (flex: 1, scrollable). Coach panel and interventions are compact and shrink; voice coaching bar tightened. Side panel stays 320px; main column gets the space.
-4. **Screen share**: Capture interval changed from 2s to 5s; interval stored and cleared on stop/endSession. UI copy: "Screen shared — Coach uses it for context only. Agent hears only your voice."
+### 2026-03-11: Frontend Modernization
 
-**Rules derived**:
-- For live voice agents, make interruption handling and "respond to what the user said" the top priority in the system prompt; soften any "do X now" opening so the model listens after.
-- On client-side barge-in, inject a short text cue to the agent so it explicitly stops and waits for the next user input.
+**Context**: Vanilla HTML/JS frontend was hard to maintain and extend.
+
+**What Changed**:
+1. Migrated to React 18 + TypeScript + Vite.
+2. Adopted Tailwind CSS v4 for styling.
+3. Component-based architecture with custom hooks.
+
+**Rules Derived**:
+- Modern frameworks improve development velocity.
+- Type safety catches bugs early.
+- Component isolation improves testability.
+
+---
+
+### 2026-03-11: False Signal Detection
+
+**Context**: "Conversation circling" triggered during active price negotiation.
+
+**Root Cause**: Deterministic detection counted topic mentions without considering progress.
+
+**Fix Applied**:
+1. Added LLM-based circling detection to coaching prompt.
+2. Hybrid approach: LLM + deterministic must agree.
+3. Increased turn threshold to 5+ for LLM, 7+ for deterministic.
+
+**Rules Derived**:
+- Keyword matching is brittle for semantic concepts.
+- LLM provides semantic understanding; deterministic provides guardrails.
+- Require multiple signals to agree for sensitive detections.
+
+---
+
+### 2026-03-11: Session Auto-Ending
+
+**Context**: Session ended automatically when "goodbye" detected, even during active negotiation.
+
+**Root Cause**: Keyword-based closing detection triggered session.complete.
+
+**Fix Applied**:
+1. Removed all auto-end behavior.
+2. Deal closure detection only updates metrics.
+3. User must click "End" button to see recap.
+
+**Rules Derived**:
+- User should control session lifecycle.
+- Detection should inform, not control.
+- Separate "detection" from "action".
+
+---
+
+### 2026-03-11: Document Analysis UX
+
+**Context**: AI repeatedly said "I see the document" when screen sharing.
+
+**Root Cause**: Continuous frame capture sent context to AI on every scroll.
+
+**Fix Applied**:
+1. Manual "Start Analysis" / "Done Scanning" flow.
+2. Frames captured every 3s while scanning (user scrolls).
+3. Explicit "Share with Counterpart" button.
+4. Context sent to AI only once per explicit share.
+
+**Final Flow**:
+```
+Share Screen → Start Analysis → Scroll Document → Done Scanning → Review Terms → Share
+```
+
+**Rules Derived**:
+- User should control what's shared with AI.
+- Prevent repetitive acknowledgments.
+- One-time context injection beats continuous.
+- Show extracted terms before sharing for transparency.
+
+---
+
+### 2026-03-11: Scoring Without Camera
+
+**Context**: Low scores when camera disabled, even for good negotiations.
+
+**Root Cause**: Scoring weighted presence at 30% even when no camera data.
+
+**Fix Applied**:
+1. Dynamic scoring weights based on camera state.
+2. Camera disabled: 100% voice score.
+3. Camera enabled: 70% voice + 30% presence.
+
+**Rules Derived**:
+- Don't penalize for missing optional features.
+- Dynamic weights based on available data.
+- Voice is primary in negotiations.
+
+---
+
+### 2026-03-11: LLM-Based Detection
+
+**Context**: Keyword matching missed nuanced deal closures like "Sure, we can do that."
+
+**What Changed**:
+1. Added CLOSING: YES/NO to coaching prompt.
+2. Added CIRCLING: YES/NO to coaching prompt.
+3. LLM now provides semantic classification.
+
+**Output Format**:
+```
+CLOSING: YES/NO
+CIRCLING: YES/NO
+SAY THIS: [coaching phrase]
+```
+
+**Rules Derived**:
+- Piggyback detection on existing LLM calls.
+- Structured output format for reliable parsing.
+- LLM understands semantic meaning better than keywords.
+
+---
+
+### 2026-03-11: Transcript Deduplication
+
+**Context**: Short messages like "0.7%" appeared twice in transcript.
+
+**Root Cause**: Deduplication only checked content length > 5, missing short exact matches.
+
+**Fix Applied**:
+1. Time-based deduplication (3s window).
+2. Exact match detection regardless of length.
+3. Substring containment for longer messages.
+
+**Rules Derived**:
+- Consider both content and timing for deduplication.
+- Handle edge cases (short messages, rapid repeats).
+
+---
+
+### 2026-03-11: Signal Rate Limiting
+
+**Context**: Same signal appeared multiple times in quick succession.
+
+**Fix Applied**:
+1. Track last emission time per signal type.
+2. 30s cooldown for urgent signals.
+3. 45s cooldown for watch/note signals.
+
+**Rules Derived**:
+- Rate limit by signal type, not globally.
+- Different urgencies deserve different cooldowns.
+- State tracking prevents spam.
+
+---
+
+## General Principles
+
+### Voice-First Design
+- Audio is primary; vision is supplementary.
+- Interruption handling is mandatory.
+- One recommendation at a time.
+
+### Multimodal Grounding
+- Extract structured data from visual input.
+- Compare spoken claims against structured state.
+- Show evidence in alerts, not just detection.
+
+### User Control
+- Never auto-end sessions.
+- Let user choose when to share.
+- Detection informs; user decides.
+
+### Hybrid Intelligence
+- LLM provides semantic understanding.
+- Deterministic provides guardrails.
+- Combine for robust detection.

@@ -1,83 +1,187 @@
-# Secondus — Claude Code Guidelines
+# Secondus — Development Guidelines
 
-## Workflow Orchestration
+## Mission
 
-### 1. Plan Mode Default
-- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
-- If something goes sideways, STOP and re-plan immediately — don't keep pushing
-- Use plan mode for verification steps, not just building
-- Write detailed specs upfront to reduce ambiguity
+Build Secondus into a judge-ready, real-time negotiation copilot for the Gemini Live Agent Challenge.
 
-### 2. Subagent Strategy
-- Use subagents liberally to keep main context window clean
-- Offload research, exploration, and parallel analysis to subagents
-- For complex problems, throw more compute at it via subagents
-- One task per subagent for focused execution
+The product should feel:
+- seamless
+- natural
+- grounded
+- calm under pressure
 
-### 3. Self-Improvement Loop
-- After ANY correction from the user: update `tasks/lessons.md` with the pattern
-- Write rules for yourself that prevent the same mistake
-- Ruthlessly iterate on these lessons until mistake rate drops
-- Review lessons at session start for relevant project
+## Current State
 
-### 4. Verification Before Done
-- Never mark a task complete without proving it works
-- Diff behavior between main and your changes when relevant
-- Ask yourself: "Would a staff engineer approve this?"
-- Run tests, check logs, demonstrate correctness
+### Frontend
+- **Framework:** React 18 + TypeScript + Vite
+- **Styling:** Tailwind CSS v4
+- **Components:** SessionScreen, DocumentAnalysis, CoachCard, SignalToast, WebcamPip
 
-### 5. Demand Elegance (Balanced)
-- For non-trivial changes: pause and ask "is there a more elegant way?"
-- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
-- Skip this for simple, obvious fixes — don't over-engineer
-- Challenge your own work before presenting it
+### Backend
+- **Framework:** FastAPI + Python 3.13
+- **Orchestrator:** session_orchestrator.py (state machine)
+- **Coach:** coach_engine.py (LLM-powered with CLOSING/CIRCLING detection)
+- **Contract:** contract_state.py (term extraction and drift detection)
+- **Recap:** recap_engine.py (dynamic scoring)
 
-### 6. Autonomous Bug Fixing
-- When given a bug report: just fix it. Don't ask for hand-holding
-- Point at logs, errors, failing tests — then resolve them
-- Zero context switching required from the user
-- Go fix failing CI tests without being told how
+### Key Features Working
+- LLM-based deal closure detection
+- LLM-based conversation circling detection
+- Manual document capture and share flow
+- Contract drift detection with evidence
+- Signal rate limiting
+- Camera-aware scoring (70/30 split when enabled)
+- Session never auto-ends (user clicks End)
 
-## Task Management
+## Product Priorities
 
-1. **Plan First**: Write plan to `tasks/todo.md` with checkable items
-2. **Verify Plan**: Check in before starting implementation
-3. **Track Progress**: Mark items complete as you go
-4. **Explain Changes**: High-level summary at each step
-5. **Document Results**: Add review section to `tasks/todo.md`
-6. **Capture Lessons**: Update `tasks/lessons.md` after corrections
+### 1. One Flagship Experience
+- Default to `Secondus Buddy` as the live AI negotiation partner.
+- Session only ends when user clicks "End" button.
+- Deal closure detection updates metrics, doesn't end session.
 
-## Core Principles
+### 2. LLM-Powered Detection
+Coaching prompt returns structured signals:
+```
+CLOSING: YES/NO
+CIRCLING: YES/NO
+SAY THIS: [phrase]
+```
 
-- **Simplicity First**: Make every change as simple as possible. Impact minimal code.
-- **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
-- **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
-- **Own Your Work**: Don't blame external factors. If it broke, understand why.
+Use hybrid approach: LLM + deterministic must agree for sensitive signals.
 
-## Project-Specific Context
+### 3. User-Controlled Document Sharing
+- User clicks "Start Analysis" to begin scanning
+- User scrolls through document while frames are captured
+- User clicks "Done Scanning" to review terms
+- User clicks "Share" to send context to counterpart
+- Context sent to AI only once per explicit share
 
-### Tech Stack
-- **Model**: Gemini 3.1 Flash via Google ADK
-- **Backend**: FastAPI + Python 3.13
-- **Frontend**: Vanilla HTML/JS with WebSocket
-- **Infrastructure**: Cloud Run, Firestore
+## Workflow
 
-### Key Files
-- `backend/main.py` — FastAPI server with ADK bidi-streaming
-- `backend/agent.py` — Secondus agent definition
-- `frontend/index.html` — Live session UI
-- `deploy.sh` — One-command Cloud Run deployment
+### Plan Before Large Changes
+- Define target experience first.
+- Work from product flow to architecture.
+- Check if change supports the 4-minute demo story.
 
-### Running Locally
+### Keep Docs In Sync
+- Update `tasks.md` when sprint direction changes.
+- Update `tasks/lessons.md` after corrections or discoveries.
+- Update `AGENTS.md` when architecture changes.
+
+### Verify Before Calling Work Done
+- Run the app when changes affect the live flow.
+- Test interruption handling when touching audio.
+- Test transcript accuracy when touching voice pipelines.
+- Test signal rate limiting when touching detection.
+
+## Architecture Rules
+
+### Session Orchestrator Owns State
+- Turn-taking and state transitions
+- Signal emission with rate limiting
+- Transcript accumulation
+- Deal closure tracking
+
+### LLM Detection Piggybacks on Coaching
+- Same API call returns coaching + detection signals
+- Structured output format for reliable parsing
+- Hybrid approach combines LLM + deterministic
+
+### Scoring Is Camera-Aware
+| Camera State | Voice Weight | Presence Weight |
+|--------------|--------------|-----------------|
+| Disabled | 100% | 0% |
+| Enabled | 70% | 30% |
+
+### Signals Are Rate Limited
+- Track last emission time per signal type
+- 30s cooldown for urgent signals
+- 45s cooldown for watch/note signals
+
+## UX Rules
+
+### Session Flow
+1. Launch → Click "Start Negotiation"
+2. Session → Transcript + Coach Card + Signals
+3. Recap → User clicks "End" → Score + Summary
+
+### Session UI Zones
+- **Left:** Document Scanner (when screen sharing)
+- **Center:** Transcript with YOUR TURN indicator
+- **Bottom:** Coach Card with "Say this now"
+- **Top Right:** Signal toasts (auto-dismiss)
+- **Bottom Right:** Webcam PiP (when camera on)
+
+### Signal Display
+- One signal type visible at a time (rate limited)
+- Auto-dismiss: urgent 6s, watch 5s, note 3s
+- Click X to dismiss early
+
+## Technical Rules
+
+### Audio
+- Resample to 16kHz before sending to Gemini
+- Buffer playback audio before playing
+- Clear buffer on interruption
+
+### Transcript
+- Filter system messages (starts with [, ends with ])
+- Filter "(USER INTERRUPTS)" markers
+- Deduplicate by time (3s) and content
+
+### Contract
+- Extract structured terms via Gemini Vision
+- Normalize terms for comparison
+- Show evidence in drift alerts
+
+### Signals
+- LLM detection for semantic concepts (closure, circling)
+- Deterministic for patterns (anchoring, timeline)
+- Hybrid when both must agree
+
+## Local Development
+
 ```bash
+# Backend
 cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-export GOOGLE_CLOUD_PROJECT="platinum-depot-489523-a7"
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+export GOOGLE_CLOUD_PROJECT="your-project-id"
 python main.py
 ```
 
-### Deployment
+Frontend is served from `frontend/dist/` (built by `npm run build` in frontend/).
+
+For frontend development with hot reload:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then visit http://localhost:5173 (Vite dev server proxies API to backend).
+
+## Deployment
+
 ```bash
 ./deploy.sh
 ```
+
+This builds frontend, copies to backend, and deploys to Cloud Run.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `backend/session_orchestrator.py` | Session state machine |
+| `backend/coach_engine.py` | LLM coaching + detection |
+| `backend/contract_state.py` | Term extraction + drift |
+| `backend/recap_engine.py` | Scoring + recap generation |
+| `backend/adversary.py` | AI counterparty agent |
+| `frontend/src/components/SessionScreen.tsx` | Main session UI |
+| `frontend/src/components/RecapOverlay.tsx` | Session recap display |
+| `frontend/src/components/DocumentAnalysis.tsx` | Document scanner panel |
+| `frontend/src/hooks/useSession.ts` | WebSocket management |
+| `frontend/src/hooks/useScreenShare.ts` | Screen capture + scanning |

@@ -7,7 +7,6 @@ Uses Google ADK's native bidi-streaming for Gemini Live API integration.
 
 import asyncio
 import base64
-import json
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -22,12 +21,14 @@ from google.adk.agents.run_config import StreamingMode
 from google.adk.sessions import InMemorySessionService
 from google.adk.agents.live_request_queue import LiveRequestQueue
 from google.genai import types
-from google import genai
 from pydantic import BaseModel
 
-from agent import root_agent, SECONDUS_PERSONA
+from agent import root_agent
 from adversary import adversary_agent
+from coach_engine import generate_coaching
+from session_orchestrator import ActiveSessionStore, BuddySessionOrchestrator
 from learnings import analyze_session, get_pre_session_briefing, get_quick_tip
+from recap_engine import build_buddy_recap
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "platinum-depot-489523-a7")
@@ -40,7 +41,7 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
 
 # Session management
 session_service = InMemorySessionService()
-active_sessions: dict[str, dict[str, Any]] = {}
+session_store = ActiveSessionStore()
 
 
 class SessionConfig(BaseModel):
@@ -64,7 +65,7 @@ async def lifespan(app: FastAPI):
     print(f"Secondus starting — Project: {PROJECT_ID}, Location: {LOCATION}")
     yield
     # Cleanup
-    active_sessions.clear()
+    session_store.clear()
     print("Secondus shutting down")
 
 
@@ -95,100 +96,6 @@ async def health_check():
         "project": PROJECT_ID,
     }
 
-
-# ============ Real-Time Coaching Generator ============
-
-# Initialize Gemini client for coaching
-coaching_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-
-COACHING_PROMPT = """You are Secondus, a negotiation coach for a CONSULTING/SERVICES deal.
-
-SCENARIO: User is negotiating a consulting contract. Topics include:
-- Price/budget (e.g., $50K, $80K, etc.)
-- Payment terms (Net-30, Net-60, Net-90)
-- Scope of work
-- Revision rounds
-- Possibly equity
-
-COUNTERPARTY JUST SAID:
-"{adversary_text}"
-
-USER'S POSITION:
-- Goals: {goals}
-- BATNA: {batna}
-- Recent commitments: {user_history}
-
-RULES:
-1. Respond ONLY to what the counterparty said - do NOT invent topics
-2. Output exactly ONE line: SAY THIS: [phrase]
-3. Keep response to 1-2 sentences
-4. If they mention price, respond about price
-5. If they mention equity, respond about equity
-6. Do NOT mention topics they didn't bring up
-
-CRITICAL — AGREEMENT DETECTION:
-If the counterparty is AGREEING, ACCEPTING, or saying "let's move forward":
-- Do NOT push back or demand more
-- CLOSE THE DEAL immediately
-- Example: "Great, let's lock that in. I'll send the contract today."
-- If terms are close to user goals, ACCEPT and confirm next steps
-- Saying "could work", "move forward", "let's do it", "sounds good" = AGREEMENT
-
-SAY THIS:"""
-
-
-
-async def generate_coaching(adversary_text: str, goals: str, batna: str, user_history: str = "", screen_bytes: bytes = None) -> dict:
-    """Generate real-time coaching response to what adversary said."""
-    try:
-        prompt = COACHING_PROMPT.format(
-            goals=goals or "Close the deal",
-            batna=batna or "Walk away",
-            adversary_text=adversary_text,
-            user_history=user_history or "No prior commitments yet"
-        )
-        
-        contents = [prompt]
-        if screen_bytes:
-            contents.append(
-                types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg")
-            )
-            contents.append("CRITICAL: Look at the provided screen capture of the contract. If the counterparty's spoken text contradicts the document terms in a way that hurts the user, output a 'DRIFT: [Contract says X, they said Y]' alert alongside your SAY THIS response!")
-
-        response = await asyncio.to_thread(
-            coaching_client.models.generate_content,
-            model="gemini-2.0-flash",
-            contents=contents,
-        )
-
-        coaching_text = response.text.strip()
-
-        # Extract the SAY THIS portion
-        if "SAY THIS:" in coaching_text.upper():
-            # Find SAY THIS and extract the phrase
-            idx = coaching_text.upper().find("SAY THIS:")
-            phrase = coaching_text[idx + 9:].strip().strip('"').strip("'")
-            return {
-                "type": "coaching",
-                "say_this": phrase,
-                "context": f"Response to: {adversary_text[:50]}..."
-            }
-        else:
-            return {
-                "type": "coaching",
-                "say_this": coaching_text,
-                "context": f"Response to: {adversary_text[:50]}..."
-            }
-
-    except Exception as e:
-        print(f"Coaching generation error: {e}")
-        return {
-            "type": "coaching",
-            "say_this": "I hear you. Let me think about the best way forward.",
-            "context": "Fallback response"
-        }
-
-
 # ============ Learning System Endpoints ============
 
 @app.get("/learnings/briefing")
@@ -201,6 +108,17 @@ async def get_briefing():
 async def analyze_session_endpoint(session_data: dict):
     """Analyze completed session and store learnings."""
     return analyze_session(session_data)
+
+
+@app.post("/session/buddy/recap")
+async def build_buddy_recap_endpoint(session_data: dict):
+    """Generate a Buddy recap payload for the frontend outcome screen."""
+    normalized = dict(session_data)
+    normalized["visualPresence"] = session_data.get("visualPresence") or {}
+    stored = analyze_session(normalized)
+    recap = build_buddy_recap(normalized)
+    recap["stored_analysis"] = stored
+    return recap
 
 
 @app.get("/learnings/tip/{tactic}")
@@ -229,16 +147,13 @@ SESSION_TIMEOUT = 300
 async def create_practice_session(config: PracticeConfig):
     """Create a practice session with adversarial client agent."""
     session_id = str(uuid.uuid4())
-
-    # Store practice mode flag
-    active_sessions[session_id] = {
-        "mode": "practice",
-        "config": config.model_dump(),
-        "context": f"PRACTICE MODE - Scenario: {config.scenario}\nYour goals: {config.goals}\nYour BATNA: {config.batna}",
-        "last_audio_time": 0,
-        "low_cost_mode": config.low_cost_mode,
-        "created_at": asyncio.get_event_loop().time(),
-    }
+    context = f"PRACTICE MODE - Scenario: {config.scenario}\nYour goals: {config.goals}\nYour BATNA: {config.batna}"
+    session_store.create_buddy_session(
+        session_id=session_id,
+        config=config.model_dump(),
+        context=context,
+        low_cost_mode=config.low_cost_mode,
+    )
 
     # Create ADK session for adversary
     await session_service.create_session(
@@ -373,12 +288,12 @@ async def create_session(config: SessionConfig):
         session_id=session_id,
     )
 
-    active_sessions[session_id] = {
-        "config": config.model_dump(),
-        "context": context,
-        "session": session,
-        "created_at": asyncio.get_event_loop().time(),
-    }
+    session_store.create_live_session(
+        session_id=session_id,
+        config=config.model_dump(),
+        context=context,
+        session=session,
+    )
 
     return SessionResponse(session_id=session_id, status="created")
 
@@ -399,12 +314,12 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
     """
     await websocket.accept()
 
-    if session_id not in active_sessions:
-        await websocket.send_json({"error": "Session not found"})
+    if not session_store.exists(session_id):
+        await websocket.send_json({"type": "session.error", "content": "Session not found", "error": "Session not found"})
         await websocket.close()
         return
 
-    session_data = active_sessions[session_id]
+    session_data = session_store.require(session_id)
     context = session_data["context"]
 
     # Create ADK runner for this session
@@ -418,6 +333,52 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
     live_queue = LiveRequestQueue()
 
     try:
+        async def emit_live_event(payload: dict[str, Any]) -> None:
+            await websocket.send_json(payload)
+
+        async def emit_live_text_signal(text: str, timestamp: float) -> None:
+            upper = text.upper()
+            if "SAY THIS:" in upper:
+                idx = upper.find("SAY THIS:")
+                phrase = text[idx + 9 :].strip().strip('"').strip("'")
+                await emit_live_event(
+                    {
+                        "type": "coach.recommendation",
+                        "phrase": phrase,
+                        "context": "Live coaching recommendation",
+                    }
+                )
+                return
+
+            signal_type = "note"
+            title = "Coach signal"
+            if upper.startswith("TACTIC:"):
+                signal_type = "tactic"
+                title = "Tactic detected"
+            elif upper.startswith("DRIFT:"):
+                signal_type = "drift"
+                title = "Contract drift"
+            elif upper.startswith("LEVERAGE:"):
+                signal_type = "leverage"
+                title = "Leverage"
+            elif upper.startswith("WATCH:"):
+                signal_type = "watch"
+                title = "Watch closely"
+            elif upper.startswith("URGENT:"):
+                signal_type = "urgent"
+                title = "Act now"
+
+            await emit_live_event(
+                {
+                    "type": "signal.alert",
+                    "urgency": signal_type if signal_type in {"urgent", "watch"} else "note",
+                    "title": title,
+                    "message": text,
+                    "signal_type": signal_type,
+                    "timestamp": timestamp,
+                }
+            )
+
         # Send initial context (sync method)
         live_queue.send_content(
             types.Content(
@@ -458,12 +419,12 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                         audio_bytes = base64.b64decode(data["data"])
                         live_queue.send_realtime(
                             types.Blob(
-                                mime_type="audio/pcm",
+                                mime_type="audio/pcm;rate=16000",
                                 data=audio_bytes,
                             )
                         )
                         # Track audio activity for silence detection
-                        active_sessions[session_id]["last_audio_time"] = asyncio.get_event_loop().time()
+                        session_store.update_last_audio_time(session_id, asyncio.get_event_loop().time())
 
                     elif msg_type == "screen":
                         # JPEG screen capture (sync method)
@@ -548,12 +509,7 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                                     urgency = "watch"
                                 else:
                                     urgency = "note"
-                                await websocket.send_json({
-                                    "type": "intervention",
-                                    "urgency": urgency,
-                                    "content": text,
-                                    "timestamp": current_time,
-                                })
+                                await emit_live_text_signal(text, current_time)
                             accumulated_text = ""
 
                     # Check for text content in the event
@@ -570,19 +526,14 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                                 else:
                                     urgency = "note"
 
-                                await websocket.send_json({
-                                    "type": "intervention",
-                                    "urgency": urgency,
-                                    "content": text,
-                                    "timestamp": asyncio.get_event_loop().time(),
-                                })
+                                await emit_live_text_signal(text, asyncio.get_event_loop().time())
 
                             # Handle audio parts (send as base64)
                             if hasattr(part, "inline_data") and part.inline_data:
                                 blob = part.inline_data
                                 if blob.mime_type and "audio" in blob.mime_type:
-                                    await websocket.send_json({
-                                        "type": "audio",
+                                    await emit_live_event({
+                                        "type": "media.audio",
                                         "data": base64.b64encode(blob.data).decode(),
                                         "mime_type": blob.mime_type,
                                     })
@@ -591,27 +542,28 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                     if hasattr(event, "input_transcription") and event.input_transcription:
                         trans = event.input_transcription
                         if hasattr(trans, "text") and trans.text:
-                            await websocket.send_json({
-                                "type": "transcript",
-                                "speaker": "counterparty",
+                            await emit_live_event({
+                                "type": "transcript.append",
+                                "speaker": "adversary",
                                 "content": trans.text,
                                 "timestamp": current_time,
                             })
                             # Update last speech time for silence detection
-                            active_sessions[session_id]["last_audio_time"] = current_time
+                            session_store.update_last_audio_time(session_id, current_time)
 
                     # Check for transcript (legacy)
                     if hasattr(event, "transcript") and event.transcript:
-                        await websocket.send_json({
-                            "type": "transcript",
+                        await emit_live_event({
+                            "type": "transcript.append",
+                            "speaker": "adversary",
                             "content": event.transcript,
                         })
 
             except WebSocketDisconnect:
                 pass
             except Exception as e:
-                await websocket.send_json({
-                    "type": "error",
+                await emit_live_event({
+                    "type": "session.error",
                     "content": str(e),
                 })
 
@@ -623,17 +575,18 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
             try:
                 while True:
                     await asyncio.sleep(1)
-                    session_data = active_sessions.get(session_id, {})
+                    session_data = session_store.get(session_id) or {}
                     last_audio = session_data.get("last_audio_time", 0)
                     current_time = asyncio.get_event_loop().time()
                     silence_duration = current_time - last_audio if last_audio > 0 else 0
 
                     if silence_duration > silence_threshold and not silence_alerted:
                         silence_alerted = True
-                        await websocket.send_json({
-                            "type": "signal",
+                        await emit_live_event({
+                            "type": "signal.alert",
+                            "urgency": "watch",
                             "signal_type": "silence",
-                            "duration": round(silence_duration, 1),
+                            "title": "Strategic pause",
                             "message": f"Strategic pause detected ({round(silence_duration)}s). They may be processing or waiting for you to fill the gap.",
                             "timestamp": current_time,
                         })
@@ -653,14 +606,14 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
                     remaining = SESSION_TIMEOUT - elapsed
 
                     if 50 <= remaining <= 60:
-                        await websocket.send_json({
-                            "type": "warning",
+                        await emit_live_event({
+                            "type": "session.warning",
                             "content": "Session ending in 1 minute (cost control)",
                         })
 
                     if elapsed >= SESSION_TIMEOUT:
-                        await websocket.send_json({
-                            "type": "timeout",
+                        await emit_live_event({
+                            "type": "session.timeout",
                             "content": "Session ended (5 minute limit)",
                         })
                         live_queue.close()
@@ -678,12 +631,11 @@ async def negotiate_websocket(websocket: WebSocket, session_id: str):
 
     except Exception as e:
         await websocket.send_json({
-            "type": "error",
+            "type": "session.error",
             "content": str(e),
         })
     finally:
-        if session_id in active_sessions:
-            del active_sessions[session_id]
+        session_store.pop(session_id)
         await websocket.close()
 
 
@@ -697,18 +649,17 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
     """
     await websocket.accept()
 
-    if session_id not in active_sessions:
-        await websocket.send_json({"type": "error", "content": "Session not found"})
+    if not session_store.exists(session_id):
+        await websocket.send_json({"type": "session.error", "content": "Session not found", "error": "Session not found"})
         await websocket.close()
         return
 
-    session_data = active_sessions[session_id]
+    session_data = session_store.require(session_id)
     if session_data.get("mode") != "practice":
-        await websocket.send_json({"type": "error", "content": "Not a practice session"})
+        await websocket.send_json({"type": "session.error", "content": "Not a Buddy session", "error": "Not a Buddy session"})
         await websocket.close()
         return
 
-    # Create runner for adversary agent
     adversary_runner = Runner(
         agent=adversary_agent,
         app_name="adversary",
@@ -716,246 +667,70 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
     )
 
     live_queue = LiveRequestQueue()
-    state = {"accumulated_text": ""}
+    orchestrator = BuddySessionOrchestrator(
+        session_id=session_id,
+        session_data=session_data,
+        session_store=session_store,
+        websocket=websocket,
+        live_queue=live_queue,
+        coaching_fn=generate_coaching,
+    )
 
     try:
-        # Send initial scenario context — opening is a suggestion; then respond naturally to the user
-        context = session_data.get("context", "Practice negotiation")
-        goals = session_data.get("config", {}).get("goals", "Close at $80K")
-        live_queue.send_content(
-            types.Content(
-                parts=[types.Part(text=f"""Start the call. You are Alex Chen, TechNova CTO. User's goals: {goals}
-
-Open with one short pitch, e.g.: "Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
-
-Then LISTEN. Whatever the user says next — including if they interrupt you — respond only to that. Do not stick to a script. Accept interruptions and answer what they actually said.""")]
-            )
-        )
-
-        async def receive_from_user():
-            try:
-                while True:
-                    data = await websocket.receive_json()
-                    msg_type = data.get("type")
-
-                    if msg_type == "audio":
-                        audio_bytes = base64.b64decode(data["data"])
-                        live_queue.send_realtime(
-                            types.Blob(mime_type="audio/pcm", data=audio_bytes)
-                        )
-
-                    elif msg_type == "text":
-                        live_queue.send_content(
-                            types.Content(parts=[types.Part(text=data["data"])])
-                        )
-
-                    elif msg_type == "screen":
-                        image_bytes = base64.b64decode(data["data"])
-                        # Store for the coach only (drift detection). Do NOT send to the adversary:
-                        # sending screen to the live agent confuses the conversation (model reacts to
-                        # document instead of user speech) and breaks transcript/sync.
-                        if session_id in active_sessions:
-                            active_sessions[session_id]["latest_screen"] = image_bytes
-
-                    elif msg_type == "client_barge_in":
-                        # User started speaking; tell the agent to stop and listen so it doesn't blindly finish.
-                        live_queue.send_content(
-                            types.Content(
-                                parts=[types.Part(
-                                    text="[The user is speaking now. Stop your current response immediately. You will hear what they said next — respond only to that.]"
-                                )]
-                            )
-                        )
-                        if state["accumulated_text"].strip():
-                            await websocket.send_json({
-                                "type": "adversary_says",
-                                "content": state["accumulated_text"].strip() + " — [interrupted]"
-                            })
-                        state["accumulated_text"] = ""
-
-                    elif msg_type == "end":
-                        live_queue.close()
-                        break
-
-            except WebSocketDisconnect:
-                live_queue.close()
-
-        async def send_adversary_response():
-            user_history = []  # Track what the user has said/committed to
-            low_cost = session_data.get("low_cost_mode", False)
-            try:
-                # Use TEXT modality in low-cost mode (no audio generation = 80% cheaper)
-                run_config = RunConfig(
-                    response_modalities=["TEXT"] if low_cost else ["AUDIO"],
-                    streaming_mode=StreamingMode.BIDI,
-                    output_audio_transcription=None if low_cost else types.AudioTranscriptionConfig(),
-                    input_audio_transcription=types.AudioTranscriptionConfig(),  # Transcribe user speech
-                )
-
-                async for event in adversary_runner.run_live(
-                    user_id="user",
-                    session_id=session_id,
-                    live_request_queue=live_queue,
-                    run_config=run_config,
-                ):
-                    # Send audio to user
-                    if hasattr(event, "content") and event.content:
-                        for part in event.content.parts:
-                            if hasattr(part, "inline_data") and part.inline_data:
-                                blob = part.inline_data
-                                if blob.mime_type and "audio" in blob.mime_type:
-                                    await websocket.send_json({
-                                        "type": "adversary_audio",
-                                        "data": base64.b64encode(blob.data).decode(),
-                                        "mime_type": blob.mime_type,
-                                    })
-
-                    # Capture what the USER said (input transcription)
-                    if hasattr(event, "input_transcription") and event.input_transcription:
-                        trans = event.input_transcription
-                        
-                        # Detect interruption: If user starts speaking while adversary is generating
-                        if hasattr(trans, "text") and trans.text and trans.text.strip():
-                            # Send a signal to frontend to clear the adversary's audio playback queue immediately
-                            await websocket.send_json({
-                                "type": "clear_audio"
-                            })
-                            if state["accumulated_text"].strip():
-                                # Send what was generated right before the interruption so it shows in the transcript
-                                await websocket.send_json({
-                                    "type": "adversary_says",
-                                    "content": state["accumulated_text"].strip() + " -- [interrupted]"
-                                })
-                            state["accumulated_text"] = "" # Reset accumulated trans as they were interrupted
-                            
-                        if hasattr(trans, "text") and trans.text and trans.text.strip():
-                            user_text = trans.text.strip()
-                            # Send fallback transcript to UI just in case Chrome Web Speech API crashed
-                            await websocket.send_json({
-                                "type": "user_says",
-                                "content": user_text
-                            })
-                            # Add to history if not duplicate
-                            if not user_history or user_history[-1] != user_text:
-                                user_history.append(user_text)
-                                # Keep last 5 user statements for context
-                                if len(user_history) > 5:
-                                    user_history.pop(0)
-
-                    # Accumulate adversary transcription
-                    if hasattr(event, "output_transcription") and event.output_transcription:
-                        trans = event.output_transcription
-                        if hasattr(trans, "text") and trans.text:
-                            if not state["accumulated_text"].endswith(trans.text):
-                                state["accumulated_text"] += trans.text
-
-                    # Send transcript on turn complete AND generate coaching
-                    if hasattr(event, "turn_complete") and event.turn_complete:
-                        if state["accumulated_text"].strip():
-                            adversary_statement = state["accumulated_text"].strip()
-
-                            # 1. Send what adversary said
-                            await websocket.send_json({
-                                "type": "adversary_says",
-                                "content": adversary_statement,
-                            })
-
-                            # 2. Generate coaching response from Secondus
-                            # Include what the user has committed to
-                            config = session_data.get("config", {})
-                            user_history_text = "\n".join([f"- User said: \"{stmt}\"" for stmt in user_history[-3:]])
-
-                            coaching = await generate_coaching(
-                                adversary_text=adversary_statement,
-                                goals=config.get("goals", ""),
-                                batna=config.get("batna", ""),
-                                user_history=user_history_text,
-                                screen_bytes=active_sessions.get(session_id, {}).get("latest_screen")
-                            )
-
-                            # 3. Send coaching to frontend
-                            await websocket.send_json({
-                                "type": "say_this",
-                                "phrase": coaching.get("phrase", coaching.get("say_this", "")),
-                                "context": coaching.get("context", ""),
-                            })
-
-                            state["accumulated_text"] = ""
-
-            except WebSocketDisconnect:
-                pass
-            except Exception as e:
-                await websocket.send_json({"type": "error", "content": str(e)})
-
-        async def session_timeout_monitor():
-            """Auto-end session after 5 minutes to prevent runaway costs."""
-            try:
-                created_at = session_data.get("created_at", asyncio.get_event_loop().time())
-                while True:
-                    await asyncio.sleep(10)  # Check every 10 seconds
-                    elapsed = asyncio.get_event_loop().time() - created_at
-                    remaining = SESSION_TIMEOUT - elapsed
-
-                    # Warn at 1 minute remaining
-                    if 50 <= remaining <= 60:
-                        await websocket.send_json({
-                            "type": "warning",
-                            "content": "Session ending in 1 minute (cost control)",
-                        })
-
-                    # End session at timeout
-                    if elapsed >= SESSION_TIMEOUT:
-                        await websocket.send_json({
-                            "type": "timeout",
-                            "content": "Session ended (5 minute limit reached)",
-                        })
-                        live_queue.close()
-                        break
-            except (WebSocketDisconnect, asyncio.CancelledError):
-                pass
-
         await asyncio.gather(
-            receive_from_user(),
-            send_adversary_response(),
-            session_timeout_monitor(),
+            orchestrator.receive_from_user(),
+            orchestrator.send_adversary_response(adversary_runner),
+            orchestrator.session_timeout_monitor(),
+            orchestrator.silence_monitor(),
         )
 
     except Exception as e:
-        await websocket.send_json({"type": "error", "content": str(e)})
+        import traceback
+        print(f"Practice websocket error: {e}", flush=True)
+        traceback.print_exc()
+        try:
+            await orchestrator.emit({"type": "session.error", "content": str(e)})
+        except Exception:
+            pass
     finally:
-        # Clean up session
-        if session_id in active_sessions:
-            del active_sessions[session_id]
-        await websocket.close()
+        session_store.pop(session_id)
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 
 @app.get("/session/{session_id}/status")
 async def get_session_status(session_id: str):
     """Get the status of a negotiation session."""
-    if session_id not in active_sessions:
+    if not session_store.exists(session_id):
         return {"error": "Session not found"}
-
-    session_data = active_sessions[session_id]
-    return {
-        "session_id": session_id,
-        "status": "active",
-        "config": session_data.get("config", {}),
-        "mode": session_data.get("mode", "live"),
-    }
+    return session_store.status_payload(session_id)
 
 
-# Serve frontend
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+# Serve frontend — try Vite build output, then Docker-copied dist, then legacy
+frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+frontend_docker = os.path.join(os.path.dirname(__file__), "frontend-dist")
+frontend_legacy = os.path.join(os.path.dirname(__file__), "..", "frontend-legacy")
+
+frontend_path = next(
+    (p for p in [frontend_dist, frontend_docker, frontend_legacy] if os.path.exists(p)),
+    frontend_legacy,
+)
+
 if os.path.exists(frontend_path):
-    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
-
     @app.get("/")
     async def serve_frontend():
         return FileResponse(os.path.join(frontend_path, "index.html"))
 
     @app.get("/contract.html")
     async def serve_contract():
-        return FileResponse(os.path.join(frontend_path, "contract.html"))
+        contract = os.path.join(frontend_path, "contract.html")
+        if not os.path.exists(contract):
+            contract = os.path.join(frontend_legacy, "contract.html")
+        return FileResponse(contract)
+
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
 
 
 if __name__ == "__main__":

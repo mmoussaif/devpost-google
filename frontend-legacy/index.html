@@ -1,0 +1,4510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secondus — Real-Time Negotiation Intelligence</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #14141f;
+            --bg-card: #1a1a2e;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888aa;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --urgent: #ef4444;
+            --watch: #f59e0b;
+            --note: #6b7280;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        /* Setup Screen */
+        #setup-screen {
+            max-width: 600px;
+            margin: 4rem auto;
+        }
+
+        .setup-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .setup-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .launch-shell {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .launch-hero {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
+        }
+
+        .launch-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .launch-title {
+            font-size: 2.4rem;
+            line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+
+        .launch-subtitle {
+            color: var(--text-secondary);
+            max-width: 52ch;
+        }
+
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .mode-card {
+            padding: 1.25rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .mode-card h3 {
+            font-size: 1.05rem;
+        }
+
+        .mode-card p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .mode-card .btn {
+            width: 100%;
+        }
+
+        .launch-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .advanced-panel {
+            display: none;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+        }
+
+        .advanced-panel.open {
+            display: block;
+        }
+
+        .advanced-header {
+            margin-bottom: 1rem;
+        }
+
+        .advanced-header h3 {
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .advanced-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .preflight-screen {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .preflight-screen.active {
+            display: block;
+        }
+
+        .preflight-card {
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .preflight-eyebrow {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .preflight-title {
+            font-size: 1.5rem;
+            margin-top: 0.35rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .preflight-copy {
+            color: var(--text-secondary);
+        }
+
+        .preflight-checks {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .preflight-check {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .preflight-check strong {
+            display: block;
+            margin-bottom: 0.15rem;
+            font-size: 0.95rem;
+        }
+
+        .preflight-check span {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .preflight-pill {
+            padding: 0.3rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(34, 197, 94, 0.14);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+
+        .preflight-pill.optional {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        .preflight-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .preflight-actions .btn {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            min-height: 48px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--accent);
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .tag button {
+            background: none;
+            border: none;
+            color: inherit;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .tag button:hover {
+            opacity: 1;
+        }
+
+        .tag-input {
+            flex: 1;
+            min-width: 120px;
+            border: none;
+            background: transparent;
+            padding: 0.25rem;
+        }
+
+        .tag-input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #5558e3;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        .btn-practice {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-practice:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .mode-hint {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .cost-options {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #f59e0b;
+        }
+        .timeout-warning {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #f59e0b;
+            color: #000;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: pulse 1s infinite;
+        }
+
+        /* Voice Enrollment */
+        .voice-enrollment {
+            margin-bottom: 1.5rem;
+        }
+        .voice-enroll-box {
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--text-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .voice-enroll-box.recording {
+            border-color: var(--urgent);
+            background: rgba(239, 68, 68, 0.1);
+            animation: pulse-record 1s infinite;
+        }
+        .voice-enroll-box.enrolled {
+            border-color: var(--primary);
+            border-style: solid;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        @keyframes pulse-record {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            50% { box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.2); }
+        }
+        .enroll-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        .enroll-icon { font-size: 1.5rem; }
+        .btn-enroll {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-enroll:hover { background: #5558e3; }
+        .btn-enroll.recording {
+            background: var(--urgent);
+            animation: pulse 1s infinite;
+        }
+        .enroll-progress {
+            margin-top: 1rem;
+        }
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .enroll-success {
+            color: var(--primary);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        .enroll-recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--urgent);
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--urgent);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .enroll-script {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        .btn-stop-enroll {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-stop-enroll:hover { background: #059669; }
+        .enroll-heard {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .heard-label {
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+        .heard-text {
+            color: var(--primary);
+            font-style: italic;
+        }
+
+        /* Live Screen */
+        #live-screen {
+            display: none;
+            position: relative;
+        }
+
+        .live-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 0;
+        }
+
+        .start-nego-panel {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        .start-nego-banner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(20, 20, 31, 0.95));
+            border: 1px solid rgba(99, 102, 241, 0.22);
+            border-radius: 12px;
+            box-shadow: 0 18px 40px rgba(4, 6, 18, 0.32);
+            backdrop-filter: blur(10px);
+        }
+        .start-nego-label {
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--success);
+        }
+        .start-nego-text {
+            flex: 1;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        .start-nego-btn {
+            flex-shrink: 0;
+            padding: 0.65rem 1.35rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7c82ff 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .start-nego-btn:hover {
+            background: linear-gradient(135deg, #8b90ff 0%, #6d71ff 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .cost-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: help;
+        }
+        .cost-display.warning {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            animation: pulse 1s infinite;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            border-radius: 999px;
+            color: #86efac;
+            font-size: 0.875rem;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: linear-gradient(180deg, rgba(32, 33, 54, 0.92), rgba(20, 20, 31, 0.92));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 24px rgba(4, 6, 18, 0.2);
+        }
+
+        .btn-control:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-control.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-control.muted {
+            opacity: 0.85;
+            color: var(--text-secondary);
+            border-color: rgba(255,255,255,0.08);
+        }
+        .btn-control.muted .mic-icon-on { display: none !important; }
+        .btn-control.muted .mic-icon-muted { display: inline-flex !important; }
+        .btn-control.active .mic-icon-on { display: inline-flex; }
+        .btn-control.active .mic-icon-muted { display: none !important; }
+        .btn-control.muted-during-playback {
+            background: var(--watch);
+            border-color: var(--watch);
+            opacity: 0.7;
+        }
+        .btn-control.muted-during-playback::after {
+            content: ' (listening...)';
+            font-size: 0.7rem;
+        }
+
+        .btn-control.danger {
+            border-color: var(--urgent);
+            color: var(--urgent);
+        }
+
+        .btn-control.danger:hover {
+            background: var(--urgent);
+            color: white;
+        }
+
+        .live-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            min-height: 0;
+            height: calc(100vh - 180px);
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 0;
+        }
+
+        .interventions-panel {
+            flex-shrink: 0;
+            max-height: 140px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(26, 26, 46, 0.92), rgba(20, 20, 31, 0.96));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 20px 40px rgba(4, 6, 18, 0.22);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .intervention-count {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .count-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .count-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .count-badge.urgent .dot { background: var(--urgent); }
+        .count-badge.watch .dot { background: var(--watch); }
+        .count-badge.note .dot { background: var(--note); }
+
+        .interventions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .intervention-card {
+            padding: 0.8rem 0.95rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-left: 3px solid;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 24px rgba(4, 6, 18, 0.12);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .intervention-card.urgent {
+            border-color: var(--urgent);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .intervention-card.watch {
+            border-color: var(--watch);
+        }
+
+        .intervention-card.note {
+            border-color: var(--note);
+        }
+
+        .intervention-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.45rem;
+        }
+
+        .intervention-type {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .intervention-card.urgent .intervention-type { color: var(--urgent); }
+        .intervention-card.watch .intervention-type { color: var(--watch); }
+        .intervention-card.note .intervention-type { color: var(--note); }
+
+        .intervention-card.signal {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(91, 33, 182, 0.08));
+        }
+        .intervention-card.signal .intervention-type { color: #8b5cf6; }
+
+        /* DRIFT Alert - Contract vs Speech mismatch */
+        .intervention-card.drift {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%);
+            border-width: 2px;
+            animation: drift-pulse 2s ease-in-out infinite;
+        }
+        .intervention-card.drift .intervention-type {
+            color: #f59e0b;
+            font-size: 0.85rem;
+        }
+        @keyframes drift-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            50% { box-shadow: 0 0 15px 3px rgba(245, 158, 11, 0.3); }
+        }
+
+        /* LEVERAGE Alert - Opportunity detected */
+        .intervention-card.leverage {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border-width: 2px;
+        }
+        .intervention-card.leverage .intervention-type { color: #10b981; }
+        .intervention-summary {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 0.18rem;
+        }
+        .intervention-body {
+            font-size: 0.94rem;
+            line-height: 1.55;
+            color: var(--text-primary);
+        }
+
+        /* TACTIC Alert - Enhanced urgency */
+        .intervention-card.tactic {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.1) 100%);
+            border-width: 2px;
+            animation: tactic-shake 0.5s ease-in-out;
+        }
+        @keyframes tactic-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* Drift Banner - Top of screen alert */
+        .drift-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            animation: slide-down 0.3s ease;
+            font-weight: 600;
+        }
+        .drift-banner.show { display: flex; }
+        .drift-banner-icon { font-size: 1.25rem; }
+        .drift-banner-text { flex: 1; text-align: center; }
+        .practice-error-banner {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 90%;
+            font-size: 0.9rem;
+        }
+        .practice-error-banner .practice-error-msg { flex: 1; }
+        .practice-error-banner button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .practice-error-banner button:hover { background: rgba(255,255,255,0.3); }
+        .muted-hint {
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.75rem;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            color: #f59e0b;
+            font-size: 0.9rem;
+        }
+        .muted-hint strong { color: #fbbf24; }
+        .drift-banner-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        @keyframes slide-down {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .vu-meter.agent-speaking .vu-fill.agent {
+            animation: agent-pulse 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes agent-pulse {
+            0% { width: 40%; }
+            100% { width: 85%; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            50% { box-shadow: 0 0 20px 5px rgba(16, 185, 129, 0.3); }
+        }
+
+        /* Coach Panel - Compact, above transcript */
+        .coach-panel {
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 34%),
+                linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%);
+            border-radius: 18px;
+            padding: 1.1rem 1.35rem;
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 20px 44px rgba(16, 185, 129, 0.22);
+        }
+        .coach-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .coach-icon { font-size: 1.5rem; }
+        .coach-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.9);
+        }
+        .coach-phrase {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: white;
+            padding: 0.55rem 0;
+            max-width: 42ch;
+        }
+        .coach-context {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.82);
+            margin-top: 0.6rem;
+        }
+
+        /* Voice Coaching Metrics */
+        .voice-coaching {
+            flex-shrink: 0;
+            background: linear-gradient(180deg, rgba(26, 26, 46, 0.94), rgba(20, 20, 31, 0.95));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            box-shadow: 0 16px 32px rgba(4, 6, 18, 0.18);
+        }
+        .voice-metric {
+            flex: 1;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .metric-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .metric-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .metric-fill.pace { background: #f59e0b; }
+        .voice-tip {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            flex: 2;
+        }
+
+        @keyframes pulse-coach {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5); }
+            100% { transform: scale(1); }
+        }
+
+        .intervention-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .intervention-content {
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+
+        .transcript-panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+        }
+
+        .transcript-panel.live-transcript {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 28%),
+                linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(20, 20, 31, 0.98) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 20px 40px rgba(4, 6, 18, 0.18);
+        }
+
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .transcript-speaker {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .transcript-speaker.adversary {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .transcript-speaker.user {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        /* Turn indicator — prominent animated bar */
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .turn-indicator.adversary-turn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .turn-indicator.your-turn {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .turn-indicator.your-turn-muted {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+        .turn-indicator.waiting {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        /* Audio wave animation */
+        .audio-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 14px;
+        }
+        .audio-bars .bar {
+            width: 3px;
+            border-radius: 1px;
+            animation: audioWave 0.8s ease-in-out infinite;
+        }
+        .audio-bars .bar:nth-child(1) { animation-delay: 0s; height: 6px; }
+        .audio-bars .bar:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+        .audio-bars .bar:nth-child(3) { animation-delay: 0.3s; height: 14px; }
+        .audio-bars .bar:nth-child(4) { animation-delay: 0.45s; height: 8px; }
+
+        .adversary-turn .bar { background: #ef4444; }
+        .your-turn .bar { background: #10b981; }
+        .your-turn-muted .bar { background: #f59e0b; animation: none; height: 4px; }
+        .waiting .bar { background: #94a3b8; animation: none; height: 4px; }
+
+        @keyframes audioWave {
+            0%, 100% { transform: scaleY(0.4); }
+            50% { transform: scaleY(1); }
+        }
+
+        /* Transcript panel border glow during speech */
+        .transcript-panel.adversary-speaking {
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+        }
+        .transcript-panel.user-speaking {
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .transcript-text {
+            flex: 1 1 auto;
+            min-height: 0;
+            font-size: 1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .transcript-entry {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .transcript-entry:last-child { border-bottom: none; }
+
+        .transcript-entry .speaker-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .transcript-entry .speaker-tag.adversary {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .transcript-entry .speaker-tag.user {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .transcript-entry .entry-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .screen-preview {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            aspect-ratio: 16/10;
+        }
+
+        .screen-preview-inner {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .screen-preview-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .audio-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .vu-meter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .vu-channel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vu-channel-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 70px;
+        }
+
+        .vu-channel-label.mic { color: #10b981; }
+        .vu-channel-label.agent { color: #ef4444; }
+
+        .vu-track {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .vu-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.08s ease-out;
+            width: 0%;
+        }
+
+        .vu-fill.mic { background: linear-gradient(90deg, #10b981, #34d399); }
+        .vu-fill.agent { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .context-panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .context-item {
+            margin-bottom: 1rem;
+        }
+
+        .context-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .context-value {
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 1.2rem 1rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 14px;
+        }
+
+        .empty-state-icon {
+            font-size: 1.6rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .live-screen-intro .coach-panel,
+        .live-screen-intro .transcript-panel.live-transcript,
+        .live-screen-intro .voice-coaching,
+        .live-screen-intro .interventions-panel,
+        .live-screen-intro .side-panel > div {
+            animation: buddyIntroReveal 0.9s ease both;
+        }
+
+        .live-screen-intro .transcript-panel.live-transcript { animation-delay: 0.07s; }
+        .live-screen-intro .voice-coaching { animation-delay: 0.12s; }
+        .live-screen-intro .interventions-panel { animation-delay: 0.18s; }
+        .live-screen-intro .side-panel > div:nth-child(1) { animation-delay: 0.22s; }
+        .live-screen-intro .side-panel > div:nth-child(2) { animation-delay: 0.28s; }
+        .live-screen-intro .side-panel > div:nth-child(3) { animation-delay: 0.34s; }
+
+        @keyframes buddyIntroReveal {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.99);
+                filter: blur(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Visual Coaching Panel */
+        .visual-coaching-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            display: none;
+        }
+        .visual-coaching-panel.active {
+            display: block;
+        }
+        .webcam-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+            border: 4px solid transparent;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        /* Color-coded visual feedback borders */
+        .webcam-container.feedback-excellent {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .webcam-container.feedback-good {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .webcam-container.feedback-warning {
+            border-color: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+        .webcam-container.feedback-poor {
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: pulse-poor 1s ease-in-out infinite;
+        }
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
+        }
+        @keyframes pulse-poor {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
+        }
+        .webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+            pointer-events: none;
+        }
+        .webcam-overlay {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+        .visual-emotion-badge {
+            background: rgba(0,0,0,0.6);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+        }
+        .visual-metrics {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .visual-metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .visual-metric .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            min-width: 65px;
+        }
+        .visual-metric .metric-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .visual-metric .metric-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+        .visual-metric .metric-fill.eye-contact {
+            background: #06b6d4;
+        }
+        .visual-metric .metric-fill.posture {
+            background: #8b5cf6;
+        }
+        .visual-metric .metric-fill.gestures {
+            background: #f59e0b;
+        }
+        .metric-percent {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            min-width: 28px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .visual-tip {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border-radius: 6px;
+            text-align: center;
+        }
+        .visual-tip.warning {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            font-weight: 600;
+            animation: pulse-warning 1s infinite;
+        }
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .visual-tip.good {
+            color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .visual-coaching-panel.warning {
+            border: 2px solid #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .live-grid {
+                grid-template-columns: 1fr;
+            }
+            .side-panel {
+                display: none;
+            }
+            .mode-cards {
+                grid-template-columns: 1fr;
+            }
+            .preflight-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Drift Alert Banner -->
+    <div class="drift-banner" id="drift-banner">
+        <span class="drift-banner-icon">📋⚠️</span>
+        <span class="drift-banner-text" id="drift-banner-text">Contract drift detected!</span>
+        <button class="drift-banner-close" onclick="hideDriftBanner()">Dismiss</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">Secondus <span>/ negotiation intelligence</span></div>
+        </header>
+
+        <!-- Setup Screen -->
+        <div id="setup-screen">
+            <div class="launch-shell">
+                <div class="launch-hero">
+                    <div class="launch-kicker">Voice, vision, and negotiation intelligence</div>
+                    <h1 class="launch-title">Meet Secondus Buddy</h1>
+                    <p class="launch-subtitle">
+                        Your live AI negotiation partner for high-stakes deal practice. Secondus Buddy talks with you in real time, pressures your position like a tough counterparty, and coaches you with the exact line to say next.
+                    </p>
+                </div>
+
+                <div class="mode-cards">
+                    <div class="mode-card">
+                        <h3>Meet Secondus Buddy</h3>
+                        <p>Run the full guided demo with an AI negotiation partner, live coaching, contract signals, and presence feedback.</p>
+                        <button type="button" class="btn btn-practice" id="launch-practice-btn">Start Secondus Buddy</button>
+                    </div>
+                </div>
+
+                <div class="launch-actions">
+                    <button type="button" class="btn btn-secondary" id="advanced-setup-toggle">Advanced setup</button>
+                </div>
+                <p class="mode-hint">Submission focus: Secondus Buddy first. Live Copilot is a future product extension once real-call logistics are solved.</p>
+
+                <div class="advanced-panel" id="advanced-setup-panel">
+                    <div class="advanced-header">
+                        <h3>Advanced setup</h3>
+                        <p>Add your goals, walk-away point, watched terms, and optional voice enrollment.</p>
+                    </div>
+
+                    <form id="setup-form">
+                        <!-- Voice Enrollment -->
+                        <div class="form-group voice-enrollment">
+                            <label>🎤 Voice Enrollment (optional)</label>
+                            <div class="voice-enroll-box" id="voice-enroll-box">
+                                <div class="enroll-status" id="enroll-status">
+                                    <span class="enroll-icon">🎙️</span>
+                                    <span>Record your voice so I can recognize you</span>
+                                </div>
+                                <button type="button" class="btn-enroll" id="enroll-btn">
+                                    Record My Voice
+                                </button>
+                                <div class="enroll-progress" id="enroll-progress" style="display:none">
+                                    <div class="enroll-recording-indicator">
+                                        <span class="recording-dot"></span>
+                                        <span>Recording — read this aloud:</span>
+                                    </div>
+                                    <p class="enroll-script">"The quick brown fox jumps over the lazy dog. I'm ready to discuss terms and find a fair agreement."</p>
+                                    <div class="enroll-heard" id="enroll-heard">
+                                        <span class="heard-label">Heard:</span>
+                                        <span class="heard-text" id="heard-text">listening...</span>
+                                    </div>
+                                    <button type="button" class="btn-stop-enroll" id="stop-enroll-btn">Done Reading</button>
+                                </div>
+                                <div class="enroll-success" id="enroll-success" style="display:none">
+                                    ✅ Voice enrolled! I'll recognize you in the conversation.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="goals">What are your goals for this deal?</label>
+                            <textarea id="goals">Close at $80K minimum, net-30 payment terms, IP ownership retained, 3 revision rounds max</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="batna">What's your BATNA? (Best Alternative if this falls through)</label>
+                            <textarea id="batna">Walk away - I have another prospect at $70K and can fill my pipeline elsewhere</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Key terms to watch (press Enter to add)</label>
+                            <div class="tag-input-container" id="terms-container">
+                                <input type="text" class="tag-input" id="terms-input" placeholder="e.g., payment terms, liability cap...">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="counterparty">Who are you negotiating with?</label>
+                            <input type="text" id="counterparty" value="Startup CTO, budget-conscious, wants AI integration for their platform">
+                        </div>
+
+                        <div class="cost-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="low-cost-mode">
+                                <span>Low-cost mode (text responses, no AI voice — saves ~80%)</span>
+                            </label>
+                        </div>
+                        <p class="mode-hint">Buddy sessions run up to 5 minutes and simulate a tough counterparty in real time.</p>
+                    </form>
+                </div>
+
+                <div class="preflight-screen" id="preflight-screen">
+                    <div class="preflight-card">
+                        <div>
+                            <div class="preflight-eyebrow" id="preflight-mode-label">Secondus Buddy</div>
+                            <h2 class="preflight-title" id="preflight-title">Ready your guided negotiation</h2>
+                            <p class="preflight-copy" id="preflight-copy">We’ll check the essentials, then drop you into a live AI negotiation with coaching and multimodal signals.</p>
+                        </div>
+
+                        <div class="preflight-checks">
+                            <div class="preflight-check">
+                                <div>
+                                    <strong>Microphone</strong>
+                                    <span>Turn it on once you enter so Secondus can hear you clearly.</span>
+                                </div>
+                                <div class="preflight-pill">Required</div>
+                            </div>
+                            <div class="preflight-check">
+                                <div>
+                                    <strong>Camera</strong>
+                                    <span>Optional, but enables presence coaching and demo proof.</span>
+                                </div>
+                                <div class="preflight-pill optional">Optional</div>
+                            </div>
+                            <div class="preflight-check">
+                                <div>
+                                    <strong>Screen / contract</strong>
+                                    <span>Share only if you want drift detection and written-term grounding.</span>
+                                </div>
+                                <div class="preflight-pill optional">Optional</div>
+                            </div>
+                            <div class="preflight-check">
+                                <div>
+                                    <strong>Output audio</strong>
+                                    <span>Use speakers or headphones so you can hear the counterpart clearly.</span>
+                                </div>
+                                <div class="preflight-pill">Ready</div>
+                            </div>
+                        </div>
+
+                        <div class="preflight-actions">
+                            <button type="button" class="btn btn-secondary" id="preflight-back-btn">Back</button>
+                            <button type="button" class="btn btn-primary" id="preflight-continue-btn">Start Buddy session</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Screen -->
+        <div id="live-screen">
+            <div class="live-header">
+                <div class="session-info">
+                    <div class="status-badge">
+                        <span class="status-dot"></span>
+                        Live
+                    </div>
+                    <div class="timer" id="timer">00:00</div>
+                    <div class="cost-display" id="cost-display" title="Estimated API cost" style="display:none">$0.00</div>
+                </div>
+                <div class="controls">
+                    <button class="btn-control muted" id="mic-btn" title="Microphone off (click to turn on)" aria-pressed="false">
+                        <span class="mic-icon-on" aria-hidden="true" style="display:none;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                        </span>
+                        <span class="mic-icon-muted" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                                <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                                <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+                            </svg>
+                        </span>
+                        <span class="mic-label" id="mic-btn-label">Muted</span>
+                    </button>
+                    <button class="btn-control" id="screen-btn" title="Share screen">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        Screen
+                    </button>
+                    <button class="btn-control danger" id="end-btn" title="End session">
+                        End Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start negotiation: slim bar so full UI is visible for demo -->
+            <div class="start-nego-panel" id="start-nego-panel" style="display: none;">
+                <div class="start-nego-banner">
+                    <span class="start-nego-label">Ready</span>
+                    <span class="start-nego-text">Review the Buddy layout below, then start the negotiation when you're ready.</span>
+                    <button type="button" class="start-nego-btn" id="start-nego-btn">Start Buddy negotiation</button>
+                </div>
+            </div>
+
+            <div class="live-grid" id="live-grid">
+                <div class="main-panel">
+                    <!-- COACH PROMPT - Most prominent -->
+                    <div class="coach-panel" id="coach-panel">
+                        <div class="coach-header">
+                            <span class="coach-icon">🎯</span>
+                            <span class="coach-title">SAY THIS NOW</span>
+                            <button class="btn-copy" id="copy-phrase-btn" title="Copy phrase" style="margin-left:auto;background:rgba(255,255,255,0.15);border:none;color:white;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">📋 Copy</button>
+                        </div>
+                        <div class="coach-phrase" id="coach-phrase">
+                            Buddy is ready. Start the negotiation when you are.
+                        </div>
+                        <div class="coach-context" id="coach-context">Your next best line will appear here in real time.</div>
+                    </div>
+
+                    <!-- Muted hint: only when mic is off so user knows to turn it on -->
+                    <div class="muted-hint" id="muted-hint" style="display: none;">
+                        Mic is off — click <strong>Mic</strong> to speak. The agent cannot hear you until you turn it on.
+                    </div>
+
+                    <!-- LIVE TRANSCRIPT - Multi-turn history -->
+                    <div class="transcript-panel live-transcript" id="transcript-panel">
+                        <div class="transcript-header">
+                            <span class="panel-title">Conversation</span>
+                            <div class="turn-indicator waiting" id="turn-indicator">
+                                <div class="audio-bars">
+                                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                                </div>
+                                <span id="turn-label">Waiting...</span>
+                            </div>
+                        </div>
+                        <div class="transcript-text" id="transcript">
+                            <div class="transcript-entry" style="color:#94a3b8;font-style:italic;">Buddy is ready. The live negotiation will appear here.</div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Coaching Bar -->
+                    <div class="voice-coaching" id="voice-coaching">
+                        <div class="voice-metric">
+                            <span class="metric-label">Confidence</span>
+                            <div class="metric-bar"><div class="metric-fill" id="confidence-bar" style="width: 70%"></div></div>
+                        </div>
+                        <div class="voice-metric">
+                            <span class="metric-label">Pace</span>
+                            <div class="metric-bar"><div class="metric-fill pace" id="pace-bar" style="width: 50%"></div></div>
+                        </div>
+                        <div class="voice-tip" id="voice-tip">Open confidently, then pause and let Buddy read the room.</div>
+                    </div>
+
+                    <!-- Tactical Alerts (only important ones) -->
+                    <div class="interventions-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Signals</span>
+                            <div class="intervention-count">
+                                <span class="count-badge urgent"><span class="dot"></span> <span id="urgent-count">0</span></span>
+                                <span class="count-badge watch"><span class="dot"></span> <span id="watch-count">0</span></span>
+                            </div>
+                        </div>
+                        <div class="interventions-list" id="interventions-list">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✓</div>
+                                <p>Buddy will surface pressure, drift, and presence moments here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <!-- Visual Coaching Panel (MediaPipe) -->
+                    <div class="visual-coaching-panel" id="visual-coaching-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Presence</span>
+                            <span class="visual-emotion-badge" id="visual-emotion">😐 neutral</span>
+                        </div>
+                        <div class="webcam-container">
+                            <video class="webcam-video" id="webcam-video" autoplay muted playsinline></video>
+                            <canvas class="webcam-overlay" id="webcam-canvas"></canvas>
+                        </div>
+                        <div class="visual-metrics">
+                            <div class="visual-metric">
+                                <span class="metric-label">Eye Contact</span>
+                                <div class="metric-bar"><div class="metric-fill eye-contact" id="eye-contact-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="eye-contact-pct">50%</span>
+                            </div>
+                            <div class="visual-metric">
+                                <span class="metric-label">Posture</span>
+                                <div class="metric-bar"><div class="metric-fill posture" id="posture-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="posture-pct">50%</span>
+                            </div>
+                            <div class="visual-metric">
+                                <span class="metric-label">Gestures</span>
+                                <div class="metric-bar"><div class="metric-fill gestures" id="gestures-bar" style="width: 50%"></div></div>
+                                <span class="metric-percent" id="gestures-pct">50%</span>
+                            </div>
+                        </div>
+                        <div class="visual-tip" id="visual-tip">Starting visual coaching...</div>
+                    </div>
+
+                    <div class="screen-preview">
+                        <div class="panel-header">
+                            <span class="panel-title">Shared Context</span>
+                        </div>
+                        <div class="screen-preview-inner" id="screen-preview">
+                            Share a contract or doc so Buddy can ground its alerts in written terms.
+                        </div>
+                    </div>
+
+                    <div class="audio-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Audio</span>
+                        </div>
+                        <div class="vu-meter" id="vu-meter">
+                            <div class="vu-channel">
+                                <span class="vu-channel-label mic" id="vu-mic-label">🎙️ Your Mic</span>
+                                <div class="vu-track"><div class="vu-fill mic" id="vu-mic"></div></div>
+                            </div>
+                            <div class="vu-channel">
+                                <span class="vu-channel-label agent">🎭 Adversary</span>
+                                <div class="vu-track"><div class="vu-fill agent" id="vu-agent"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createCostTracker, createSessionRecording } from "/static/js/app-state.js";
+        import {
+            addIntervention as renderInterventionCard,
+            addSignal as renderSignalCard,
+            addTranscriptEntry as renderTranscriptEntry,
+            hideDriftBanner as hideDriftBannerUI,
+            setMicUIState as renderMicButtonState,
+            setTurnState as renderTurnState,
+            showDriftBanner as showDriftBannerUI,
+            showPracticeError as renderPracticeError,
+            showTimeoutWarning as renderTimeoutWarning,
+            updateCoachPanel as renderCoachPanel,
+            updateMutedHint as renderMutedHint,
+            updateTimer as renderTimerText,
+            updateTurnLabelIfUserTurn as renderTurnLabelForUserTurn,
+            updateVoiceTip as renderVoiceTip
+        } from "/static/js/ui-renderers.js";
+
+        // State
+        let sessionId = null;
+        let ws = null;
+        let mediaStream = null;
+        let screenStream = null;
+        let screenCaptureIntervalId = null;
+        let audioContext = null;
+        let audioWorklet = null;
+        let timerInterval = null;
+        let startTime = null;
+        let keyTerms = [];
+        let counts = { urgent: 0, watch: 0 };
+        let isPracticeMode = false;
+        let sessionEnded = false;
+        let voiceEnrolled = false;
+        let voiceSampleBase64 = null;
+        window.__secondusGetWs = () => ws;
+        window.__secondusIsPracticeMode = () => isPracticeMode;
+        window.__secondusPresenceState = window.__secondusPresenceState || { lastSentAt: 0 };
+
+        // Load saved voice sample from localStorage
+        const savedVoiceSample = localStorage.getItem('secondus_voice_sample');
+        if (savedVoiceSample) {
+            voiceSampleBase64 = savedVoiceSample;
+            voiceEnrolled = true;
+            console.log('Loaded saved voice sample from localStorage');
+        }
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const preflightScreen = document.getElementById('preflight-screen');
+        const liveScreen = document.getElementById('live-screen');
+        const setupForm = document.getElementById('setup-form');
+        const advancedSetupPanel = document.getElementById('advanced-setup-panel');
+        const advancedSetupToggle = document.getElementById('advanced-setup-toggle');
+        const launchPracticeBtn = document.getElementById('launch-practice-btn');
+        const preflightBackBtn = document.getElementById('preflight-back-btn');
+        const preflightContinueBtn = document.getElementById('preflight-continue-btn');
+        const preflightModeLabel = document.getElementById('preflight-mode-label');
+        const preflightTitle = document.getElementById('preflight-title');
+        const preflightCopy = document.getElementById('preflight-copy');
+        const termsInput = document.getElementById('terms-input');
+        const termsContainer = document.getElementById('terms-container');
+        const micBtn = document.getElementById('mic-btn');
+        const screenBtn = document.getElementById('screen-btn');
+        const endBtn = document.getElementById('end-btn');
+        const interventionsList = document.getElementById('interventions-list');
+        const transcript = document.getElementById('transcript');
+        const timer = document.getElementById('timer');
+        const screenPreview = document.getElementById('screen-preview');
+        const vuMeter = document.getElementById('vu-meter');
+        window.__secondusTimerEl = timer;
+
+        // VU meter fill elements
+        const vuMic = document.getElementById('vu-mic');
+        const vuAgent = document.getElementById('vu-agent');
+
+        // Show enrolled state if voice already saved
+        if (voiceEnrolled) {
+            const enrollBox = document.getElementById('voice-enroll-box');
+            const enrollBtn = document.getElementById('enroll-btn');
+            const enrollStatus = document.getElementById('enroll-status');
+            const enrollSuccess = document.getElementById('enroll-success');
+            enrollBox.classList.add('enrolled');
+            enrollBtn.style.display = 'none';
+            enrollStatus.style.display = 'none';
+            enrollSuccess.textContent = '✅ Voice already enrolled (saved locally)';
+            enrollSuccess.style.display = 'block';
+        }
+
+        // Tag input handling
+        termsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && termsInput.value.trim()) {
+                e.preventDefault();
+                addTerm(termsInput.value.trim());
+                termsInput.value = '';
+            }
+        });
+
+        function addTerm(term) {
+            keyTerms.push(term);
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${term} <button type="button" onclick="removeTerm(this, '${term}')">&times;</button>`;
+            termsContainer.insertBefore(tag, termsInput);
+        }
+
+        function removeTerm(btn, term) {
+            keyTerms = keyTerms.filter(t => t !== term);
+            btn.parentElement.remove();
+        }
+
+        // Add default key terms
+        ['payment terms', 'IP ownership', 'liability cap', 'revision rounds'].forEach(term => {
+            addTerm(term);
+        });
+
+        // Voice Enrollment Handler (Server-side validation)
+        const enrollBtn = document.getElementById('enroll-btn');
+        const enrollProgress = document.getElementById('enroll-progress');
+        const enrollStatus = document.getElementById('enroll-status');
+        const enrollSuccess = document.getElementById('enroll-success');
+        const enrollBox = document.getElementById('voice-enroll-box');
+        const stopEnrollBtn = document.getElementById('stop-enroll-btn');
+        const heardText = document.getElementById('heard-text');
+        let activeMediaRecorder = null;
+        let activeStream = null;
+
+        enrollBtn.addEventListener('click', async () => {
+            if (voiceEnrolled) return; // Already enrolled
+
+            try {
+                // Request microphone access
+                activeStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        sampleRate: 48000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+
+                // Update UI for recording
+                enrollBtn.style.display = 'none';
+                enrollStatus.style.display = 'none';
+                enrollProgress.style.display = 'block';
+                enrollBox.classList.add('recording');
+                heardText.textContent = 'listening...';
+
+                // Set up MediaRecorder
+                activeMediaRecorder = new MediaRecorder(activeStream, { mimeType: 'audio/webm;codecs=opus' });
+                const audioChunks = [];
+
+                activeMediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                activeMediaRecorder.onstop = async () => {
+                    // Stop the stream
+                    activeStream.getTracks().forEach(t => t.stop());
+
+                    // Show validating state
+                    heardText.textContent = 'Validating with server...';
+                    stopEnrollBtn.disabled = true;
+                    stopEnrollBtn.textContent = 'Validating...';
+
+                    // Convert to base64
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result.split(',')[1];
+
+                        try {
+                            // Send to server for validation
+                            const response = await fetch('/voice/validate', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio_base64: base64Audio })
+                            });
+                            const result = await response.json();
+
+                            console.log('Voice validation result:', result);
+                            heardText.textContent = result.transcript || '(no speech detected)';
+
+                            if (result.success) {
+                                // Success! Save to localStorage
+                                voiceSampleBase64 = base64Audio;
+                                voiceEnrolled = true;
+                                localStorage.setItem('secondus_voice_sample', base64Audio);
+                                enrollBox.classList.remove('recording');
+                                enrollBox.classList.add('enrolled');
+                                enrollProgress.style.display = 'none';
+                                enrollSuccess.textContent = result.message;
+                                enrollSuccess.style.display = 'block';
+                            } else {
+                                // Failed - allow retry
+                                alert(result.message);
+                                resetEnrollUI();
+                            }
+                        } catch (err) {
+                            console.error('Voice validation error:', err);
+                            alert('Failed to validate voice. Please try again.');
+                            resetEnrollUI();
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+
+                // Start recording
+                activeMediaRecorder.start();
+
+            } catch (err) {
+                console.error('Voice enrollment failed:', err);
+                alert('Microphone access is required for voice enrollment.');
+                resetEnrollUI();
+            }
+        });
+
+        function resetEnrollUI() {
+            enrollBox.classList.remove('recording');
+            enrollBtn.style.display = 'block';
+            enrollStatus.style.display = 'flex';
+            enrollProgress.style.display = 'none';
+            stopEnrollBtn.disabled = false;
+            stopEnrollBtn.textContent = 'Done Reading';
+        }
+
+        // "Done Reading" button stops the recording
+        stopEnrollBtn.addEventListener('click', () => {
+            if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+                activeMediaRecorder.stop();
+            }
+        });
+
+        function toggleAdvancedSetup(forceOpen) {
+            const shouldOpen = typeof forceOpen === 'boolean'
+                ? forceOpen
+                : !advancedSetupPanel.classList.contains('open');
+            advancedSetupPanel.classList.toggle('open', shouldOpen);
+            advancedSetupToggle.textContent = shouldOpen ? 'Hide advanced setup' : 'Advanced setup';
+        }
+
+        function showLaunchScreen() {
+            preflightScreen.classList.remove('active');
+            toggleAdvancedSetup(false);
+        }
+
+        function showPreflight() {
+            preflightModeLabel.textContent = 'Secondus Buddy';
+            preflightTitle.textContent = 'Ready your guided negotiation';
+            preflightCopy.textContent = 'You will enter a controlled negotiation with Secondus Buddy, the AI negotiation partner built for the demo.';
+            preflightScreen.classList.add('active');
+            preflightScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showLiveScreen(modeLabel, statusDotStyle = '') {
+            setupScreen.style.display = 'none';
+            liveScreen.style.display = 'block';
+            liveScreen.classList.add('live-screen-intro');
+            const badge = document.querySelector('.status-badge');
+            if (badge) {
+                badge.innerHTML = `<span class="status-dot" ${statusDotStyle}></span> ${modeLabel}`;
+            }
+        }
+
+        async function startPracticeDemo() {
+            isPracticeMode = true;
+            const lowCostMode = document.getElementById('low-cost-mode').checked;
+
+            try {
+                const briefingRes = await fetch('/learnings/briefing');
+                sessionBriefing = await briefingRes.json();
+                console.log('Pre-session briefing:', sessionBriefing);
+            } catch (e) {
+                console.warn('Could not fetch briefing:', e);
+                sessionBriefing = null;
+            }
+
+            const config = {
+                goals: document.getElementById('goals').value || 'Close at $80K',
+                batna: document.getElementById('batna').value || 'Walk away',
+                scenario: document.getElementById('counterparty').value || 'AI consulting deal',
+                low_cost_mode: lowCostMode
+            };
+
+            try {
+                const res = await fetch('/session/practice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const data = await res.json();
+                sessionId = data.session_id;
+
+                showLiveScreen('Secondus Buddy', 'style="background:#f59e0b"');
+                document.getElementById('start-nego-panel').style.display = 'flex';
+            } catch (err) {
+                console.error('Failed to start practice session:', err);
+                alert('Failed to start practice. Please try again.');
+            }
+        }
+
+        advancedSetupToggle?.addEventListener('click', () => toggleAdvancedSetup());
+        launchPracticeBtn?.addEventListener('click', () => showPreflight());
+        preflightBackBtn?.addEventListener('click', showLaunchScreen);
+        preflightContinueBtn?.addEventListener('click', async () => {
+            await startPracticeDemo();
+        });
+
+        // Form submission
+        setupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showPreflight();
+        });
+
+        // Session briefing from learning system
+        let sessionBriefing = null;
+
+        // Start negotiation: connect WebSocket, send "start", then begin timer/mic/coaching
+        document.getElementById('start-nego-btn').addEventListener('click', () => {
+            const startPanel = document.getElementById('start-nego-panel');
+            if (!sessionId || !startPanel) return;
+
+            startPanel.style.display = 'none';
+
+            function onSessionStarted() {
+                // Unlock audio playback (browser requires user gesture before playing)
+                if (!playbackAudioContext || playbackAudioContext.state === 'closed') {
+                    playbackAudioContext = new AudioContext({ sampleRate: 24000 });
+                }
+                playbackAudioContext.resume().catch(() => {});
+
+                let openingCoach = "Start by stating your price confidently. Say: 'Based on the scope, my rate is $80,000.'";
+                let openingContext = "Opening move";
+                if (sessionBriefing && sessionBriefing.focus_areas && sessionBriefing.focus_areas.length > 0) {
+                    openingContext = `${sessionBriefing.message} | Focus: ${sessionBriefing.focus_areas[0]}`;
+                }
+                updateCoachPanel(openingCoach, openingContext);
+
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+                startCostTracking();
+                setTimeout(() => micBtn.click(), 500);
+                window.startVisualCoaching?.();
+                setTimeout(() => {
+                    liveScreen.classList.remove('live-screen-intro');
+                }, 1800);
+            }
+
+            connectPracticeWebSocket(onSessionStarted);
+        });
+
+        // Initialize Web Speech API for user transcript
+        function startSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn('Speech recognition not supported');
+                return;
+            }
+
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = false;
+            speechRecognition.lang = 'en-US';
+
+            let lastTranscript = '';
+            let silenceTimer = null;
+
+            speechRecognition.onresult = (event) => {
+                if (sessionEnded) return;
+
+                const result = event.results[event.results.length - 1];
+                if (result.isFinal) {
+                    const transcript = result[0].transcript.trim();
+
+                    // Avoid duplicates
+                    if (transcript && transcript !== lastTranscript && transcript.length > 3) {
+                        lastTranscript = transcript;
+                        const timestamp = timer.textContent;
+
+                        // Record user exchange
+                        sessionRecording.exchanges.push({
+                            speaker: 'user',
+                            text: transcript,
+                            timestamp
+                        });
+
+                        // Update UI to show user speech
+                        setTurnState('user');
+                        addTranscriptEntry('user', transcript);
+
+                        // Analyze user response for tactics handling
+                        analyzeUserResponse(transcript, timestamp);
+
+                        console.log('User said:', transcript);
+                    }
+                }
+            };
+
+            speechRecognition.onerror = (event) => {
+                // Log all errors for debugging — 'network' errors indicate mic conflicts
+                if (event.error === 'no-speech' || event.error === 'aborted') {
+                    // These are normal during pauses
+                    return;
+                }
+                console.warn('Speech recognition error:', event.error);
+            };
+
+            speechRecognition.onend = () => {
+                // Restart if session is still active
+                if (!sessionEnded && isPracticeMode) {
+                    try {
+                        speechRecognition.start();
+                    } catch (e) {
+                        // Already started
+                    }
+                }
+            };
+
+            try {
+                speechRecognition.start();
+                console.log('Speech recognition started');
+            } catch (e) {
+                console.warn('Failed to start speech recognition:', e);
+            }
+        }
+
+        // Stop speech recognition
+        function stopSpeechRecognition() {
+            if (speechRecognition) {
+                try {
+                    speechRecognition.stop();
+                } catch (e) {
+                    // Already stopped
+                }
+                speechRecognition = null;
+            }
+        }
+
+        // Analyze user response for negotiation quality
+        function analyzeUserResponse(text, timestamp) {
+            const lower = text.toLowerCase();
+
+            // Track positive negotiation behaviors
+            const strongOpeners = ['i believe', 'my rate is', 'the value is', 'based on', 'my experience'];
+            const counterAnchoring = ['actually', 'however', 'that said', 'on the other hand'];
+            const closingPhrases = ['let\'s do it', 'sounds good', 'we have a deal', 'agreed'];
+            const questionPhrases = ['what if', 'could you', 'how about', 'would you consider'];
+
+            // Check for strong negotiation behaviors
+            if (strongOpeners.some(p => lower.includes(p))) {
+                sessionRecording.metrics.progressInstances++;
+            }
+            if (counterAnchoring.some(p => lower.includes(p))) {
+                // User is countering - good sign
+                sessionRecording.metrics.progressInstances++;
+            }
+            if (closingPhrases.some(p => lower.includes(p))) {
+                sessionRecording.metrics.dealClosed = true;
+            }
+        }
+
+        function connectPracticeWebSocket(onSessionStarted) {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/practice/${sessionId}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handlePracticeMessage(data);
+            };
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'start' }));
+                ws.send(JSON.stringify({ type: 'mic_state', muted: !micBtn.classList.contains('active') }));
+                if (typeof onSessionStarted === 'function') onSessionStarted();
+            };
+
+            ws.onerror = (err) => console.error('WebSocket error:', err);
+            ws.onclose = () => console.log('Secondus Buddy session closed');
+        }
+
+        // Audio playback for adversary voice - buffer chunks until turn complete
+        let playbackAudioContext = null;
+        let audioChunksBuffer = [];
+        let isAdversarySpeaking = false; // Flag to mute user mic during adversary playback
+        let currentAudioSource = null; // Track current playing audio to stop it upon interruption
+
+        function bufferAudioChunk(base64Data) {
+            if (sessionEnded) return; // Don't buffer if session ended
+            audioChunksBuffer.push(base64Data);
+            updateAudioIndicator(true);
+            // Track cost: Gemini outputs at 24kHz, 16-bit PCM
+            const bytes = atob(base64Data).length;
+            costTracker.audioOutputSeconds += bytes / 2 / 24000;
+        }
+
+        // On user barge-in: stop current playback but keep buffered chunks so they can still play when the next Buddy audio event lands.
+        function clearAudio() {
+            if (currentAudioSource) {
+                try {
+                    currentAudioSource.stop();
+                    currentAudioSource.disconnect();
+                } catch (e) {
+                    console.warn('Error stopping current audio source', e);
+                }
+                currentAudioSource = null;
+            }
+            // Do NOT clear audioChunksBuffer — playBufferedAudio() will flush it on the next Buddy audio turn.
+            isAdversarySpeaking = false;
+
+            setTurnState('user');
+
+            const vuMeter = document.getElementById('vu-meter');
+            const vuAgent = document.getElementById('vu-agent');
+            if (vuMeter) vuMeter.classList.remove('agent-speaking');
+            if (vuAgent) vuAgent.style.width = '0%';
+        }
+
+        // ===== Turn state management =====
+        function addTranscriptEntry(speaker, text) {
+            renderTranscriptEntry({ transcriptEl: transcript, speaker, text });
+        }
+
+        // Copy button handler
+        document.getElementById('copy-phrase-btn')?.addEventListener('click', () => {
+            const phrase = document.getElementById('coach-phrase')?.textContent;
+            if (phrase) {
+                navigator.clipboard.writeText(phrase.trim()).then(() => {
+                    const btn = document.getElementById('copy-phrase-btn');
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => { btn.textContent = '📋 Copy'; }, 1500);
+                });
+            }
+        });
+
+        function setTurnState(state) {
+            renderTurnState({
+                indicatorEl: document.getElementById('turn-indicator'),
+                labelEl: document.getElementById('turn-label'),
+                panelEl: document.getElementById('transcript-panel'),
+                micBtn,
+                state
+            });
+            updateMutedHint();
+        }
+
+        function updateMutedHint() {
+            renderMutedHint({
+                hintEl: document.getElementById('muted-hint'),
+                micBtn,
+                liveScreenEl: liveScreen
+            });
+        }
+
+        function updateTurnLabelIfUserTurn() {
+            renderTurnLabelForUserTurn({
+                indicatorEl: document.getElementById('turn-indicator'),
+                labelEl: document.getElementById('turn-label'),
+                micBtn
+            });
+            updateMutedHint();
+        }
+
+        function playBufferedAudio() {
+            if (sessionEnded || audioChunksBuffer.length === 0) return;
+
+            try {
+                // Gemini outputs at 24000Hz
+                const sampleRate = 24000;
+
+                if (!playbackAudioContext || playbackAudioContext.state === 'closed') {
+                    playbackAudioContext = new AudioContext({ sampleRate });
+                }
+
+                if (playbackAudioContext.state === 'suspended') {
+                    playbackAudioContext.resume();
+                }
+
+                // Combine all chunks into one buffer
+                let totalBytes = 0;
+                const decodedChunks = audioChunksBuffer.map(base64Data => {
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    totalBytes += bytes.length;
+                    return bytes;
+                });
+
+                // Merge all chunks
+                const combined = new Uint8Array(totalBytes);
+                let offset = 0;
+                for (const chunk of decodedChunks) {
+                    combined.set(chunk, offset);
+                    offset += chunk.length;
+                }
+
+                // Convert to Int16 PCM then Float32
+                const int16Array = new Int16Array(combined.buffer);
+                const float32Array = new Float32Array(int16Array.length);
+                for (let i = 0; i < int16Array.length; i++) {
+                    float32Array[i] = int16Array[i] / 32768.0;
+                }
+
+                // Create and play audio buffer
+                const audioBuffer = playbackAudioContext.createBuffer(1, float32Array.length, sampleRate);
+                audioBuffer.getChannelData(0).set(float32Array);
+
+                const source = playbackAudioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(playbackAudioContext.destination);
+                currentAudioSource = source;
+
+                // Mute UI removed explicitly; full-duplex enabled.
+                isAdversarySpeaking = true;
+                setTurnState('adversary');
+                // Animate adversary VU meter
+                if (vuMeter) vuMeter.classList.add('agent-speaking');
+                if (vuMic) vuMic.style.width = '2%'; // Mute mic indicator
+
+                source.onended = () => {
+                    isAdversarySpeaking = false;
+                    setTurnState('user');
+                    if (vuMeter) vuMeter.classList.remove('agent-speaking');
+                    if (vuAgent) vuAgent.style.width = '0%';
+                };
+
+                source.start();
+                console.log(`Playing ${audioChunksBuffer.length} chunks, ${float32Array.length} samples`);
+
+            } catch (err) {
+                console.error('Audio playback error:', err);
+            }
+
+            // Clear buffer for next turn
+            audioChunksBuffer = [];
+        }
+
+        let speechRecognition = null;  // Web Speech API for user transcript
+
+        // Session recording for post-session analysis
+        let sessionRecording = createSessionRecording();
+        window.__secondusSessionRecording = sessionRecording;
+
+        // Real-time cost tracking (estimated)
+        const costTracker = createCostTracker();
+        let costUpdateInterval = null;
+
+        function handlePracticeMessage(data) {
+            // Ignore messages if session has ended
+            if (sessionEnded) return;
+
+            if (data.type === 'session.state') {
+                if (data.state === 'counterpart_turn') setTurnState('adversary');
+                else if (data.state === 'user_turn') setTurnState('user');
+                return;
+            }
+
+            if (data.type === 'transcript.append') {
+                const content = (data.content || '').trim();
+                if (!content) return;
+                const speaker = data.speaker === 'adversary' ? 'adversary' : 'user';
+                if (speaker === 'adversary') {
+                    const timestamp = timer.textContent;
+                    const lastAdversary = document.querySelector('.transcript-entry.adversary:last-child .entry-text');
+                    const lastText = lastAdversary ? lastAdversary.textContent.trim().replace(/\s*[—–-]\s*\[interrupted\]\s*$/i, '') : '';
+                    const contentNormalized = content.replace(/\s*[—–-]\s*\[interrupted\]\s*$/i, '').trim();
+                    const isDuplicate = lastText && contentNormalized.length > 10 && (lastText === contentNormalized || contentNormalized.includes(lastText) || lastText.includes(contentNormalized));
+                    if (!isDuplicate) {
+                        sessionRecording.exchanges.push({ speaker: 'adversary', text: content, timestamp });
+                        sessionRecording.metrics.totalTurns++;
+                        addTranscriptEntry('adversary', content);
+                    }
+                    playBufferedAudio();
+                    return;
+                }
+
+                const lastUserNodes = document.querySelectorAll('.transcript-entry.user');
+                const lastUserText = lastUserNodes.length > 0 ? lastUserNodes[lastUserNodes.length - 1].querySelector('.entry-text')?.textContent?.trim() : '';
+                const isDuplicate = lastUserText === content || (lastUserText && lastUserText.includes(content)) || (content && content.includes(lastUserText));
+                if (isDuplicate) return;
+                const timestamp = timer ? timer.textContent : '0:00';
+                sessionRecording.exchanges.push({ speaker: 'user', text: content, timestamp });
+                setTurnState('user');
+                addTranscriptEntry('user', content);
+                analyzeUserResponse(content, timestamp);
+                return;
+            }
+
+            if (data.type === 'coach.recommendation') {
+                const timestamp = timer.textContent;
+                updateCoachPanel(data.phrase, data.context);
+                sessionRecording.coachingGiven.push({
+                    phrase: data.phrase,
+                    context: data.context,
+                    timestamp
+                });
+                updateVoiceMetrics(null);
+                return;
+            }
+
+            if (data.type === 'signal.alert') {
+                const timestamp = timer.textContent;
+                if (data.signal_type === 'tactic' || data.signal_type === 'momentum' || data.signal_type === 'drift' || data.signal_type === 'presence') {
+                    if (data.title) {
+                        sessionRecording.tacticsDetected.push({
+                            name: data.title.toUpperCase(),
+                            desc: data.message,
+                            timestamp
+                        });
+                    }
+                    addIntervention({
+                        urgency: data.urgency || 'watch',
+                        content: `${data.title}: ${data.message}`
+                    });
+                    if (data.signal_type === 'drift') {
+                        showDriftBanner(`DRIFT: ${data.message}`);
+                    }
+                } else {
+                    addSignal({ signal_type: data.signal_type || 'signal', message: data.message });
+                }
+                return;
+            }
+
+            if (data.type === 'media.audio') {
+                bufferAudioChunk(data.data);
+                return;
+            }
+
+            if (data.type === 'audio.clear') {
+                clearAudio();
+                return;
+            }
+
+            if (data.type === 'session.warning') {
+                showTimeoutWarning(data.content);
+                return;
+            }
+
+            if (data.type === 'session.timeout') {
+                addIntervention({ urgency: 'note', content: data.content });
+                endSession();
+                return;
+            }
+
+            if (data.type === 'session.complete') {
+                addIntervention({ urgency: 'note', content: data.content });
+                setTimeout(() => endSession(), 1200);
+                return;
+            }
+
+            if (data.type === 'session.error') {
+                console.error('Buddy session error:', data.content);
+                updateCoachPanel(
+                    data.code === 'audio_format'
+                        ? 'Buddy could not hear usable microphone audio yet.'
+                        : data.code === 'network'
+                            ? 'Buddy could not reach the live model right now.'
+                            : 'Buddy hit a temporary issue.',
+                    data.code === 'network'
+                        ? 'Check your connection and restart the session when you are ready.'
+                        : data.code === 'audio_format'
+                            ? 'End this session, refresh mic access, and start a fresh Buddy round.'
+                            : 'End this session and start a fresh Buddy round.'
+                );
+                setTurnState('waiting');
+                showPracticeError(data.content, data.code);
+                return;
+            }
+        }
+
+        // Show timeout warning banner
+        function showTimeoutWarning(message) {
+            renderTimeoutWarning('⏱️ ' + message);
+        }
+
+        function showPracticeError(message, code) {
+            renderPracticeError(message, code);
+        }
+
+        // Start cost tracking display
+        function startCostTracking() {
+            // Reset cost tracker
+            costTracker.audioInputSeconds = 0;
+            costTracker.audioOutputSeconds = 0;
+            costTracker.screenCaptures = 0;
+
+            // Update display every 5 seconds
+            costUpdateInterval = setInterval(updateCostDisplay, 5000);
+            updateCostDisplay(); // Initial display
+        }
+
+        // Update cost display
+        function updateCostDisplay() {
+            const costEl = document.getElementById('cost-display');
+            if (!costEl) return;
+
+            const cost = costTracker.totalCost;
+            costEl.textContent = '$' + cost.toFixed(3);
+
+            // Warning if cost is high
+            if (cost > 0.50) {
+                costEl.classList.add('warning');
+            } else {
+                costEl.classList.remove('warning');
+            }
+        }
+
+        // Stop cost tracking
+        function stopCostTracking() {
+            if (costUpdateInterval) {
+                clearInterval(costUpdateInterval);
+                costUpdateInterval = null;
+            }
+        }
+
+        // Update voice coaching metrics
+        function updateVoiceMetrics(momentum) {
+            // Confidence based on progress vs stalling
+            const progressRatio = momentum ? (momentum.progressSignals / Math.max(1, momentum.turns)) : 0.5;
+            const confidence = Math.min(95, Math.max(20, 50 + (progressRatio * 50) - ((momentum?.stallingCount || 0) * 10)));
+            const pace = 50 + Math.random() * 30;
+
+            document.getElementById('confidence-bar').style.width = confidence + '%';
+            document.getElementById('pace-bar').style.width = pace + '%';
+
+            // Context-aware tips
+            let tip = "Pause before responding — silence is power";
+            if (momentum) {
+                if (momentum.isCircling) tip = "They're circling — time to close or schedule follow-up";
+                else if (momentum.stallingCount >= 2) tip = "Stalling detected — ask for the real objection";
+                else if (momentum.isProgress) tip = "They're moving! Push for commitment now";
+                else if (momentum.turns > 5) tip = "Long conversation — create urgency to decide";
+            }
+            document.getElementById('voice-tip').textContent = tip;
+        }
+
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/negotiate/${sessionId}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+
+            ws.onerror = (err) => {
+                console.error('WebSocket error:', err);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+            };
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'session.state' || data.type === 'transcript.append' || data.type === 'coach.recommendation' || data.type === 'signal.alert' || data.type === 'media.audio' || data.type === 'audio.clear' || data.type === 'session.warning' || data.type === 'session.timeout' || data.type === 'session.complete' || data.type === 'session.error') {
+                handlePracticeMessage(data);
+            } else {
+                console.error('Server error:', data.content);
+            }
+        }
+
+        function updateCoachPanel(phrase, context) {
+            renderCoachPanel({
+                coachPhraseEl: document.getElementById('coach-phrase'),
+                coachContextEl: document.getElementById('coach-context'),
+                coachPanelEl: document.getElementById('coach-panel'),
+                phrase,
+                context
+            });
+        }
+
+        function updateVoiceTip(content) {
+            renderVoiceTip({
+                voiceTipEl: document.getElementById('voice-tip'),
+                content
+            });
+        }
+
+        function showDriftBanner(content) {
+            showDriftBannerUI({
+                bannerEl: document.getElementById('drift-banner'),
+                bannerTextEl: document.getElementById('drift-banner-text'),
+                content
+            });
+        }
+
+        function hideDriftBanner() {
+            hideDriftBannerUI({
+                bannerEl: document.getElementById('drift-banner')
+            });
+        }
+
+        function addSignal(data) {
+            renderSignalCard({
+                interventionsListEl: interventionsList,
+                data,
+                startTime
+            });
+        }
+
+        function updateAudioIndicator(active) {
+            // Flash VU meter when agent is speaking
+            if (active) {
+                document.getElementById('vu-meter').classList.add('agent-speaking');
+                setTimeout(() => {
+                    document.getElementById('vu-meter').classList.remove('agent-speaking');
+                }, 500);
+            }
+        }
+
+        function addIntervention(data) {
+            renderInterventionCard({
+                interventionsListEl: interventionsList,
+                data,
+                startTime,
+                counts,
+                countElements: {
+                    urgent: document.getElementById('urgent-count'),
+                    watch: document.getElementById('watch-count')
+                }
+            });
+        }
+
+        function updateTimer() {
+            renderTimerText({ timerEl: timer, startTime });
+        }
+
+        // Microphone handling — clear active vs muted state
+        function setMicUIState(active) {
+            const labelEl = document.getElementById('mic-btn-label');
+            const vuLabel = document.getElementById('vu-mic-label');
+            renderMicButtonState({
+                active,
+                micBtn,
+                labelEl,
+                vuLabelEl: vuLabel,
+                vuMicEl: vuMic
+            });
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'mic_state', muted: !active }));
+            }
+            updateTurnLabelIfUserTurn();
+            updateMutedHint();
+        }
+
+        micBtn.addEventListener('click', async () => {
+            if (micBtn.classList.contains('active')) {
+                // Mute: stop mic
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(t => t.stop());
+                    mediaStream = null;
+                }
+                if (audioWorklet) {
+                    audioWorklet.disconnect();
+                    audioWorklet = null;
+                }
+                setMicUIState(false);
+            } else {
+                // Start mic
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            sampleRate: 16000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        }
+                    });
+
+                    // Use default context rate; we resample to 16kHz before sending (Gemini requires 16kHz s16le mono)
+                    audioContext = new AudioContext();
+                    const inputSampleRate = audioContext.sampleRate;
+                    if (Math.abs(inputSampleRate - 16000) > 100) {
+                        console.log(`Mic: resampling ${inputSampleRate}Hz → 16kHz for API`);
+                    }
+                    const source = audioContext.createMediaStreamSource(mediaStream);
+
+                    // Create analyzer for VU meter AND emotion detection
+                    const analyzer = audioContext.createAnalyser();
+                    analyzer.fftSize = 2048; // Higher for better pitch detection
+                    analyzer.smoothingTimeConstant = 0.8;
+                    source.connect(analyzer);
+
+                    // Emotion detection state
+                    let emotionState = {
+                        pitchHistory: [],
+                        volumeHistory: [],
+                        lastEmotion: 'neutral',
+                        speechStartTime: null,
+                        silenceDuration: 0
+                    };
+
+                    // VU meter and emotion analysis
+                    const freqData = new Uint8Array(analyzer.frequencyBinCount);
+                    const timeData = new Float32Array(analyzer.fftSize);
+
+                    function updateVUAndEmotion() {
+                        if (!mediaStream) return;
+
+                        analyzer.getByteFrequencyData(freqData);
+                        analyzer.getFloatTimeDomainData(timeData);
+
+                        // VU meter — update mic level
+                        const avgLevel = Array.from(freqData.slice(0, 32)).reduce((a, b) => a + b, 0) / 32;
+                        const micLevel = Math.min(100, avgLevel / 1.5);
+                        if (vuMic) vuMic.style.width = `${Math.max(2, micLevel)}%`;
+
+                        // Calculate audio features for emotion
+                        const volume = calculateRMS(timeData);
+                        const pitch = estimatePitch(freqData, audioContext.sampleRate);
+                        const isSpeaking = volume > 0.02;
+
+                        if (isSpeaking) {
+                            emotionState.pitchHistory.push(pitch);
+                            emotionState.volumeHistory.push(volume);
+                            emotionState.silenceDuration = 0;
+
+                            // Keep last 50 samples (~3 seconds)
+                            if (emotionState.pitchHistory.length > 50) {
+                                emotionState.pitchHistory.shift();
+                                emotionState.volumeHistory.shift();
+                            }
+
+                            // Analyze emotion every 20 frames
+                            if (emotionState.pitchHistory.length % 20 === 0) {
+                                analyzeEmotionalTone(emotionState);
+                            }
+                        } else {
+                            emotionState.silenceDuration++;
+                            // Detect long pauses
+                            if (emotionState.silenceDuration === 60) { // ~1 second
+                                updateEmotionFeedback('pause', 'Good use of pause - shows confidence');
+                            }
+                        }
+
+                        requestAnimationFrame(updateVUAndEmotion);
+                    }
+
+                    // Calculate RMS volume
+                    function calculateRMS(data) {
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            sum += data[i] * data[i];
+                        }
+                        return Math.sqrt(sum / data.length);
+                    }
+
+                    // Estimate pitch from frequency data
+                    function estimatePitch(freqData, sampleRate) {
+                        let maxIndex = 0;
+                        let maxValue = 0;
+                        // Look in speech range (85-400 Hz)
+                        const minBin = Math.floor(85 * analyzer.fftSize / sampleRate);
+                        const maxBin = Math.floor(400 * analyzer.fftSize / sampleRate);
+
+                        for (let i = minBin; i < maxBin && i < freqData.length; i++) {
+                            if (freqData[i] > maxValue) {
+                                maxValue = freqData[i];
+                                maxIndex = i;
+                            }
+                        }
+                        return maxIndex * sampleRate / analyzer.fftSize;
+                    }
+
+                    // Analyze emotional tone from audio features
+                    function analyzeEmotionalTone(state) {
+                        if (state.pitchHistory.length < 10) return;
+
+                        const pitches = state.pitchHistory;
+                        const volumes = state.volumeHistory;
+
+                        // Calculate statistics
+                        const avgPitch = pitches.reduce((a, b) => a + b, 0) / pitches.length;
+                        const pitchVariance = pitches.reduce((sum, p) => sum + Math.pow(p - avgPitch, 2), 0) / pitches.length;
+                        const pitchStd = Math.sqrt(pitchVariance);
+
+                        const avgVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+                        const volumeVariance = volumes.reduce((sum, v) => sum + Math.pow(v - avgVolume, 2), 0) / volumes.length;
+
+                        // Emotion detection heuristics
+                        let emotion = 'neutral';
+                        let recommendation = '';
+                        let confidence = 50;
+
+                        // High pitch + high variance = nervous/anxious
+                        if (avgPitch > 200 && pitchStd > 30) {
+                            emotion = 'nervous';
+                            recommendation = 'Lower your pitch and slow down - breathe deeply';
+                            confidence = 35;
+                        }
+                        // High pitch + low variance = excited/enthusiastic
+                        else if (avgPitch > 180 && pitchStd < 20) {
+                            emotion = 'excited';
+                            recommendation = 'Good energy! Channel it into clear points';
+                            confidence = 70;
+                        }
+                        // Low pitch + steady = confident/authoritative
+                        else if (avgPitch < 150 && pitchStd < 25 && avgVolume > 0.03) {
+                            emotion = 'confident';
+                            recommendation = 'Great! You sound authoritative';
+                            confidence = 85;
+                        }
+                        // Low volume + hesitant = uncertain
+                        else if (avgVolume < 0.02) {
+                            emotion = 'hesitant';
+                            recommendation = 'Speak up! Project your voice with conviction';
+                            confidence = 40;
+                        }
+                        // High volume variance = emotional/passionate
+                        else if (volumeVariance > 0.001) {
+                            emotion = 'passionate';
+                            recommendation = 'Strong emotion - steady your delivery for impact';
+                            confidence = 60;
+                        }
+                        // Moderate everything = calm
+                        else {
+                            emotion = 'calm';
+                            recommendation = 'Steady tone - good for building trust';
+                            confidence = 70;
+                        }
+
+                        state.lastEmotion = emotion;
+                        updateEmotionFeedback(emotion, recommendation, confidence);
+                    }
+
+                    // Update the UI with emotion feedback
+                    function updateEmotionFeedback(emotion, recommendation, confidence) {
+                        const emotionIcons = {
+                            nervous: '😰',
+                            excited: '🔥',
+                            confident: '💪',
+                            hesitant: '🤔',
+                            passionate: '💥',
+                            calm: '😌',
+                            pause: '⏸️',
+                            neutral: '😐'
+                        };
+
+                        const emotionColors = {
+                            nervous: '#f59e0b',
+                            excited: '#10b981',
+                            confident: '#10b981',
+                            hesitant: '#ef4444',
+                            passionate: '#8b5cf6',
+                            calm: '#3b82f6',
+                            pause: '#6b7280',
+                            neutral: '#6b7280'
+                        };
+
+                        // Update confidence bar
+                        if (confidence !== undefined) {
+                            document.getElementById('confidence-bar').style.width = confidence + '%';
+                            document.getElementById('confidence-bar').style.background = emotionColors[emotion] || 'var(--primary)';
+                        }
+
+                        // Update voice tip with emotion
+                        const tip = `${emotionIcons[emotion] || ''} ${emotion.toUpperCase()}: ${recommendation}`;
+                        document.getElementById('voice-tip').textContent = tip;
+
+                        // Record emotion in session
+                        if (sessionRecording && emotion !== 'neutral' && emotion !== 'pause') {
+                            if (!sessionRecording.emotions) sessionRecording.emotions = [];
+                            sessionRecording.emotions.push({
+                                emotion,
+                                timestamp: timer.textContent,
+                                confidence
+                            });
+                        }
+                    }
+
+                    updateVUAndEmotion();
+
+                    // Resample to 16kHz s16le mono (Gemini Live requirement); input may be 44.1/48kHz from browser
+                    function resampleTo16k(float32, inputRate) {
+                        if (inputRate === 16000 || float32.length === 0) return float32;
+                        const outLength = Math.max(1, Math.round(float32.length * 16000 / inputRate));
+                        const out = new Float32Array(outLength);
+                        const lastIdx = float32.length - 1;
+                        for (let i = 0; i < outLength; i++) {
+                            const srcIdx = lastIdx > 0 ? (i * lastIdx) / (outLength - 1) : 0;
+                            const lo = Math.min(Math.floor(srcIdx), lastIdx);
+                            const hi = Math.min(lo + 1, lastIdx);
+                            const t = srcIdx - lo;
+                            out[i] = float32[lo] * (1 - t) + float32[hi] * t;
+                        }
+                        return out;
+                    }
+
+                    // Process audio with ScriptProcessor (AudioWorklet would be better)
+                    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+                    processor.onaudioprocess = (e) => {
+                        if (!mediaStream || !ws || ws.readyState !== WebSocket.OPEN) return;
+                        const inputData = e.inputBuffer.getChannelData(0);
+                        const inputRate = audioContext.sampleRate;
+
+                            // Check if user is actually speaking (not silence)
+                            let maxLevel = 0;
+                            for (let i = 0; i < inputData.length; i++) {
+                                const abs = Math.abs(inputData[i]);
+                                if (abs > maxLevel) maxLevel = abs;
+                            }
+
+                            // Track user audio activity (threshold 0.05 = actual speech volume)
+                            if (maxLevel > 0.05 && isPracticeMode) {
+                                // ZERO-LATENCY BARGE IN: Stop the AI instantly locally!
+                                if (isAdversarySpeaking) {
+                                    console.log("Client-side VAD detected speech! Stopping adversary playback...");
+                                    clearAudio();
+                                    ws.send(JSON.stringify({ type: 'client_barge_in' }));
+                                }
+
+                                sessionRecording.metrics.userAudioChunks++;
+                                // Count as a "turn" every ~50 chunks of speech (~2.5 seconds)
+                                if (sessionRecording.metrics.userAudioChunks % 50 === 0) {
+                                    sessionRecording.metrics.userTurns++;
+                                }
+                            }
+
+                            // Resample to 16kHz then convert to 16-bit PCM (s16le mono) for Gemini
+                            const at16k = resampleTo16k(inputData, inputRate);
+                            const pcm = new Int16Array(at16k.length);
+                            for (let i = 0; i < at16k.length; i++) {
+                                pcm[i] = Math.max(-32768, Math.min(32767, at16k[i] * 32768));
+                            }
+                            // Send as base64 (16kHz s16le mono)
+                            const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm.buffer)));
+                            ws.send(JSON.stringify({ type: 'audio', data: base64 }));
+                            // Track cost: PCM samples at 16kHz = seconds
+                            costTracker.audioInputSeconds += at16k.length / 16000;
+                    };
+                    source.connect(processor);
+                    processor.connect(audioContext.destination);
+
+                    setMicUIState(true);
+                } catch (err) {
+                    console.error('Mic access denied:', err);
+                    alert('Microphone access is required for live negotiation support.');
+                }
+            }
+        });
+
+        // Screen share handling
+        screenBtn.addEventListener('click', async () => {
+            if (screenBtn.classList.contains('active')) {
+                // Stop screen share
+                if (screenCaptureIntervalId) {
+                    clearInterval(screenCaptureIntervalId);
+                    screenCaptureIntervalId = null;
+                }
+                if (screenStream) {
+                    screenStream.getTracks().forEach(t => t.stop());
+                    screenStream = null;
+                }
+                screenPreview.innerHTML = 'Click "Screen" to share your document';
+                screenPreview.classList.remove('active-share');
+                screenBtn.classList.remove('active');
+            } else {
+                // Start screen share — used for coach context only; agent hears only your voice
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            cursor: 'never',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    });
+
+                    const video = document.createElement('video');
+                    video.srcObject = screenStream;
+                    video.play();
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const captureFrame = () => {
+                        if (!screenStream) return;
+
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0);
+
+                        screenPreview.innerHTML = `
+                            <div style="text-align: center; color: #10b981; padding: 0.5rem;">
+                                <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📋</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Screen shared</div>
+                                <div style="font-size: 0.7rem; opacity: 0.9; margin-top: 0.25rem;">Coach uses it for context only.<br/>Agent hears only your voice.</div>
+                            </div>
+                        `;
+                        screenPreview.classList.add('active-share');
+
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                            if (base64 && base64.length > 2000) {
+                                ws.send(JSON.stringify({ type: 'screen', data: base64 }));
+                            }
+                        }
+                    };
+
+                    captureFrame();
+                    screenCaptureIntervalId = setInterval(captureFrame, 5000);
+
+                    screenStream.getVideoTracks()[0].onended = () => {
+                        if (screenCaptureIntervalId) {
+                            clearInterval(screenCaptureIntervalId);
+                            screenCaptureIntervalId = null;
+                        }
+                        screenBtn.classList.remove('active');
+                        screenPreview.innerHTML = 'Click "Screen" to share your document';
+                        screenPreview.classList.remove('active-share');
+                    };
+
+                    screenBtn.classList.add('active');
+                } catch (err) {
+                    console.error('Screen share denied:', err);
+                }
+            }
+        });
+
+        // End session
+        endBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to end this session?')) {
+                endSession();
+            }
+        });
+
+        function endSession() {
+            if (sessionEnded) return;
+            sessionEnded = true;
+
+            // Stop cost tracking
+            stopCostTracking();
+
+            // Stop listening to websocket messages
+            if (ws) {
+                ws.onmessage = null; // Stop processing messages
+                ws.send(JSON.stringify({ type: 'end' }));
+                ws.close();
+                ws = null;
+            }
+
+            // Stop all audio playback immediately
+            if (playbackAudioContext) {
+                playbackAudioContext.close();
+                playbackAudioContext = null;
+            }
+            audioChunksBuffer = []; // Clear any pending audio
+
+            // Stop microphone
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+
+            // Stop speech recognition
+            stopSpeechRecognition();
+
+            // Stop screen share
+            if (screenCaptureIntervalId) {
+                clearInterval(screenCaptureIntervalId);
+                screenCaptureIntervalId = null;
+            }
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Stop visual coaching
+            window.stopVisualCoaching?.();
+
+            // Show Buddy recap instead of reloading
+            if (isPracticeMode && sessionRecording.metrics.totalTurns > 0) {
+                showSessionAnalysis();
+            } else {
+                location.reload();
+            }
+        }
+
+        // Generate and display Buddy recap
+        async function showSessionAnalysis() {
+            const sessionData = {
+                session: { duration: timer.textContent, mode: 'secondus_buddy', date: new Date().toISOString() },
+                metrics: sessionRecording.metrics,
+                exchanges: sessionRecording.exchanges,
+                tacticsDetected: sessionRecording.tacticsDetected,
+                coachingGiven: sessionRecording.coachingGiven,
+                visualPresence: window.getVisualMetricsSummary?.()
+            };
+
+            let recap;
+            try {
+                const res = await fetch('/session/buddy/recap', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessionData)
+                });
+                recap = await res.json();
+            } catch (e) {
+                console.warn('Could not build Buddy recap on backend:', e);
+                recap = {
+                    score: 50,
+                    duration: sessionData.session.duration,
+                    user_participation: sessionRecording.exchanges.filter(e => e.speaker === 'user').length,
+                    buddy_turns: sessionRecording.metrics.totalTurns,
+                    pressure_signals: sessionRecording.tacticsDetected.length,
+                    outcome: 'Buddy completed the session.',
+                    best_intervention: sessionRecording.coachingGiven.at(-1)?.phrase || 'Buddy kept the conversation moving.',
+                    biggest_risk: 'No major pressure signal stood out.',
+                    next_focus: 'Keep sessions longer and respond directly to pressure.',
+                    strengths: ['Buddy recap unavailable from backend, using fallback summary.'],
+                    moments: sessionRecording.coachingGiven.slice(-3),
+                    visual_summary: sessionData.visualPresence,
+                };
+            }
+
+            const visualSummary = recap.visual_summary;
+            const score = recap.score;
+
+            // Build analysis HTML
+            const analysisHTML = `
+                <div class="session-analysis-overlay" id="session-analysis">
+                    <div class="session-analysis-modal">
+                        <div class="recap-hero">
+                            <div class="recap-kicker">Secondus Buddy recap</div>
+                            <h2>What happened in your negotiation</h2>
+                            <p>One clear summary of the pressure Buddy applied, the line that mattered most, and what to sharpen next.</p>
+                        </div>
+                        <div class="analysis-score">
+                            <div class="score-circle ${score >= 70 ? 'good' : score >= 50 ? 'ok' : 'needs-work'}">
+                                <span class="score-number">${score}</span>
+                                <span class="score-label">/ 100</span>
+                            </div>
+                            <div class="score-text">${score >= 80 ? 'Excellent Buddy round' : score >= 60 ? 'Strong Buddy session' : 'Useful Buddy practice'}</div>
+                        </div>
+
+                        <div class="analysis-stats">
+                            <div class="stat"><span class="stat-value">${recap.duration}</span><span class="stat-label">Duration</span></div>
+                            <div class="stat"><span class="stat-value">${recap.user_participation}</span><span class="stat-label">Your Turns</span></div>
+                            <div class="stat"><span class="stat-value">${recap.buddy_turns}</span><span class="stat-label">Buddy Turns</span></div>
+                            <div class="stat"><span class="stat-value">${recap.pressure_signals}</span><span class="stat-label">Pressure Signals</span></div>
+                        </div>
+
+                        <div class="analysis-section recap-highlight">
+                            <h3>Outcome</h3>
+                            <p>${recap.outcome}</p>
+                        </div>
+
+                        <div class="analysis-section recap-highlight">
+                            <h3>Best Buddy Intervention</h3>
+                            <p>${recap.best_intervention}</p>
+                        </div>
+
+                        <div class="analysis-section recap-highlight">
+                            <h3>Biggest Risk Caught</h3>
+                            <p>${recap.biggest_risk}</p>
+                        </div>
+
+                        <div class="analysis-section recap-highlight">
+                            <h3>Next Focus</h3>
+                            <p>${recap.next_focus}</p>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h3>What Went Well</h3>
+                            <ul>${(recap.strengths || []).length ? recap.strengths.slice(0, 3).map(s => `<li>${s}</li>`).join('') : '<li>Complete a few more turns and Buddy will give sharper feedback here.</li>'}</ul>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h3>Buddy Moments</h3>
+                            <div class="coaching-timeline">
+                                ${(recap.moments || []).slice(-3).map(c => `
+                                    <div class="coaching-moment">
+                                        <span class="coaching-time">${c.timestamp || ''}</span>
+                                        <span class="coaching-context">${c.context || c.phrase || ''}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${visualSummary ? `
+                        <div class="analysis-section">
+                            <h3>Presence Snapshot</h3>
+                            <div class="visual-summary">
+                                <div class="visual-stat-row">
+                                    <div class="visual-stat">
+                                        <span class="visual-stat-label">Eye Contact</span>
+                                        <div class="visual-stat-bar">
+                                            <div class="visual-stat-fill" style="width: ${visualSummary.avgEyeContact}%; background: ${visualSummary.avgEyeContact >= 60 ? '#10b981' : '#f59e0b'}"></div>
+                                        </div>
+                                        <span class="visual-stat-value">${visualSummary.avgEyeContact}%</span>
+                                    </div>
+                                    <div class="visual-stat">
+                                        <span class="visual-stat-label">Posture</span>
+                                        <div class="visual-stat-bar">
+                                            <div class="visual-stat-fill" style="width: ${visualSummary.avgPosture}%; background: ${visualSummary.avgPosture >= 60 ? '#10b981' : '#f59e0b'}"></div>
+                                        </div>
+                                        <span class="visual-stat-value">${visualSummary.avgPosture}%</span>
+                                    </div>
+                                </div>
+                                <div class="visual-presence-emotion">
+                                    <span>Dominant Visual Emotion:</span>
+                                    <strong>${visualSummary.dominantEmotion.toUpperCase()}</strong>
+                                </div>
+                                <p class="visual-tip-summary">
+                                    ${visualSummary.avgTension > 50
+                                        ? 'Tip: Relax your face and jaw before the next Buddy round.'
+                                        : visualSummary.avgEyeContact < 50
+                                        ? 'Tip: Hold eye contact with the camera more consistently.'
+                                        : 'Strong presence — you looked confident and engaged.'}
+                                </p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="analysis-actions">
+                            <button class="btn btn-primary" onclick="location.reload()">Run Buddy Again</button>
+                            <button class="btn" onclick="downloadSessionReport()">Download Buddy Report</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add styles and show
+            const style = document.createElement('style');
+            style.textContent = `
+                .session-analysis-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background:
+                        radial-gradient(circle at top, rgba(99, 102, 241, 0.16), transparent 28%),
+                        rgba(2, 6, 23, 0.92);
+                    backdrop-filter: blur(12px);
+                    z-index: 1000;
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 2rem;
+                }
+                .session-analysis-modal {
+                    background:
+                        radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 26%),
+                        linear-gradient(180deg, rgba(20, 20, 31, 0.98), rgba(10, 10, 15, 0.98));
+                    border-radius: 24px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                    box-shadow: 0 32px 80px rgba(0,0,0,0.45);
+                    max-width: 760px; width: 100%; max-height: 90vh; overflow-y: auto;
+                    padding: 2rem;
+                }
+                .recap-hero {
+                    text-align: center;
+                    margin-bottom: 1.75rem;
+                }
+                .recap-kicker {
+                    display: inline-flex;
+                    padding: 0.35rem 0.75rem;
+                    border-radius: 999px;
+                    background: rgba(99, 102, 241, 0.12);
+                    border: 1px solid rgba(99, 102, 241, 0.2);
+                    color: #a5b4fc;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    margin-bottom: 0.9rem;
+                }
+                .session-analysis-modal h2 {
+                    margin: 0 0 0.6rem;
+                    text-align: center;
+                    font-size: 2rem;
+                }
+                .recap-hero p {
+                    margin: 0 auto;
+                    max-width: 48ch;
+                    color: var(--text-secondary);
+                    font-size: 0.98rem;
+                    line-height: 1.6;
+                }
+                .analysis-score { text-align: center; margin-bottom: 1.6rem; }
+                .score-circle {
+                    width: 132px; height: 132px; border-radius: 50%;
+                    display: inline-flex; flex-direction: column;
+                    align-items: center; justify-content: center;
+                    margin-bottom: 0.75rem;
+                    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+                }
+                .score-circle.good { background: rgba(16, 185, 129, 0.2); border: 3px solid var(--primary); }
+                .score-circle.ok { background: rgba(245, 158, 11, 0.2); border: 3px solid #f59e0b; }
+                .score-circle.needs-work { background: rgba(239, 68, 68, 0.2); border: 3px solid var(--urgent); }
+                .score-number { font-size: 2.7rem; font-weight: 700; }
+                .score-label { font-size: 0.875rem; color: var(--text-secondary); }
+                .score-text { font-size: 1.05rem; color: var(--text-secondary); }
+                .analysis-stats {
+                    display: grid;
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                    gap: 0.75rem;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 18px;
+                    padding: 1rem;
+                    margin-bottom: 1.5rem;
+                }
+                .stat {
+                    text-align: center;
+                    padding: 0.8rem 0.5rem;
+                    border-radius: 14px;
+                    background: rgba(255,255,255,0.02);
+                }
+                .stat-value { display: block; font-size: 1.5rem; font-weight: 600; }
+                .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+                .analysis-section {
+                    margin-bottom: 1.2rem;
+                    padding: 1rem 1.1rem;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 16px;
+                }
+                .recap-highlight {
+                    background:
+                        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+                    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+                }
+                .analysis-section h3 {
+                    font-size: 0.92rem;
+                    margin-bottom: 0.55rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    color: #c7d2fe;
+                }
+                .analysis-section p {
+                    color: var(--text-primary);
+                    line-height: 1.65;
+                }
+                .analysis-section ul { margin: 0; padding-left: 1.25rem; }
+                .analysis-section li { margin-bottom: 0.25rem; color: var(--text-secondary); }
+                .coaching-timeline { display: flex; flex-direction: column; gap: 0.5rem; }
+                .coaching-moment {
+                    background: rgba(255,255,255,0.04);
+                    padding: 0.7rem 0.85rem;
+                    border-radius: 12px;
+                    font-size: 0.875rem;
+                    border: 1px solid rgba(255,255,255,0.04);
+                }
+                .coaching-time { color: var(--text-secondary); margin-right: 0.5rem; }
+                .transcript-excerpts { display: flex; flex-direction: column; gap: 0.5rem; }
+                .transcript-excerpt {
+                    background: var(--bg-tertiary); padding: 0.5rem 0.75rem;
+                    border-radius: 8px; font-size: 0.875rem;
+                    border-left: 3px solid var(--primary);
+                }
+                .excerpt-time { color: var(--text-secondary); margin-right: 0.5rem; font-size: 0.75rem; }
+                .excerpt-text { color: var(--text-primary); font-style: italic; }
+                .emotion-summary { background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; }
+                .emotion-stat { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+                .emotion-label { color: var(--text-secondary); }
+                .emotion-value { font-weight: 600; }
+                .emotion-advice { margin: 1rem 0; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-size: 0.875rem; }
+                .emotion-breakdown { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+                .emotion-tag { background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+                .visual-summary {
+                    background: rgba(255,255,255,0.03);
+                    padding: 1rem;
+                    border-radius: 14px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .visual-stat-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+                .visual-stat { flex: 1; }
+                .visual-stat-label { font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem; }
+                .visual-stat-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-bottom: 0.25rem; }
+                .visual-stat-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+                .visual-stat-value { font-size: 0.875rem; font-weight: 600; }
+                .visual-presence-emotion {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 0.75rem 0;
+                    padding: 0.65rem 0.75rem;
+                    background: rgba(255,255,255,0.04);
+                    border-radius: 10px;
+                }
+                .visual-tip-summary { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.75rem; font-style: italic; }
+                .analysis-actions {
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: center;
+                    margin-top: 2rem;
+                    padding-top: 0.5rem;
+                }
+                @media (max-width: 720px) {
+                    .session-analysis-modal {
+                        padding: 1.25rem;
+                        border-radius: 18px;
+                    }
+                    .analysis-stats {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+                    .analysis-actions {
+                        flex-direction: column;
+                    }
+                    .visual-stat-row {
+                        flex-direction: column;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.insertAdjacentHTML('beforeend', analysisHTML);
+        }
+
+        // Download session report
+        function downloadSessionReport() {
+            const visualSummary = window.getVisualMetricsSummary?.();
+            const report = {
+                session: {
+                    duration: timer.textContent,
+                    mode: 'secondus_buddy',
+                    date: new Date().toISOString()
+                },
+                metrics: sessionRecording.metrics,
+                exchanges: sessionRecording.exchanges,
+                tacticsDetected: sessionRecording.tacticsDetected,
+                coachingGiven: sessionRecording.coachingGiven,
+                visualPresence: visualSummary || null
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `secondus-buddy-session-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.removeTerm = removeTerm;
+        window.hideDriftBanner = hideDriftBanner;
+        window.downloadSessionReport = downloadSessionReport;
+    </script>
+
+    <!-- MediaPipe for visual emotion/pose/hand detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+    <script>
+    // ========================================
+    // MediaPipe Visual Coaching System
+    // ========================================
+
+    let faceMesh = null;
+    let pose = null;
+    let hands = null;
+    let webcamStream = null;
+    let visualCoachingActive = false;
+    let lastVisualEmotion = { state: 'neutral', confidence: 50 };
+    let visualMetricsHistory = [];
+    let lastHandsResults = null;
+    let lastFaceMeshResults = null;
+
+    // Visual coaching state
+    const visualState = {
+        eyeContact: 50,
+        facialTension: 0,
+        headTilt: 0,
+        shoulderPosture: 50,
+        armsCrossed: false,
+        faceVisible: true,
+        handsVisible: false,
+        leaningBack: false,
+        tooClose: false,
+        tooFar: false,
+        lastTip: '',
+        lastWarning: '',
+        emotions: [],
+        // Negotiation gesture states
+        steepling: false,        // Confidence signal - fingertips together
+        openPalms: false,        // Honesty signal - palms facing outward
+        faceTouching: false,     // Stress signal - hands near face
+        gestureScore: 50         // Overall gesture quality score
+    };
+
+    // Initialize MediaPipe Face Mesh
+    async function initFaceMesh() {
+        if (typeof FaceMesh === 'undefined') {
+            console.warn('MediaPipe FaceMesh not loaded');
+            return null;
+        }
+
+        faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults(onFaceMeshResults);
+        return faceMesh;
+    }
+
+    // Initialize MediaPipe Pose
+    async function initPose() {
+        if (typeof Pose === 'undefined') {
+            console.warn('MediaPipe Pose not loaded');
+            return null;
+        }
+
+        pose = new Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(onPoseResults);
+        return pose;
+    }
+
+    // Initialize MediaPipe Hands
+    async function initHands() {
+        if (typeof Hands === 'undefined') {
+            console.warn('MediaPipe Hands not loaded');
+            return null;
+        }
+
+        hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onHandsResults);
+        return hands;
+    }
+
+    // Process Hands results
+    function onHandsResults(results) {
+        // Store for drawing in face mesh callback
+        lastHandsResults = results;
+    }
+
+    // Process Face Mesh results
+    function onFaceMeshResults(results) {
+        lastFaceMeshResults = results; // Store for gesture analysis
+        const canvas = document.getElementById('webcam-canvas');
+        const video = document.getElementById('webcam-video');
+
+        if (canvas && video) {
+            // Set canvas size to match video
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+
+                // Draw face mesh (simplified - key points only)
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+                ctx.lineWidth = 1;
+
+                // Draw key landmark points (face outline, eyes, mouth)
+                const keyPoints = [
+                    // Face oval
+                    10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
+                    397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136,
+                    172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
+                    // Eyes
+                    33, 133, 160, 159, 158, 144, 145, 153, 154, 155, 263, 362,
+                    387, 386, 385, 373, 374, 380, 381, 382,
+                    // Mouth
+                    61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291,
+                    375, 321, 405, 314, 17, 84, 181, 91, 146
+                ];
+
+                // Draw points
+                for (const idx of keyPoints) {
+                    if (landmarks[idx]) {
+                        const x = landmarks[idx].x * canvas.width;
+                        const y = landmarks[idx].y * canvas.height;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+
+                // Draw connections for face outline
+                ctx.beginPath();
+                const faceOutline = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10];
+                for (let i = 0; i < faceOutline.length; i++) {
+                    const idx = faceOutline[i];
+                    if (landmarks[idx]) {
+                        const x = landmarks[idx].x * canvas.width;
+                        const y = landmarks[idx].y * canvas.height;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw hands if available
+                if (lastHandsResults && lastHandsResults.multiHandLandmarks) {
+                    ctx.fillStyle = 'rgba(255, 165, 0, 0.8)'; // Orange for hands
+                    ctx.strokeStyle = 'rgba(255, 165, 0, 0.6)';
+                    ctx.lineWidth = 2;
+
+                    for (const handLandmarks of lastHandsResults.multiHandLandmarks) {
+                        // Draw hand landmarks
+                        for (const landmark of handLandmarks) {
+                            const x = landmark.x * canvas.width;
+                            const y = landmark.y * canvas.height;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                            ctx.fill();
+                        }
+
+                        // Draw hand connections
+                        const connections = [
+                            [0, 1], [1, 2], [2, 3], [3, 4],     // Thumb
+                            [0, 5], [5, 6], [6, 7], [7, 8],     // Index
+                            [0, 9], [9, 10], [10, 11], [11, 12], // Middle
+                            [0, 13], [13, 14], [14, 15], [15, 16], // Ring
+                            [0, 17], [17, 18], [18, 19], [19, 20], // Pinky
+                            [5, 9], [9, 13], [13, 17]           // Palm
+                        ];
+
+                        ctx.beginPath();
+                        for (const [start, end] of connections) {
+                            const x1 = handLandmarks[start].x * canvas.width;
+                            const y1 = handLandmarks[start].y * canvas.height;
+                            const x2 = handLandmarks[end].x * canvas.width;
+                            const y2 = handLandmarks[end].y * canvas.height;
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                        }
+                        ctx.stroke();
+                    }
+                }
+
+                // Analyze facial features
+                analyzeFacialExpression(landmarks);
+                analyzeEyeContact(landmarks);
+                analyzeHeadPosition(landmarks);
+
+                // Update visual coaching UI
+                visualState.faceVisible = true;
+                updateVisualCoachingUI();
+            } else {
+                // No face detected
+                visualState.faceVisible = false;
+                showUrgentWarning('⚠️ FACE NOT VISIBLE — Look at the camera!');
+            }
+        } else {
+            // No face landmarks
+            visualState.faceVisible = false;
+            showUrgentWarning('⚠️ FACE NOT VISIBLE — Look at the camera!');
+        }
+    }
+
+    // Show urgent visual warning
+    function showUrgentWarning(message) {
+        const visualTipEl = document.getElementById('visual-tip');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (visualTipEl) {
+            visualTipEl.textContent = message;
+            visualTipEl.classList.add('warning');
+        }
+        if (visualPanel) {
+            visualPanel.style.borderColor = '#ef4444';
+            visualPanel.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.4)';
+        }
+
+        // Reset after face detected again
+        visualState.lastWarning = message;
+    }
+
+    // Clear warning state
+    function clearWarning() {
+        const visualTipEl = document.getElementById('visual-tip');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (visualTipEl) visualTipEl.classList.remove('warning');
+        if (visualPanel) {
+            visualPanel.style.borderColor = '';
+            visualPanel.style.boxShadow = '';
+        }
+        visualState.lastWarning = '';
+    }
+
+    // Process Pose results
+    function onPoseResults(results) {
+        if (!results.poseLandmarks) {
+            return;
+        }
+
+        const landmarks = results.poseLandmarks;
+
+        // Analyze body language
+        analyzePosture(landmarks);
+        analyzeArmPosition(landmarks);
+        analyzeHandGestures();
+
+        // Update visual coaching UI
+        updateVisualCoachingUI();
+    }
+
+    // Analyze facial expression for stress/confidence
+    function analyzeFacialExpression(landmarks) {
+        // Key landmarks for expression analysis
+        // Eyebrows: 70, 63 (left), 300, 293 (right)
+        // Eyes: 159, 145 (left), 386, 374 (right)
+        // Mouth corners: 61, 291
+        // Jaw: 152
+
+        // Eyebrow raise (stress indicator)
+        const leftBrowHeight = landmarks[70].y - landmarks[159].y;
+        const rightBrowHeight = landmarks[300].y - landmarks[386].y;
+        const browRaise = (leftBrowHeight + rightBrowHeight) / 2;
+
+        // Mouth tension (stress indicator)
+        const mouthWidth = Math.abs(landmarks[61].x - landmarks[291].x);
+        const mouthOpenness = Math.abs(landmarks[13].y - landmarks[14].y);
+
+        // Eye openness (alertness/stress)
+        const leftEyeOpen = Math.abs(landmarks[159].y - landmarks[145].y);
+        const rightEyeOpen = Math.abs(landmarks[386].y - landmarks[374].y);
+        const eyeOpenness = (leftEyeOpen + rightEyeOpen) / 2;
+
+        // Calculate facial tension (0-100) - more forgiving thresholds
+        let tension = 0;
+        // Furrowed brow (brows pulled together/down) indicates stress
+        if (browRaise < -0.035) tension += 25;
+        // Very wide eyes (startled look) indicates stress
+        if (eyeOpenness > 0.035) tension += 20;
+        // Very tight/pursed mouth indicates stress
+        if (mouthWidth < 0.06) tension += 20;
+        // Clenched jaw - mouth very closed
+        if (mouthOpenness < 0.005 && mouthWidth < 0.07) tension += 15;
+
+        visualState.facialTension = Math.min(100, tension);
+
+        // Determine emotional state - default to neutral more often
+        let emotion = 'neutral';
+        let confidence = 60;
+
+        if (tension >= 65) {
+            emotion = 'stressed';
+            confidence = 40;
+        } else if (tension >= 50) {
+            emotion = 'tense';
+            confidence = 50;
+        } else if (tension < 25 && mouthWidth > 0.09) {
+            emotion = 'confident';
+            confidence = 75;
+        } else if (mouthOpenness > 0.015 && mouthWidth > 0.11) {
+            emotion = 'engaged';
+            confidence = 70;
+        }
+
+        lastVisualEmotion = { state: emotion, confidence };
+    }
+
+    // Analyze eye contact (looking at camera)
+    function analyzeEyeContact(landmarks) {
+        // Check if eyes are looking forward (at camera)
+        // Left eye: 468, Right eye: 473 (iris centers with refineLandmarks)
+        // Face center: 1
+
+        const leftIris = landmarks[468] || landmarks[159];
+        const rightIris = landmarks[473] || landmarks[386];
+        const nose = landmarks[1];
+
+        // Calculate eye direction relative to face center
+        const leftOffset = Math.abs(leftIris.x - nose.x);
+        const rightOffset = Math.abs(rightIris.x - nose.x);
+
+        // Good eye contact = eyes centered
+        const eyeContactScore = Math.max(0, 100 - (leftOffset + rightOffset) * 500);
+        visualState.eyeContact = Math.round(eyeContactScore);
+    }
+
+    // Analyze head position/tilt
+    function analyzeHeadPosition(landmarks) {
+        // Check for head tilt (shoulders should be level with chin)
+        const leftCheek = landmarks[234];
+        const rightCheek = landmarks[454];
+
+        const tiltAngle = Math.atan2(rightCheek.y - leftCheek.y, rightCheek.x - leftCheek.x);
+        const tiltDegrees = tiltAngle * (180 / Math.PI);
+
+        visualState.headTilt = tiltDegrees;
+    }
+
+    // Analyze posture from pose landmarks - meaningful for video calls
+    function analyzePosture(landmarks) {
+        // Key landmarks
+        const nose = landmarks[0];
+        const leftShoulder = landmarks[11];
+        const rightShoulder = landmarks[12];
+        const leftHip = landmarks[23];
+        const rightHip = landmarks[24];
+
+        if (!leftShoulder || !rightShoulder || !nose) return;
+
+        let postureScore = 50;
+        let issues = [];
+
+        // 1. Check distance from camera using shoulder width (more reliable than face position)
+        const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+        const faceX = nose.x;
+
+        // Shoulder width indicates distance: wider = closer, narrower = farther
+        if (shoulderWidth > 0.55) {
+            visualState.tooClose = true;
+            visualState.tooFar = false;
+            postureScore -= 15;
+            issues.push('too close');
+        } else if (shoulderWidth < 0.20) {
+            visualState.tooClose = false;
+            visualState.tooFar = true;
+            postureScore -= 15;
+            issues.push('too far');
+        } else {
+            visualState.tooClose = false;
+            visualState.tooFar = false;
+            postureScore += 15;
+        }
+
+        // 2. Check if centered
+        if (faceX < 0.3 || faceX > 0.7) {
+            postureScore -= 10;
+            issues.push('off-center');
+        } else {
+            postureScore += 10;
+        }
+
+        // 3. Check shoulders level
+        const shoulderDiff = Math.abs(leftShoulder.y - rightShoulder.y);
+        if (shoulderDiff < 0.05) {
+            postureScore += 10;
+        } else {
+            issues.push('shoulders uneven');
+        }
+
+        // 4. Check for leaning (nose position relative to shoulders)
+        if (leftHip && rightHip) {
+            const hipCenter = (leftHip.y + rightHip.y) / 2;
+            const shoulderCenter = (leftShoulder.y + rightShoulder.y) / 2;
+            const leanAngle = shoulderCenter - hipCenter;
+
+            // Leaning back = disengaged
+            visualState.leaningBack = leanAngle < 0.1;
+            if (visualState.leaningBack) {
+                postureScore -= 15;
+                issues.push('leaning back');
+            } else {
+                postureScore += 10;
+            }
+        }
+
+        // 5. Check if hands are visible (shows engagement)
+        if (lastHandsResults && lastHandsResults.multiHandLandmarks && lastHandsResults.multiHandLandmarks.length > 0) {
+            visualState.handsVisible = true;
+            postureScore += 5;
+        } else {
+            visualState.handsVisible = false;
+        }
+
+        visualState.shoulderPosture = Math.max(0, Math.min(100, postureScore));
+        visualState.postureIssues = issues;
+    }
+
+    // Analyze arm position (crossed arms = defensive)
+    function analyzeArmPosition(landmarks) {
+        // Wrist landmarks: 15 (left), 16 (right)
+        // Elbow landmarks: 13 (left), 14 (right)
+        const leftWrist = landmarks[15];
+        const rightWrist = landmarks[16];
+        const leftElbow = landmarks[13];
+        const rightElbow = landmarks[14];
+
+        if (!leftWrist || !rightWrist) return;
+
+        // Check if wrists are crossed (near center of body)
+        const wristDistance = Math.abs(leftWrist.x - rightWrist.x);
+        const wristsCrossed = wristDistance < 0.15;
+
+        // Check if arms are in front of body
+        const armsInFront = leftWrist.z < -0.1 && rightWrist.z < -0.1;
+
+        visualState.armsCrossed = wristsCrossed && armsInFront;
+    }
+
+    // Analyze hand gestures for negotiation signals
+    function analyzeHandGestures() {
+        if (!lastHandsResults || !lastHandsResults.multiHandLandmarks || lastHandsResults.multiHandLandmarks.length === 0) {
+            visualState.steepling = false;
+            visualState.openPalms = false;
+            visualState.faceTouching = false;
+            visualState.gestureScore = 30; // Low score when no hands visible
+            return;
+        }
+
+        const hands = lastHandsResults.multiHandLandmarks;
+        let gestureScore = 50;
+
+        // Reset gesture states before analysis
+        visualState.faceTouching = false;
+
+        // Hand landmark indices:
+        // 0: wrist, 4: thumb tip, 8: index tip, 12: middle tip, 16: ring tip, 20: pinky tip
+        // 5,6,7,8: index finger, 9,10,11,12: middle finger, etc.
+
+        // Check for steepling (two hands, fingertips close together, pointing up)
+        if (hands.length === 2) {
+            const hand1 = hands[0];
+            const hand2 = hands[1];
+
+            // Get fingertips (indices 4, 8, 12, 16, 20)
+            const tips1 = [hand1[4], hand1[8], hand1[12], hand1[16], hand1[20]];
+            const tips2 = [hand2[4], hand2[8], hand2[12], hand2[16], hand2[20]];
+
+            // Calculate average distance between fingertips
+            let totalDist = 0;
+            let fingersPointingUp = 0;
+
+            for (let i = 0; i < 5; i++) {
+                const dx = tips1[i].x - tips2[i].x;
+                const dy = tips1[i].y - tips2[i].y;
+                totalDist += Math.sqrt(dx * dx + dy * dy);
+
+                // Check if fingers are pointing up (tips above knuckles)
+                // Knuckles are at indices 5, 9, 13, 17 for fingers
+                const knuckle1Idx = [2, 5, 9, 13, 17][i]; // MCP joints
+                const knuckle2Idx = [2, 5, 9, 13, 17][i];
+                if (hand1[knuckle1Idx] && tips1[i].y < hand1[knuckle1Idx].y) {
+                    fingersPointingUp++;
+                }
+            }
+
+            const avgDist = totalDist / 5;
+
+            // Steepling: hands close together, fingers pointing up
+            visualState.steepling = avgDist < 0.15 && fingersPointingUp >= 3;
+            if (visualState.steepling) {
+                gestureScore += 25; // Strong confidence signal
+            }
+        } else {
+            visualState.steepling = false;
+        }
+
+        // Check for open palms (palm landmarks visible, wrist below fingers)
+        let openPalmCount = 0;
+        for (const hand of hands) {
+            const wrist = hand[0];
+            const middleTip = hand[12];
+            const indexTip = hand[8];
+            const pinkyTip = hand[20];
+
+            // Palm facing camera if wrist is below fingers (y increases downward)
+            // and fingers are spread (distance between tips)
+            const palmOpen = wrist.y > middleTip.y;
+            const fingerSpread = Math.abs(indexTip.x - pinkyTip.x) > 0.1;
+
+            if (palmOpen && fingerSpread) {
+                openPalmCount++;
+            }
+        }
+        visualState.openPalms = openPalmCount > 0;
+        if (visualState.openPalms) {
+            gestureScore += 15; // Honesty/openness signal
+        }
+
+        // Check for face touching (hand near face - stress signal)
+        // Need face landmarks for this - use lastFaceMeshResults
+        if (lastFaceMeshResults && lastFaceMeshResults.multiFaceLandmarks && lastFaceMeshResults.multiFaceLandmarks.length > 0) {
+            const faceLandmarks = lastFaceMeshResults.multiFaceLandmarks[0];
+            const nose = faceLandmarks[1]; // Nose tip
+            const chin = faceLandmarks[152]; // Chin
+
+            for (const hand of hands) {
+                const wrist = hand[0];
+                const indexTip = hand[8];
+
+                // Check if any hand point is near face
+                const distToNose = Math.sqrt(
+                    Math.pow(indexTip.x - nose.x, 2) + Math.pow(indexTip.y - nose.y, 2)
+                );
+                const distToChin = Math.sqrt(
+                    Math.pow(indexTip.x - chin.x, 2) + Math.pow(indexTip.y - chin.y, 2)
+                );
+
+                if (distToNose < 0.15 || distToChin < 0.15) {
+                    visualState.faceTouching = true;
+                    gestureScore -= 20; // Stress signal
+                    break;
+                }
+            }
+        }
+
+        // Hands visible is positive
+        gestureScore += 10;
+
+        visualState.gestureScore = Math.max(0, Math.min(100, gestureScore));
+    }
+
+    // Update visual coaching UI with tips
+    function updateVisualCoachingUI() {
+        const visualTipEl = document.getElementById('visual-tip');
+        const eyeContactBar = document.getElementById('eye-contact-bar');
+        const postureBar = document.getElementById('posture-bar');
+        const gesturesBar = document.getElementById('gestures-bar');
+        const visualEmotionEl = document.getElementById('visual-emotion');
+        const eyeContactPct = document.getElementById('eye-contact-pct');
+        const posturePct = document.getElementById('posture-pct');
+        const gesturesPct = document.getElementById('gestures-pct');
+
+        if (!visualTipEl) return;
+
+        // Helper function for color coding
+        function getBarColor(value) {
+            if (value >= 70) return 'linear-gradient(90deg, #22c55e, #16a34a)'; // Green
+            if (value >= 40) return 'linear-gradient(90deg, #eab308, #ca8a04)'; // Yellow
+            return 'linear-gradient(90deg, #ef4444, #dc2626)'; // Red
+        }
+
+        // Update bars with color coding and percentages
+        if (eyeContactBar) {
+            const val = Math.round(visualState.eyeContact);
+            eyeContactBar.style.width = val + '%';
+            eyeContactBar.style.background = getBarColor(val);
+            if (eyeContactPct) eyeContactPct.textContent = val + '%';
+        }
+        if (postureBar) {
+            const val = Math.round(visualState.shoulderPosture);
+            postureBar.style.width = val + '%';
+            postureBar.style.background = getBarColor(val);
+            if (posturePct) posturePct.textContent = val + '%';
+        }
+        if (gesturesBar) {
+            const val = Math.round(visualState.gestureScore);
+            gesturesBar.style.width = val + '%';
+            gesturesBar.style.background = getBarColor(val);
+            if (gesturesPct) gesturesPct.textContent = val + '%';
+        }
+
+        // Update emotion indicator
+        if (visualEmotionEl) {
+            const emotionEmoji = {
+                'confident': '😎',
+                'engaged': '🙂',
+                'neutral': '😐',
+                'tense': '😬',
+                'stressed': '😰'
+            };
+            visualEmotionEl.textContent = `${emotionEmoji[lastVisualEmotion.state] || '😐'} ${lastVisualEmotion.state}`;
+        }
+
+        // Clear warning if face is visible
+        if (visualState.faceVisible && visualState.lastWarning) {
+            clearWarning();
+        }
+
+        // Generate coaching tip - prioritize by urgency
+        let tip = '';
+        let isWarning = false;
+
+        if (!visualState.faceVisible) {
+            tip = '⚠️ FACE NOT VISIBLE — Look at the camera!';
+            isWarning = true;
+        } else if (visualState.tooClose) {
+            tip = '📏 Too close to camera — move back for better framing';
+            isWarning = true;
+        } else if (visualState.tooFar) {
+            tip = '📏 Too far from camera — move closer to fill the frame';
+            isWarning = true;
+        } else if (visualState.faceTouching) {
+            tip = '🤚 Hands near face — signals stress, keep hands lower';
+            isWarning = true;
+        } else if (visualState.leaningBack) {
+            tip = '🪑 Leaning back — lean in slightly to show engagement';
+        } else if (visualState.armsCrossed) {
+            tip = '🙅 Arms crossed — open your posture, use hand gestures';
+        } else if (visualState.eyeContact < 40) {
+            tip = '👀 Look at the camera lens — maintain eye contact';
+        } else if (visualState.facialTension > 60) {
+            tip = '😤 Facial tension detected — relax jaw, soften brow';
+        } else if (Math.abs(visualState.headTilt) > 15) {
+            tip = '📐 Level your head — tilting ' + (visualState.headTilt > 0 ? 'right' : 'left');
+        } else if (!visualState.handsVisible) {
+            tip = '🤲 Show your hands — gestures build trust';
+        } else if (visualState.steepling) {
+            tip = '🙏 Steepling detected — excellent confidence signal!';
+        } else if (visualState.openPalms) {
+            tip = '✋ Open palms — great! Signals honesty and openness';
+        } else if (visualState.eyeContact > 70 && visualState.facialTension < 30 && !visualState.leaningBack) {
+            tip = '✅ Great presence — confident posture, good eye contact';
+        } else {
+            tip = '👍 Good body language — stay relaxed and confident';
+        }
+
+        // Apply warning style if needed
+        if (isWarning && visualTipEl) {
+            visualTipEl.classList.add('warning');
+        } else if (visualTipEl) {
+            visualTipEl.classList.remove('warning');
+        }
+
+        if (tip !== visualState.lastTip) {
+            visualState.lastTip = tip;
+            visualTipEl.textContent = tip;
+        }
+
+        const activeWs = window.__secondusGetWs ? window.__secondusGetWs() : null;
+        const buddyModeActive = window.__secondusIsPracticeMode ? window.__secondusIsPracticeMode() : false;
+        if (activeWs && activeWs.readyState === WebSocket.OPEN && buddyModeActive) {
+            const now = Date.now();
+            const presenceState = window.__secondusPresenceState || (window.__secondusPresenceState = { lastSentAt: 0 });
+            if (now - presenceState.lastSentAt > 1000) {
+                presenceState.lastSentAt = now;
+                activeWs.send(JSON.stringify({
+                    type: 'presence_metrics',
+                    data: {
+                        eye_contact: Math.round(visualState.eyeContact),
+                        posture: Math.round(visualState.shoulderPosture),
+                        tension: Math.round(visualState.facialTension),
+                        dominant_emotion: lastVisualEmotion.state
+                    }
+                }));
+            }
+        }
+
+        // Update webcam border color based on overall score
+        const webcamContainer = document.querySelector('.webcam-container');
+        if (webcamContainer) {
+            // Calculate overall score - more forgiving weights
+            // Eye contact matters most, gestures are bonus
+            let overallScore = (visualState.eyeContact * 0.5) +
+                               (visualState.shoulderPosture * 0.35) +
+                               (visualState.gestureScore * 0.15);
+
+            // Bonus points for positive signals
+            if (visualState.steepling) overallScore += 10;
+            if (visualState.openPalms) overallScore += 5;
+            if (!visualState.leaningBack) overallScore += 5;
+
+            // Cap at 100
+            overallScore = Math.min(100, overallScore);
+
+            // Remove all feedback classes
+            webcamContainer.classList.remove('feedback-excellent', 'feedback-good', 'feedback-warning', 'feedback-poor');
+
+            // Apply appropriate class - more achievable thresholds
+            if (!visualState.faceVisible || visualState.tooClose || visualState.tooFar) {
+                webcamContainer.classList.add('feedback-poor');
+            } else if (visualState.faceTouching) {
+                webcamContainer.classList.add('feedback-warning');
+            } else if (overallScore >= 55) {
+                // Green: Eye contact 50%+ and posture 50%+ gets you there
+                webcamContainer.classList.add('feedback-excellent');
+            } else if (overallScore >= 40) {
+                webcamContainer.classList.add('feedback-good');
+            } else if (overallScore >= 25) {
+                webcamContainer.classList.add('feedback-warning');
+            } else {
+                webcamContainer.classList.add('feedback-poor');
+            }
+        }
+
+        // Record for session analysis
+        if (visualCoachingActive) {
+            visualMetricsHistory.push({
+                timestamp: Date.now(),
+                eyeContact: visualState.eyeContact,
+                posture: visualState.shoulderPosture,
+                emotion: lastVisualEmotion.state,
+                tension: visualState.facialTension,
+                steepling: visualState.steepling,
+                openPalms: visualState.openPalms,
+                faceTouching: visualState.faceTouching,
+                gestureScore: visualState.gestureScore
+            });
+        }
+    }
+
+    function updateVisualTip(tip) {
+        const visualTipEl = document.getElementById('visual-tip');
+        if (visualTipEl && tip !== visualState.lastTip) {
+            visualState.lastTip = tip;
+            visualTipEl.textContent = tip;
+        }
+    }
+
+    // Start visual coaching with webcam
+    async function startVisualCoaching() {
+        const videoEl = document.getElementById('webcam-video');
+        const visualPanel = document.getElementById('visual-coaching-panel');
+
+        if (!videoEl) {
+            console.warn('Webcam video element not found');
+            return;
+        }
+
+        try {
+            // Initialize MediaPipe
+            await initFaceMesh();
+            await initPose();
+            await initHands();
+
+            // Get webcam stream
+            webcamStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: 'user' }
+            });
+
+            videoEl.srcObject = webcamStream;
+            await videoEl.play();
+
+            // Show visual coaching panel
+            if (visualPanel) visualPanel.style.display = 'block';
+
+            visualCoachingActive = true;
+
+            // Process frames
+            processVideoFrame(videoEl);
+
+        } catch (err) {
+            console.error('Failed to start visual coaching:', err);
+            updateVisualTip('Camera access denied — enable for visual coaching');
+        }
+    }
+
+    // Process video frames for analysis
+    async function processVideoFrame(videoEl) {
+        if (!visualCoachingActive || !videoEl.srcObject) return;
+
+        try {
+            if (faceMesh) await faceMesh.send({ image: videoEl });
+            if (pose) await pose.send({ image: videoEl });
+            if (hands) await hands.send({ image: videoEl });
+        } catch (err) {
+            console.warn('Frame processing error:', err);
+        }
+
+        // Process at ~10fps for performance
+        setTimeout(() => processVideoFrame(videoEl), 100);
+    }
+
+    // Stop visual coaching
+    function stopVisualCoaching() {
+        visualCoachingActive = false;
+
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(t => t.stop());
+            webcamStream = null;
+        }
+
+        const videoEl = document.getElementById('webcam-video');
+        if (videoEl) videoEl.srcObject = null;
+    }
+
+    // Get visual metrics summary for session analysis
+    function getVisualMetricsSummary() {
+        if (visualMetricsHistory.length === 0) {
+            return null;
+        }
+
+        const avgEyeContact = visualMetricsHistory.reduce((s, m) => s + m.eyeContact, 0) / visualMetricsHistory.length;
+        const avgPosture = visualMetricsHistory.reduce((s, m) => s + m.posture, 0) / visualMetricsHistory.length;
+        const avgTension = visualMetricsHistory.reduce((s, m) => s + m.tension, 0) / visualMetricsHistory.length;
+
+        // Count emotions
+        const emotionCounts = {};
+        visualMetricsHistory.forEach(m => {
+            emotionCounts[m.emotion] = (emotionCounts[m.emotion] || 0) + 1;
+        });
+        const dominantEmotion = Object.entries(emotionCounts)
+            .sort((a, b) => b[1] - a[1])[0];
+
+        return {
+            avgEyeContact: Math.round(avgEyeContact),
+            avgPosture: Math.round(avgPosture),
+            avgTension: Math.round(avgTension),
+            dominantEmotion: dominantEmotion ? dominantEmotion[0] : 'neutral',
+            totalSamples: visualMetricsHistory.length
+        };
+    }
+
+    window.startVisualCoaching = startVisualCoaching;
+    window.stopVisualCoaching = stopVisualCoaching;
+    window.getVisualMetricsSummary = getVisualMetricsSummary;
+    </script>
+</body>
+</html>

@@ -1,10 +1,7 @@
 #!/bin/bash
 # Secondus — Cloud Run Deployment Script
-# One-command deployment for the Gemini Live Agent Challenge
-
 set -e
 
-# Configuration
 PROJECT_ID="${GOOGLE_CLOUD_PROJECT:-platinum-depot-489523-a7}"
 REGION="us-central1"
 SERVICE_NAME="secondus"
@@ -15,6 +12,15 @@ echo "Project: ${PROJECT_ID}"
 echo "Region: ${REGION}"
 echo ""
 
+# Build frontend
+echo "Building frontend..."
+(cd frontend && npm ci && npm run build)
+
+# Copy frontend dist into backend so Docker context includes it
+echo "Copying frontend build into backend..."
+rm -rf backend/frontend-dist
+cp -r frontend/dist backend/frontend-dist
+
 # Ensure we're authenticated
 echo "Checking authentication..."
 gcloud auth print-access-token > /dev/null 2>&1 || {
@@ -22,10 +28,8 @@ gcloud auth print-access-token > /dev/null 2>&1 || {
     gcloud auth login
 }
 
-# Set project
 gcloud config set project ${PROJECT_ID}
 
-# Enable required APIs
 echo "Enabling required APIs..."
 gcloud services enable \
     run.googleapis.com \
@@ -34,14 +38,12 @@ gcloud services enable \
     firestore.googleapis.com \
     --quiet
 
-# Build and push container
 echo "Building container..."
 gcloud builds submit \
     --tag ${IMAGE_NAME} \
     --timeout=600s \
     ./backend
 
-# Deploy to Cloud Run
 echo "Deploying to Cloud Run..."
 gcloud run deploy ${SERVICE_NAME} \
     --image ${IMAGE_NAME} \
@@ -56,11 +58,12 @@ gcloud run deploy ${SERVICE_NAME} \
     --max-instances 10 \
     --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION}"
 
-# Get service URL
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} --region ${REGION} --format 'value(status.url)')
+
+# Cleanup
+rm -rf backend/frontend-dist
 
 echo ""
 echo "=== Deployment Complete ==="
 echo "Service URL: ${SERVICE_URL}"
-echo ""
 echo "Test with: curl ${SERVICE_URL}/health"

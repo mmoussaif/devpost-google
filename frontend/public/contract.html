@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulting Services Agreement — TechVenture Inc.</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:wght@400;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Merriweather', Georgia, serif;
+            background: #f8f5f0;
+            color: #1a1a1a;
+            line-height: 1.8;
+            padding: 2rem;
+        }
+
+        .contract {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem 4rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e0dbd3;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px double #333;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .header .subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .header .doc-id {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+
+        .parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: #fafaf7;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .party {
+            flex: 1;
+        }
+
+        .party-label {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 0.25rem;
+        }
+
+        .party-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .party-detail {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #ddd;
+            color: #222;
+        }
+
+        h2 .section-num {
+            color: #888;
+            font-weight: 400;
+        }
+
+        .clause {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .clause p {
+            font-size: 0.92rem;
+        }
+
+        .key-term {
+            background: rgba(59, 130, 246, 0.08);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            color: #1e40af;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .financial-table th {
+            background: #f0ede8;
+            padding: 0.6rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .financial-table td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .financial-table tr:last-child td {
+            border-bottom: 2px solid #ccc;
+        }
+
+        .financial-table .amount {
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .signatures {
+            margin-top: 3rem;
+            display: flex;
+            gap: 3rem;
+        }
+
+        .sig-block {
+            flex: 1;
+            border-top: 1px solid #333;
+            padding-top: 0.5rem;
+        }
+
+        .sig-label {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+
+        .sig-line {
+            height: 40px;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 0.25rem;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 5rem;
+            color: rgba(0,0,0,0.03);
+            font-weight: 700;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .effective-date {
+            font-family: 'Source Sans Pro', sans-serif;
+            text-align: center;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .amendment-note {
+            margin-top: 2rem;
+            padding: 0.75rem 1rem;
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #92400e;
+        }
+
+        /* Agent Scanner UI */
+        .agent-scanner-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 50px;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: pulse-badge 2s infinite alternate;
+        }
+
+        .scanner-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes pulse-badge {
+            0% { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+            100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6); }
+        }
+
+        @keyframes blink {
+            from { opacity: 0.2; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">DRAFT</div>
+
+    <div class="contract">
+        <div class="header">
+            <h1>Consulting Services Agreement</h1>
+            <div class="subtitle">AI Strategy & Implementation Engagement</div>
+            <div class="doc-id">Doc #: TV-2026-0347 | Rev 2.1</div>
+        </div>
+
+        <div class="effective-date">
+            Effective Date: <strong>March 15, 2026</strong>
+        </div>
+
+        <div class="parties">
+            <div class="party">
+                <div class="party-label">Client</div>
+                <div class="party-name">TechVenture Inc.</div>
+                <div class="party-detail">340 Innovation Blvd, San Francisco, CA 94105</div>
+            </div>
+            <div class="party">
+                <div class="party-label">Consultant</div>
+                <div class="party-name">Mohammed Amine Moussaif</div>
+                <div class="party-detail">Independent AI Consulting</div>
+            </div>
+        </div>
+
+        <h2><span class="section-num">§1</span> Scope of Work</h2>
+        <div class="clause">
+            <p>Consultant shall provide AI strategy consulting, model evaluation, implementation guidance,
+            and technical architecture review for Client's customer engagement platform. Deliverables include:</p>
+            <ul style="margin: 0.75rem 0; padding-left: 1.5rem; font-size: 0.92rem;">
+                <li>AI readiness assessment and gap analysis</li>
+                <li>Model selection and benchmark evaluation</li>
+                <li>Technical architecture design document</li>
+                <li>Implementation roadmap with milestones</li>
+                <li>Knowledge transfer sessions (2 half-day workshops)</li>
+            </ul>
+        </div>
+
+        <h2><span class="section-num">§2</span> Compensation</h2>
+        <div class="clause">
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Engagement Fee</td>
+                        <td class="amount key-term">$75,000 USD</td>
+                    </tr>
+                    <tr>
+                        <td>Payment Schedule</td>
+                        <td class="key-term">Net-30 from invoice date</td>
+                    </tr>
+                    <tr>
+                        <td>Milestone 1 — Kickoff (30%)</td>
+                        <td class="amount">$22,500</td>
+                    </tr>
+                    <tr>
+                        <td>Milestone 2 — Mid-project (40%)</td>
+                        <td class="amount">$30,000</td>
+                    </tr>
+                    <tr>
+                        <td>Milestone 3 — Final delivery (30%)</td>
+                        <td class="amount">$22,500</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2><span class="section-num">§3</span> Timeline & Delivery</h2>
+        <div class="clause">
+            <p>The engagement shall commence on the Effective Date and conclude within
+            <span class="key-term">10 weeks</span> of project kickoff. Weekly status updates shall be
+            provided every Friday. Any delay caused by Client's failure to provide required materials
+            or access shall extend the timeline proportionally.</p>
+        </div>
+
+        <h2><span class="section-num">§4</span> Revisions & Change Orders</h2>
+        <div class="clause">
+            <p>This agreement includes <span class="key-term">3 rounds of revisions</span> per deliverable.
+            Additional revision rounds shall be billed at <span class="key-term">$250/hour</span>.
+            Any material scope change requires a written Change Order signed by both parties,
+            with associated fee adjustments.</p>
+        </div>
+
+        <h2><span class="section-num">§5</span> Intellectual Property</h2>
+        <div class="clause">
+            <p><strong>Client</strong> shall own all deliverables, reports, and custom materials produced
+            under this agreement upon full payment. <strong>Consultant</strong> retains ownership of
+            <span class="key-term">pre-existing methodologies, frameworks, and tools</span> used in the
+            engagement. Consultant grants Client a perpetual, non-exclusive license to use such tools
+            within the scope of the delivered project.</p>
+        </div>
+
+        <h2><span class="section-num">§6</span> Liability & Indemnification</h2>
+        <div class="clause">
+            <p>Consultant's total aggregate liability under this agreement shall not exceed
+            <span class="key-term">1x the total contract value ($75,000)</span>. Neither party shall be
+            liable for indirect, consequential, or punitive damages. Each party shall indemnify the other
+            against third-party claims arising from their breach of this agreement.</p>
+        </div>
+
+        <h2><span class="section-num">§7</span> Confidentiality</h2>
+        <div class="clause">
+            <p>Both parties agree to maintain strict confidentiality of all proprietary information
+            shared during the engagement. This obligation survives termination by
+            <span class="key-term">24 months</span>.</p>
+        </div>
+
+        <h2><span class="section-num">§8</span> Termination</h2>
+        <div class="clause">
+            <p>Either party may terminate with <span class="key-term">14 days</span> written notice.
+            Upon termination, Client shall pay for all work completed through the termination date.
+            Consultant shall deliver all work-in-progress materials within 5 business days of termination.</p>
+        </div>
+
+        <div class="amendment-note">
+            ⚠️ <strong>Note:</strong> This is Rev 2.1 — previous revision (Rev 1.0) had pricing at $60,000
+            with Net-45 terms. Terms were updated per Consultant's counter-proposal dated March 8, 2026.
+        </div>
+
+        <div class="signatures">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">Client — TechVenture Inc.</div>
+                <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">Date: _______________</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">Consultant</div>
+                <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">Date: _______________</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Scanner Indicator -->
+    <div class="agent-scanner-badge" id="scanner-badge">
+        <div class="scanner-dot"></div>
+        <span>Secondus Vision Agent: Scanning Document</span>
+    </div>
+
+    <script>
+        // Simulate the Secondus agent taking control of the document to scroll and read it
+        document.addEventListener('DOMContentLoaded', () => {
+            let isScrollingDown = true;
+            let currentScroll = 0;
+            const badge = document.getElementById('scanner-badge');
+            
+            // Clean recursive approach for pausing
+            function autoScroll() {
+                const maxScroll = document.body.scrollHeight - window.innerHeight;
+                if (maxScroll <= 0) return; // No need to scroll if content fits
+
+                if (isScrollingDown) {
+                    currentScroll += 1.5;
+                    if (currentScroll >= maxScroll) {
+                        isScrollingDown = false;
+                        badge.querySelector('span').textContent = 'Vision Agent: Cross-referencing terms...';
+                        setTimeout(() => requestAnimationFrame(autoScroll), 4000); // Pause at bottom
+                        return;
+                    }
+                } else {
+                    currentScroll -= 3;
+                    if (currentScroll <= 0) {
+                        isScrollingDown = true;
+                        badge.querySelector('span').textContent = 'Vision Agent: Scanning terms...';
+                        setTimeout(() => requestAnimationFrame(autoScroll), 4000); // Pause at top
+                        return;
+                    }
+                }
+                window.scrollTo(0, currentScroll);
+                requestAnimationFrame(autoScroll);
+            }
+            
+            // Start the optimized scrolling
+            setTimeout(() => {
+                requestAnimationFrame(autoScroll);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
