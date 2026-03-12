@@ -716,3 +716,104 @@ Sessions are recorded as JSON for recap and analysis:
   }
 }
 ```
+
+## Future Architecture Enhancements
+
+### Multi-Agent System
+
+```mermaid
+flowchart TB
+    subgraph AgentPool["Agent Pool"]
+        Alex[Alex Chen<br/>Aggressive Buyer]
+        Sarah[Sarah Miller<br/>Friendly Vendor]
+        James[James Wu<br/>Skeptical Investor]
+        Custom[Custom Agent<br/>User-Defined]
+    end
+    
+    subgraph Orchestrator["Enhanced Orchestrator"]
+        Router[Agent Router]
+        Memory[Session Memory]
+        Analytics[Analytics Engine]
+    end
+    
+    subgraph Storage["Persistence Layer"]
+        Firestore[(Firestore)]
+        BigQuery[(BigQuery)]
+    end
+    
+    User --> Router
+    Router --> Alex
+    Router --> Sarah
+    Router --> James
+    Router --> Custom
+    Memory --> Firestore
+    Analytics --> BigQuery
+```
+
+### Planned Capabilities
+
+| Capability | Status | Target |
+|------------|--------|--------|
+| Agent Marketplace | Planned | Phase 1 |
+| Multi-Agent Simulations | Planned | Phase 1 |
+| Session Persistence | Planned | Phase 2 |
+| Progress Tracking | Planned | Phase 2 |
+| Calendar Integration | Planned | Phase 3 |
+| Team Dashboards | Planned | Phase 3 |
+| Mobile Apps | Planned | Phase 5 |
+| VR Environment | Planned | Phase 5 |
+
+### Enhanced Presence Detection (Future)
+
+```mermaid
+flowchart LR
+    subgraph Current["Current (MediaPipe)"]
+        Face[Face Landmarker]
+        Pose[Pose Landmarker]
+    end
+    
+    subgraph Future["Future Enhancements"]
+        Hands[Hand Gestures]
+        Voice[Voice Tone]
+        Micro[Micro-expressions]
+        Stress[Stress Indicators]
+    end
+    
+    Face --> Metrics[Presence Score]
+    Pose --> Metrics
+    Hands --> Metrics
+    Voice --> Metrics
+    Micro --> Metrics
+    Stress --> Metrics
+```
+
+## Google Cloud Services Used
+
+| Service | Purpose | API |
+|---------|---------|-----|
+| **Cloud Run** | Serverless hosting | `run.googleapis.com` |
+| **Cloud Build** | Container builds | `cloudbuild.googleapis.com` |
+| **Vertex AI** | Gemini API access | `aiplatform.googleapis.com` |
+| **Gemini 2.5 Flash** | Real-time voice (Live API) | Via Vertex AI |
+| **Gemini 2.0 Flash** | Vision + coaching | Via Vertex AI |
+
+## Challenge Compliance
+
+Built for the **Gemini Live Agent Challenge** (March 2026).
+
+### Requirements Met
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Leverage Gemini model | Gemini 2.5 Flash (Live) + 2.0 Flash (Vision) |
+| Built with GenAI SDK or ADK | Google ADK for adversary agent |
+| Google Cloud service | Cloud Run, Cloud Build, Vertex AI |
+| Beyond text box | Proactive real-time coaching |
+
+### Differentiators
+
+1. **Coach, Not Commentator** — Exact phrases to say, not commentary
+2. **Hybrid Detection** — LLM + deterministic for reliable signals
+3. **Client-Side ML** — MediaPipe runs entirely in browser (privacy)
+4. **Fair Scoring** — 70/30 voice/presence, no camera penalty
+5. **Research-Backed** — Harvard PON, Chris Voss, Fisher & Ury

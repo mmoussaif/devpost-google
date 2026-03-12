@@ -347,10 +347,51 @@ Secondus coaching is grounded in proven negotiation research:
 | **Limited Authority** | Fisher & Ury | Establish decision-makers early |
 | **Good Cop/Bad Cop** | Harvard PON | Address the dynamic directly |
 
+## Product Roadmap
+
+### Phase 1: Agent Marketplace
+- Multiple agent personalities (aggressive buyer, friendly vendor, skeptical investor)
+- Industry-specific scenarios (real estate, salary, vendor contracts)
+- Difficulty levels with adaptive challenge
+- Custom agent builder via prompt configuration
+
+### Phase 2: Learning & Memory
+- Session history persistence across sessions
+- Progress tracking and weakness identification
+- Structured learning paths based on Harvard PON, Chris Voss, Fisher & Ury
+- Achievement system and skill badges
+
+### Phase 3: Enterprise Features
+- Calendar & CRM integration (Salesforce, HubSpot)
+- Pre-meeting practice powered by prospect data
+- Team dashboards with aggregate analytics
+- White-label deployment option
+
+### Phase 4: Advanced Intelligence
+- Multi-language support (Spanish, French, Mandarin)
+- Voice tone analysis (confidence, hesitation)
+- Cultural negotiation style adaptation
+- Enhanced micro-expression detection
+
+### Phase 5: Platform Expansion
+- iOS/Android mobile apps
+- Browser extension for live Zoom/Meet coaching
+- VR practice environments (Oculus Quest)
+- Offline mode with local models
+
+See [tasks.md](tasks.md) for the complete roadmap with detailed features.
+
+## Links
+
+- **Live Demo:** https://secondus-svmgok3hyq-uc.a.run.app
+- **Demo Video:** https://youtu.be/ffmS4bpW0UQ
+- **Devpost:** https://devpost.com/software/secondus-real-time-negotiation-copilot
+- **Medium Article:** Building Secondus with Gemini Live API
+
 ## Author
 
 Built by [@mmoussaif](https://github.com/mmoussaif)
 
-[Google Developer Community](https://developers.google.com/community) member
+[Google Developer Profile](https://g.dev/mohammedaminemoussaif) | [Google Developer Community](https://developers.google.com/community) member
 
 `#GeminiLiveAgentChallenge`
