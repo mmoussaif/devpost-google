@@ -100,7 +100,6 @@ OPENAPI_TAGS = [
     {"name": "Health", "description": "Liveness and readiness"},
     {"name": "Learnings", "description": "Pre-session briefing, session analysis, tactic tips"},
     {"name": "Session", "description": "Recap generation and session completion"},
-    {"name": "Debug", "description": "Operational diagnostics (e.g. Firestore connectivity)"},
 ]
 
 app = FastAPI(
@@ -130,43 +129,6 @@ async def health_check():
         "model": "gemini-live-2.5-flash-native-audio",
         "project": PROJECT_ID,
     }
-
-
-@app.get("/debug/firestore", tags=["Debug"])
-async def debug_firestore():
-    """
-    Test Firestore write. Creates one document in collection `sessions`.
-    Use to verify IAM permissions and that the default Firestore database exists.
-    Returns `ok: true` and env info on success, or `ok: false` with error details.
-    """
-    import os
-    project = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
-    k_service = os.getenv("K_SERVICE", "")
-    if not project:
-        return {"ok": False, "error": "GOOGLE_CLOUD_PROJECT not set", "GOOGLE_CLOUD_PROJECT": None, "K_SERVICE": k_service}
-    if not k_service:
-        return {"ok": False, "error": "K_SERVICE not set (not running on Cloud Run?)", "GOOGLE_CLOUD_PROJECT": project, "K_SERVICE": k_service}
-    try:
-        from google.cloud import firestore
-        db = firestore.Client(project=project)
-        doc_ref = db.collection("sessions").document()
-        from datetime import datetime, timezone
-        doc_ref.set({"debug": True, "message": "Test write from /debug/firestore", "ts": datetime.now(timezone.utc).isoformat()})
-        return {
-            "ok": True,
-            "message": "Firestore write succeeded. Check collection 'sessions' in console.",
-            "GOOGLE_CLOUD_PROJECT": project,
-            "K_SERVICE": k_service,
-        }
-    except Exception as e:
-        import traceback
-        return {
-            "ok": False,
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-            "GOOGLE_CLOUD_PROJECT": project,
-            "K_SERVICE": k_service,
-        }
 
 
 # ============ Learning System Endpoints ============

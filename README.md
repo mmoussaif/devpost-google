@@ -263,7 +263,7 @@ The backend exposes OpenAPI 3.0 documentation:
 - **Swagger UI:** `http://localhost:8080/docs` (local) or `https://<your-service>.run.app/docs` (Cloud Run)
 - **ReDoc:** `http://localhost:8080/redoc` or `https://<your-service>.run.app/redoc`
 
-Endpoints are grouped by tags: Health, Learnings, Session, Debug.
+Endpoints are grouped by tags: Health, Learnings, Session.
 
 ### Google Cloud services used by Secondus
 
