@@ -60,11 +60,13 @@ flowchart LR
         Coach[Coach Engine]
         Contract[Contract State]
         Recap[Recap Engine]
+        Repo[Session Repository]
     end
     
     subgraph Google
         Live[Gemini Live API]
         Vision[Gemini Vision]
+        Firestore[(Firestore)]
     end
     
     React <-->|WebSocket| Orch
@@ -75,6 +77,8 @@ flowchart LR
     Coach --> Live
     Contract --> Vision
     Orch --> Recap
+    Recap --> Repo
+    Repo --> Firestore
 ```
 
 See [AGENTS.md](AGENTS.md) for detailed architecture documentation.
@@ -252,6 +256,61 @@ npm run dev
 ./deploy.sh
 ```
 
+### API documentation (OpenAPI)
+
+The backend exposes OpenAPI 3.0 documentation:
+
+- **Swagger UI:** `http://localhost:8080/docs` (local) or `https://<your-service>.run.app/docs` (Cloud Run)
+- **ReDoc:** `http://localhost:8080/redoc` or `https://<your-service>.run.app/redoc`
+
+Endpoints are grouped by tags: Health, Learnings, Session, Debug.
+
+### Google Cloud services used by Secondus
+
+| Service | Purpose |
+|---------|---------|
+| **Cloud Run** | Hosts the backend (FastAPI + WebSocket). |
+| **Cloud Build** | Builds the Docker image. |
+| **Container Registry (gcr.io)** | Stores the image used by Cloud Run. |
+| **Vertex AI** | Access to Gemini models. |
+| **Gemini Live Agent (2.5 Flash)** | Live Agent: real-time voice counterparty (Google ADK). Speaks and listens. |
+| **Gemini 2.0 Flash** | Vision (documents) and text (coaching, detection). |
+| **Firestore** | Persists completed sessions (collection `sessions`). |
+
+See [AGENTS.md](AGENTS.md#google-cloud-services-used-by-secondus) for APIs and details.
+
+### Testing Firestore on GCP
+
+Session persistence to Firestore is **on by default** on Cloud Run (when `GOOGLE_CLOUD_PROJECT` is set and the service runs with `K_SERVICE`).
+
+1. **Create a Firestore database** (if not already done):
+   - [Console](https://console.cloud.google.com/firestore): Firestore → Create database → **Native mode**, choose a region (e.g. `nam5`).
+   - Or: `gcloud firestore databases create --region=nam5` (if supported for your project).
+
+2. **Grant the Cloud Run service account access to Firestore**:
+   ```bash
+   PROJECT_ID="${GOOGLE_CLOUD_PROJECT:-platinum-depot-489523-a7}"
+   PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+   SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+   gcloud projects add-iam-policy-binding $PROJECT_ID \
+     --member="serviceAccount:${SA}" \
+     --role="roles/datastore.user"
+   ```
+   Or in Console: IAM → find the **Compute Engine default service account** → Add role **Cloud Datastore User**.
+
+3. **Deploy** (Firestore API is already enabled in `deploy.sh`):
+   ```bash
+   ./deploy.sh
+   ```
+
+4. **Test**:
+   - Open the Cloud Run URL (printed at the end of `./deploy.sh`).
+   - Start a negotiation, speak a few turns, then click **End**.
+   - In [Firestore Console](https://console.cloud.google.com/firestore/data), open the `sessions` collection: you should see a new document with `user_session`, `metrics`, `exchanges`, etc.
+
+5. **Optional – disable persistence** on Cloud Run:
+   - In deploy, add: `--set-env-vars "...,PERSIST_SESSIONS_TO_FIRESTORE=0"` (or omit it and leave default).
+
 ## Project Structure
 
 ```
@@ -262,6 +321,7 @@ secondus/
 │   ├── coach_engine.py         # LLM coaching + detection
 │   ├── contract_state.py       # Contract term management
 │   ├── recap_engine.py         # Scoring and recap
+│   ├── session_repository.py   # Firestore session persistence
 │   ├── presence_engine.py      # Presence metrics structure
 │   └── adversary.py            # AI counterparty
 ├── frontend/
@@ -307,16 +367,16 @@ secondus/
 
 ## Gemini Live Agent Challenge 2026
 
-Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.devpost.com).
+Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.devpost.com). Secondus uses a **Live Agent** (Gemini Live API + Google ADK): the AI speaks and listens in real time as the negotiation counterparty, not just text-in/out.
 
 ### Challenge Requirements Met
 
 | Requirement | Implementation |
 |-------------|----------------|
-| Live Agent | Real-time voice + vision + presence |
-| Gemini Live API | Native audio via ADK |
-| Google Cloud | Cloud Run deployment |
-| Beyond Text Box | Proactive coaching, not Q&A |
+| **Live Agent** | Real-time voice agent (Google ADK + Gemini 2.5 Flash Live). Speaks and listens; vision + presence. |
+| Gemini Live API | Native bidirectional audio via ADK |
+| Google Cloud | Cloud Run, Firestore, Vertex AI |
+| Beyond Text Box | Proactive coaching, live agent conversation |
 
 ### Key Differentiators
 

@@ -12,9 +12,27 @@ echo "Project: ${PROJECT_ID}"
 echo "Region: ${REGION}"
 echo ""
 
-# Build frontend
+# Build frontend (requires Node 20+)
 echo "Building frontend..."
-(cd frontend && npm ci && npm run build)
+(
+  cd frontend
+  # Prefer Node 20+ via nvm if available
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    if nvm use 20 2>/dev/null || nvm use 22 2>/dev/null || nvm use --lts 2>/dev/null; then
+      : # ok
+    fi
+  fi
+  NODE_VER=$(node -v 2>/dev/null || true)
+  if [ -n "$NODE_VER" ]; then
+    MAJOR=$(echo "$NODE_VER" | sed -n 's/^v\([0-9]*\).*/\1/p')
+    if [ -n "$MAJOR" ] && [ "$MAJOR" -lt 20 ]; then
+      echo "Frontend requires Node 20+. Current: $NODE_VER. Run: nvm install 20 && nvm use 20 (or install Node 20 LTS)."
+      exit 1
+    fi
+  fi
+  npm ci && npm run build
+)
 
 # Copy frontend dist into backend so Docker context includes it
 echo "Copying frontend build into backend..."

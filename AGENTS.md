@@ -4,8 +4,8 @@
 
 ## Product Overview
 
-Secondus is an AI-powered negotiation practice partner that:
-- **Speaks** as a tough counterparty (Alex Chen, TechNova CTO)
+Secondus is an AI-powered negotiation practice partner built around a **Live Agent** (Gemini Live API + Google ADK). The agent:
+- **Speaks** as a tough counterparty (Maya Chen, TechNova CTO) — real-time voice (Gemini Live female voice), not just text
 - **Listens** to your responses with real-time transcription
 - **Sees** shared contract documents via screen capture
 - **Watches** your presence via MediaPipe (eye contact, posture, tension)
@@ -32,12 +32,14 @@ flowchart TB
         Signals[Signal Detection]
         Recap[Recap Engine]
         Presence[Presence Engine]
+        Repo[Session Repository]
     end
 
     subgraph Google["Google Cloud"]
+        Run[Cloud Run]
         Live[Gemini Live API<br/>2.5 Flash Native Audio]
         Vision[Gemini Vision<br/>Document Analysis]
-        Run[Cloud Run]
+        Firestore[(Firestore<br/>Session Memory)]
     end
 
     Audio -->|audio chunks| WS
@@ -53,6 +55,8 @@ flowchart TB
     Orchestrator -->|transcript, coaching, signals| UI
     Live -->|adversary audio| Playback
     Orchestrator --> Recap
+    Recap -->|POST /session/buddy/recap| Repo
+    Repo -->|sessions collection| Firestore
 ```
 
 ## Core Flow
@@ -66,6 +70,8 @@ sequenceDiagram
     participant Orch as Orchestrator
     participant Coach as Coach Engine
     participant Gemini as Gemini Live
+    participant API as Backend API
+    participant Firestore as Firestore
 
     User->>UI: Click "Start Negotiation"
     UI->>WS: { type: "start" }
@@ -100,6 +106,10 @@ sequenceDiagram
     UI->>WS: { type: "end" }
     Orch->>Recap: Generate summary with presence
     Orch-->>UI: session.complete
+    UI->>API: POST /session/buddy/recap (recording)
+    API->>API: build_buddy_recap + analyze_session
+    API->>Firestore: save_session (fire-and-forget)
+    API-->>UI: recap (score, strengths, etc.)
 ```
 
 ## Presence Detection System (MediaPipe)
@@ -476,7 +486,7 @@ Personalized negotiation intelligence (patterns, recommendations, briefing).
 ### `adversary.py`
 AI counterparty agent definition using Google ADK.
 
-**Role:** Alex Chen, CTO of TechNova (fictional startup)
+**Role:** Maya Chen, CTO of TechNova (fictional startup). The Gemini Live voice is female; this is used for Maya Chen.
 
 **Behavior:**
 - Opens with budget constraint and timeline pressure
@@ -739,7 +749,7 @@ Sessions are recorded as JSON for recap and analysis:
 ```mermaid
 flowchart TB
     subgraph AgentPool["Agent Pool"]
-        Alex[Alex Chen<br/>Aggressive Buyer]
+        Maya[Maya Chen<br/>Aggressive Buyer]
         Sarah[Sarah Miller<br/>Friendly Vendor]
         James[James Wu<br/>Skeptical Investor]
         Custom[Custom Agent<br/>User-Defined]
@@ -757,7 +767,7 @@ flowchart TB
     end
     
     User --> Router
-    Router --> Alex
+    Router --> Maya
     Router --> Sarah
     Router --> James
     Router --> Custom
@@ -802,28 +812,50 @@ flowchart LR
     Stress --> Metrics
 ```
 
-## Google Cloud Services Used
+## Google Cloud Services Used by Secondus
 
-| Service | Purpose | API |
-|---------|---------|-----|
-| **Cloud Run** | Serverless hosting | `run.googleapis.com` |
-| **Cloud Build** | Container builds | `cloudbuild.googleapis.com` |
-| **Vertex AI** | Gemini API access | `aiplatform.googleapis.com` |
-| **Gemini 2.5 Flash** | Real-time voice (Live API) | Via Vertex AI |
-| **Gemini 2.0 Flash** | Vision + coaching | Via Vertex AI |
+Secondus uses the following **Google Cloud and Google AI services** explicitly:
+
+| Service | Purpose | API / How used |
+|---------|---------|-----------------|
+| **Cloud Run** | Hosts the Secondus backend (FastAPI + WebSocket). Serverless, scales to zero. | `run.googleapis.com` |
+| **Cloud Build** | Builds the Docker image from `backend/` and pushes to the container registry. | `cloudbuild.googleapis.com` |
+| **Artifact Registry / Container Registry** | Stores the built image (`gcr.io/<project>/secondus`) used by Cloud Run. | Used by Cloud Build and Cloud Run |
+| **Vertex AI** | Provides access to Gemini models (Live API and Vision). All Gemini calls go through Vertex AI. | `aiplatform.googleapis.com` |
+| **Gemini Live Agent (2.5 Flash)** | **Live Agent**: real-time voice agent (Google ADK). Bidirectional audio with the AI counterparty; speaks and listens. Native audio in/out. | Via Vertex AI (Gemini Live) |
+| **Gemini 2.0 Flash** | Vision (document term extraction) and text (coaching, detection). | Via Vertex AI |
+| **Firestore** | Session Memory: persists completed sessions (collection `sessions`) for analytics and future learnings. Optional, fire-and-forget. | `firestore.googleapis.com` |
+
+### APIs enabled at deploy time
+
+```bash
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  aiplatform.googleapis.com \
+  firestore.googleapis.com
+```
+
+### Summary
+
+- **Compute / hosting:** Cloud Run  
+- **CI/CD / build:** Cloud Build, Container Registry (gcr.io)  
+- **AI / agents:** Vertex AI, **Gemini Live Agent** (2.5 Flash — voice agent via ADK), Gemini 2.0 Flash (Vision + text)  
+- **Data:** Firestore (sessions collection)
 
 ## Challenge Compliance
 
-Built for the **Gemini Live Agent Challenge** (March 2026).
+Built for the **Gemini Live Agent Challenge** (March 2026). Secondus is built around a **Live Agent** (voice agent via Gemini Live API + Google ADK).
 
 ### Requirements Met
 
 | Requirement | Implementation |
 |-------------|----------------|
+| **Live Agent** | Gemini Live Agent (2.5 Flash) via Google ADK — speaks and listens in real time as the counterparty |
 | Leverage Gemini model | Gemini 2.5 Flash (Live) + 2.0 Flash (Vision) |
-| Built with GenAI SDK or ADK | Google ADK for adversary agent |
-| Google Cloud service | Cloud Run, Cloud Build, Vertex AI |
-| Beyond text box | Proactive real-time coaching |
+| Built with GenAI SDK or ADK | Google ADK for the adversarial agent (Maya Chen) |
+| Google Cloud service | Cloud Run, Cloud Build, Vertex AI, Firestore |
+| Beyond text box | Proactive real-time coaching; live agent conversation |
 
 ### Differentiators
 

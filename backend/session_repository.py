@@ -13,6 +13,21 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
+def _to_firestore_value(val: Any) -> Any:
+    """Convert to Firestore-serializable types (dict, list, str, int, float, bool, None)."""
+    if val is None:
+        return None
+    if isinstance(val, (str, int, float, bool)):
+        return val
+    if isinstance(val, datetime):
+        return val.isoformat()
+    if isinstance(val, dict):
+        return {k: _to_firestore_value(v) for k, v in val.items()}
+    if isinstance(val, (list, tuple)):
+        return [_to_firestore_value(v) for v in val]
+    return str(val)
+
 # Enable persistence only when explicitly set or when running in GCP (project set)
 PERSIST_ENV = os.getenv("PERSIST_SESSIONS_TO_FIRESTORE", "").lower() in ("1", "true", "yes")
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
@@ -109,6 +124,10 @@ def save_session(
     """
     db = _client()
     if db is None:
+        logger.info(
+            "Firestore persistence skipped (client unavailable). "
+            "Set GOOGLE_CLOUD_PROJECT and run on Cloud Run or PERSIST_SESSIONS_TO_FIRESTORE=1."
+        )
         return
     try:
         user_session = _build_user_session_summary(session_data, stored_analysis, recap_summary)
@@ -124,7 +143,8 @@ def save_session(
             "completed_at": user_session["completed_at"],
             "user_session": user_session,
         }
+        doc = _to_firestore_value(doc)
         db.collection(COLLECTION).add(doc)
         logger.info("Session persisted to Firestore")
     except Exception as e:
-        logger.warning("Firestore save failed (non-fatal): %s", e)
+        logger.warning("Firestore save failed (non-fatal): %s", e, exc_info=True)

@@ -390,7 +390,7 @@ class BuddySessionOrchestrator:
             types.Content(
                 parts=[
                     types.Part(
-                        text=f"""Start the call. You are Alex Chen, TechNova CTO. User's goals: {goals}
+                        text=f"""Start the call. You are Maya Chen, TechNova CTO. User's goals: {goals}
 
 Open with one short pitch, e.g.: "Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
 

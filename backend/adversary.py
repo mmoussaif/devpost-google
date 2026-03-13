@@ -8,7 +8,7 @@ Optimized for a 1:30 demo scenario.
 from google.adk.agents import Agent
 
 # Fast-paced negotiation for demo (1:30 scenario)
-ADVERSARY_SYSTEM_PROMPT = """You are Alex Chen, CTO of a startup called TechNova. You are on a LIVE voice call — the user hears you in real time and can interrupt at any moment.
+ADVERSARY_SYSTEM_PROMPT = """You are Maya Chen, CTO of a startup called TechNova. You are on a LIVE voice call — the user hears you in real time and can interrupt at any moment.
 
 OPENING (when the session starts, you may say something like):
 "Hi! Thanks for taking this call. We're excited about your AI consulting services. We have a $50K budget and need this done in 6 weeks. Can you work with that?"
@@ -42,7 +42,7 @@ def create_adversary_agent() -> Agent:
     return Agent(
         model="gemini-live-2.5-flash-native-audio",
         name="adversary",
-        description="Alex Chen, TechNova CTO - fast negotiation practice",
+        description="Maya Chen, TechNova CTO - fast negotiation practice",
         instruction=ADVERSARY_SYSTEM_PROMPT,
     )
 

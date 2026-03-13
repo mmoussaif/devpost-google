@@ -23,6 +23,7 @@ warnings.filterwarnings(
 )
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -80,10 +81,33 @@ async def lifespan(app: FastAPI):
     print("Secondus shutting down")
 
 
+OPENAPI_DESCRIPTION = """
+**Secondus** is a real-time negotiation copilot API built around a **Gemini Live Agent**. It powers the Secondus web app with:
+
+- **Live Agent (Gemini Live API)** — Voice-based AI agent (Google ADK) that speaks and listens in real time as the negotiation counterparty (Maya Chen, TechNova CTO). Uses the Gemini Live female voice. Native bidirectional audio via WebSocket.
+- **WebSocket** — Live session with the agent: start, audio stream, end.
+- **REST** — Session lifecycle, recap, learnings (briefing, analyze, tactic tips).
+- **Firestore** — Persistence of completed sessions (Session Memory) for analytics and future learnings.
+
+### Authentication
+Endpoints are currently unauthenticated (demo). In production, protect with IAP or API keys.
+
+### Base URL
+- Local: `http://localhost:8080`
+- Cloud Run: `https://<service-url>.run.app`
+"""
+OPENAPI_TAGS = [
+    {"name": "Health", "description": "Liveness and readiness"},
+    {"name": "Learnings", "description": "Pre-session briefing, session analysis, tactic tips"},
+    {"name": "Session", "description": "Recap generation and session completion"},
+    {"name": "Debug", "description": "Operational diagnostics (e.g. Firestore connectivity)"},
+]
+
 app = FastAPI(
-    title="Secondus",
-    description="Real-time negotiation intelligence agent",
+    title="Secondus API",
+    description=OPENAPI_DESCRIPTION.strip(),
     version="1.0.0",
+    openapi_tags=OPENAPI_TAGS,
     lifespan=lifespan,
 )
 
@@ -97,9 +121,9 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint for Cloud Run."""
+    """Health check for Cloud Run and load balancers. Returns service name and project."""
     return {
         "status": "ok",
         "service": "secondus",
@@ -107,23 +131,61 @@ async def health_check():
         "project": PROJECT_ID,
     }
 
+
+@app.get("/debug/firestore", tags=["Debug"])
+async def debug_firestore():
+    """
+    Test Firestore write. Creates one document in collection `sessions`.
+    Use to verify IAM permissions and that the default Firestore database exists.
+    Returns `ok: true` and env info on success, or `ok: false` with error details.
+    """
+    import os
+    project = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    k_service = os.getenv("K_SERVICE", "")
+    if not project:
+        return {"ok": False, "error": "GOOGLE_CLOUD_PROJECT not set", "GOOGLE_CLOUD_PROJECT": None, "K_SERVICE": k_service}
+    if not k_service:
+        return {"ok": False, "error": "K_SERVICE not set (not running on Cloud Run?)", "GOOGLE_CLOUD_PROJECT": project, "K_SERVICE": k_service}
+    try:
+        from google.cloud import firestore
+        db = firestore.Client(project=project)
+        doc_ref = db.collection("sessions").document()
+        from datetime import datetime, timezone
+        doc_ref.set({"debug": True, "message": "Test write from /debug/firestore", "ts": datetime.now(timezone.utc).isoformat()})
+        return {
+            "ok": True,
+            "message": "Firestore write succeeded. Check collection 'sessions' in console.",
+            "GOOGLE_CLOUD_PROJECT": project,
+            "K_SERVICE": k_service,
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "ok": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "GOOGLE_CLOUD_PROJECT": project,
+            "K_SERVICE": k_service,
+        }
+
+
 # ============ Learning System Endpoints ============
 
-@app.get("/learnings/briefing")
+@app.get("/learnings/briefing", tags=["Learnings"])
 async def get_briefing():
-    """Get personalized pre-session briefing based on past performance."""
+    """Get personalized pre-session briefing from accumulated learnings (focus areas, stats)."""
     return get_pre_session_briefing()
 
 
-@app.post("/learnings/analyze")
+@app.post("/learnings/analyze", tags=["Learnings"])
 async def analyze_session_endpoint(session_data: dict):
-    """Analyze completed session and store learnings."""
+    """Analyze a completed session and persist patterns to learnings store (JSON + optional Firestore)."""
     return analyze_session(session_data)
 
 
-@app.post("/session/buddy/recap")
+@app.post("/session/buddy/recap", tags=["Session"])
 async def build_buddy_recap_endpoint(session_data: dict):
-    """Generate a Buddy recap payload for the frontend outcome screen."""
+    """Build recap (score, outcome, strengths, improvements). Persists session to Firestore in background."""
     normalized = dict(session_data)
     normalized["visualPresence"] = session_data.get("visualPresence") or {}
     stored = analyze_session(normalized)
@@ -137,9 +199,9 @@ async def build_buddy_recap_endpoint(session_data: dict):
     return recap
 
 
-@app.get("/learnings/tip/{tactic}")
+@app.get("/learnings/tip/{tactic}", tags=["Learnings"])
 async def get_tactic_tip(tactic: str):
-    """Get quick counter-tip for a specific tactic."""
+    """Get a short counter-tip for a given tactic (e.g. ANCHORING, NIBBLING)."""
     tip = get_quick_tip(tactic)
     if tip:
         return {"tactic": tactic, "tip": tip}
@@ -700,6 +762,10 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
             orchestrator.silence_monitor(),
         )
 
+    except (ConnectionClosedOK, ConnectionClosed) as e:
+        # Normal when user clicks End: client closes WS, Gemini Live closes with 1000 (OK)
+        if e.code != 1000:
+            print(f"Practice websocket closed: {e}", flush=True)
     except Exception as e:
         import traceback
         print(f"Practice websocket error: {e}", flush=True)
