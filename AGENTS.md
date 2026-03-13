@@ -458,6 +458,21 @@ class PresenceSnapshot:
         }
 ```
 
+### `session_repository.py`
+Optional Firestore persistence for completed sessions (Session Memory).
+
+- **When:** After recap is built in `POST /session/buddy/recap`; save runs in a thread (fire-and-forget).
+- **Enabled:** If `GOOGLE_CLOUD_PROJECT` is set and `PERSIST_SESSIONS_TO_FIRESTORE` is truthy, or when running on Cloud Run (`K_SERVICE` set).
+- **Collection:** `sessions`; each doc stores session payload + `stored_analysis` from `learnings.analyze_session`.
+- **Impact:** None on response or demo flow; failures are logged and ignored.
+
+### `learnings.py`
+Personalized negotiation intelligence (patterns, recommendations, briefing).
+
+- **Storage:** `data/user_learnings.json` (patterns, session list, recommendations). Completed sessions are also persisted to Firestore via `session_repository` when enabled.
+- **Endpoints:** `GET /learnings/briefing`, `POST /learnings/analyze`, `GET /learnings/tip/{tactic}`.
+- **Used by:** Recap endpoint calls `analyze_session` then `build_buddy_recap`; briefing/tip used by frontend when available.
+
 ### `adversary.py`
 AI counterparty agent definition using Google ADK.
 
@@ -756,7 +771,7 @@ flowchart TB
 |------------|--------|--------|
 | Agent Marketplace | Planned | Phase 1 |
 | Multi-Agent Simulations | Planned | Phase 1 |
-| Session Persistence | Planned | Phase 2 |
+| Session Persistence | Implemented (optional Firestore) | Phase 2 |
 | Progress Tracking | Planned | Phase 2 |
 | Calendar Integration | Planned | Phase 3 |
 | Team Dashboards | Planned | Phase 3 |

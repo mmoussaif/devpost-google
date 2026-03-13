@@ -57,6 +57,9 @@ export interface SessionRecording {
     avgTension: number;
   };
   emotions?: { emotion: string; timestamp: string; confidence: number }[];
+  /** Set when ending session; sent to backend for Firestore session details */
+  sessionId?: string | null;
+  config?: SessionConfig | null;
 }
 
 export interface RecapData {

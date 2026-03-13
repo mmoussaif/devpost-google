@@ -407,7 +407,10 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     screenShare.stop();
     camera.stop();
     setPhase("ended");
-    
+
+    recordingRef.current.sessionId = session.sessionId ?? undefined;
+    recordingRef.current.config = config;
+
     // Calculate presence averages if camera was used
     const pm = presenceMetricsRef.current;
     if (pm.eyeContact.length > 0) {
@@ -418,7 +421,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
         avgTension: avg(pm.tension),
       };
     }
-    
+
     onSessionEnd(recordingRef.current);
   };
 

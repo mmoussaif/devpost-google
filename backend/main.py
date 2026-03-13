@@ -39,6 +39,7 @@ from coach_engine import generate_coaching
 from session_orchestrator import ActiveSessionStore, BuddySessionOrchestrator
 from learnings import analyze_session, get_pre_session_briefing, get_quick_tip
 from recap_engine import build_buddy_recap
+from session_repository import save_session as persist_session
 
 # Configuration
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "platinum-depot-489523-a7")
@@ -128,6 +129,11 @@ async def build_buddy_recap_endpoint(session_data: dict):
     stored = analyze_session(normalized)
     recap = build_buddy_recap(normalized)
     recap["stored_analysis"] = stored
+    # Fire-and-forget persist to Firestore (Session Memory); no impact on response or demo flow
+    asyncio.get_event_loop().run_in_executor(
+        None,
+        lambda: persist_session(normalized, stored, recap_summary=recap),
+    )
     return recap
 
 

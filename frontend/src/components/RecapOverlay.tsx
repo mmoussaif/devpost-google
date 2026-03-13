@@ -16,6 +16,8 @@ export default function RecapOverlay({ recording, onRestart }: RecapOverlayProps
         duration: formatDuration(recording.startTime),
         mode: "secondus_buddy",
         date: new Date().toISOString(),
+        ...(recording.sessionId != null && { session_id: recording.sessionId }),
+        ...(recording.config != null && { config: recording.config }),
       },
       metrics: recording.metrics,
       exchanges: recording.exchanges,

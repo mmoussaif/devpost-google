@@ -257,6 +257,8 @@ This builds frontend, copies to backend, and deploys to Cloud Run.
 | `backend/coach_engine.py` | LLM coaching + detection |
 | `backend/contract_state.py` | Term extraction + drift |
 | `backend/recap_engine.py` | Scoring + recap generation |
+| `backend/session_repository.py` | Optional Firestore session persistence |
+| `backend/learnings.py` | Patterns, recommendations, briefing (JSON + Firestore) |
 | `backend/presence_engine.py` | Presence metrics structure |
 | `backend/adversary.py` | AI counterparty agent |
 | `frontend/src/components/SessionScreen.tsx` | Main session UI |

@@ -3,6 +3,12 @@ Secondus Learning System — Personalized Negotiation Intelligence
 
 Stores user performance patterns and provides research-backed recommendations.
 Based on: Harvard PON, Chris Voss (Never Split the Difference), Joe Navarro body language.
+
+Persistence:
+- Learnings (patterns, recommendations, session list) are stored in data/user_learnings.json.
+- Each completed session is also persisted to Firestore by session_repository (optional,
+  see PERSIST_SESSIONS_TO_FIRESTORE / GOOGLE_CLOUD_PROJECT). Stored sessions include
+  stored_analysis from this module, enabling future learnings aggregation from Firestore.
 """
 
 import json
