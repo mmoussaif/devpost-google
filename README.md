@@ -9,6 +9,7 @@
 [![Cloud Run](https://img.shields.io/badge/Hosted-Google%20Cloud%20Run-green)]()
 [![ADK](https://img.shields.io/badge/Framework-Google%20ADK-yellow)]()
 [![MediaPipe](https://img.shields.io/badge/ML-MediaPipe%20Vision-purple)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## The Problem
 
@@ -447,6 +448,10 @@ See [tasks.md](tasks.md) for the complete roadmap with detailed features.
 - **Demo Video:** https://youtu.be/ffmS4bpW0UQ
 - **Devpost:** https://devpost.com/software/secondus-real-time-negotiation-copilot
 - **Medium Article:** [Building Secondus with Gemini Live API](https://medium.com/@mmsf_74923/building-secondus-a-real-time-negotiation-copilot-with-gemini-live-api-and-google-cloud-b478117831db)
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
 
 ## Author
 
