@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, DollarSign, Clock, CreditCard, Play, Square, Send, CheckCircle, Loader2, Scan } from "lucide-react";
+import { FileText, DollarSign, Clock, CreditCard, Play, Square, Send, CheckCircle, Loader2, Scan, Camera } from "lucide-react";
 import type { ScreenAnalysisStatus, ExtractedTerms } from "../types";
 
 type ScanPhase = "ready" | "scanning" | "review";
@@ -9,9 +9,11 @@ interface DocumentAnalysisProps {
   status: ScreenAnalysisStatus;
   terms?: ExtractedTerms;
   isShared: boolean;
+  error?: string;
   frameCount: number;
   onStartScan: () => void;
   onStopScan: () => void;
+  onCaptureNow?: () => void;
   onShare: () => void;
 }
 
@@ -20,9 +22,11 @@ export default function DocumentAnalysis({
   status,
   terms,
   isShared,
+  error: extractionError,
   frameCount,
   onStartScan,
   onStopScan,
+  onCaptureNow,
   onShare,
 }: DocumentAnalysisProps) {
   const [phase, setPhase] = useState<ScanPhase>("ready");
@@ -72,8 +76,8 @@ export default function DocumentAnalysis({
         {phase === "ready" && !hasTerms && (
           <>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Click <strong>Start Analysis</strong> then scroll through your document. 
-              The AI agent will extract all contract terms automatically.
+              Share the <strong>tab or window</strong> where your document is open. 
+              Start Analysis captures the view; use <strong>Capture this view</strong> when the key terms are on screen.
             </p>
             <button
               onClick={handleStartScan}
@@ -99,14 +103,36 @@ export default function DocumentAnalysis({
             </div>
             
             <p className="text-xs text-slate-400">
-              Scroll through your document now. The agent is extracting terms from each view.
+              Scroll through the shared document slowly — we capture every 3s. When key terms are visible, click <strong>Capture this view</strong>.
             </p>
+            <div className="flex items-center gap-2 rounded-lg bg-indigo-500/10 border border-indigo-400/20 px-3 py-1.5">
+              <span className="text-indigo-400 text-sm animate-bounce">↕</span>
+              <span className="text-[11px] text-indigo-300">Scroll up &amp; down on your document so we can read all terms</span>
+            </div>
+
+            {onCaptureNow && (
+              <button
+                type="button"
+                onClick={onCaptureNow}
+                disabled={isAnalyzing}
+                className="flex items-center justify-center gap-2 rounded-lg bg-indigo-500/80 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+              >
+                <Camera size={12} />
+                Capture this view
+              </button>
+            )}
 
             {isAnalyzing && (
               <div className="flex items-center gap-2 text-xs text-purple-400">
                 <Loader2 size={12} className="animate-spin" />
                 Analyzing current view...
               </div>
+            )}
+
+            {extractionError && !isAnalyzing && (
+              <p className="text-xs text-amber-400/90" title={extractionError}>
+                {extractionError}
+              </p>
             )}
 
             {/* Live extracted terms */}
@@ -137,6 +163,11 @@ export default function DocumentAnalysis({
         {/* Phase: Review (or has terms from previous scan) */}
         {(phase === "review" || (hasTerms && phase === "ready")) && (
           <>
+            {extractionError && termItems.length === 0 && (
+              <p className="text-xs text-amber-400/90" title={extractionError}>
+                {extractionError}
+              </p>
+            )}
             {/* Extracted terms */}
             {termItems.length > 0 && (
               <div className="flex flex-col gap-2">
@@ -158,8 +189,10 @@ export default function DocumentAnalysis({
               {!isShared && (
                 <>
                   <button
+                    type="button"
                     onClick={onShare}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-600"
+                    disabled={!hasTerms}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Send size={14} />
                     Share with Counterpart

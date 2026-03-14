@@ -27,7 +27,7 @@ flowchart TB
     subgraph Backend["Backend (FastAPI/Python)"]
         WS[WebSocket Handler]
         Orchestrator[Session Orchestrator]
-        Coach[Coach Engine<br/>Gemini 2.0 Flash]
+        Coach[Coach Engine<br/>Gemini 2.5 Flash-Lite]
         Contract[Contract State]
         Signals[Signal Detection]
         Recap[Recap Engine]
@@ -823,7 +823,8 @@ Secondus uses the following **Google Cloud and Google AI services** explicitly:
 | **Artifact Registry / Container Registry** | Stores the built image (`gcr.io/<project>/secondus`) used by Cloud Run. | Used by Cloud Build and Cloud Run |
 | **Vertex AI** | Provides access to Gemini models (Live API and Vision). All Gemini calls go through Vertex AI. | `aiplatform.googleapis.com` |
 | **Gemini Live Agent (2.5 Flash)** | **Live Agent**: real-time voice agent (Google ADK). Bidirectional audio with the AI counterparty; speaks and listens. Native audio in/out. | Via Vertex AI (Gemini Live) |
-| **Gemini 2.0 Flash** | Vision (document term extraction) and text (coaching, detection). | Via Vertex AI |
+| **Gemini 2.5 Flash-Lite** | Real-time coaching (~600ms latency). | Via Vertex AI |
+| **Gemini 2.5 Flash** | Vision (document term extraction), LLM-judge scoring. | Via Vertex AI |
 | **Firestore** | Session Memory: persists completed sessions (collection `sessions`) for analytics and future learnings. Optional, fire-and-forget. | `firestore.googleapis.com` |
 
 ### APIs enabled at deploy time
@@ -840,7 +841,7 @@ gcloud services enable \
 
 - **Compute / hosting:** Cloud Run  
 - **CI/CD / build:** Cloud Build, Container Registry (gcr.io)  
-- **AI / agents:** Vertex AI, **Gemini Live Agent** (2.5 Flash — voice agent via ADK), Gemini 2.0 Flash (Vision + text)  
+- **AI / agents:** Vertex AI, **Gemini Live Agent** (2.5 Flash — voice agent via ADK), Gemini 2.5 Flash-Lite (coaching), Gemini 2.5 Flash (vision + judge)  
 - **Data:** Firestore (sessions collection)
 
 ## Challenge Compliance

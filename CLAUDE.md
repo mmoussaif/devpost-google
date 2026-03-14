@@ -27,13 +27,18 @@ The product should feel:
 - **Presence:** presence_engine.py (MediaPipe metrics structure)
 
 ### Key Features Working
-- LLM-based deal closure detection
-- LLM-based conversation circling detection
-- Manual document capture and share flow
-- Contract drift detection with evidence
+- LLM-based deal closure detection (via coaching LLM, not pattern matching)
+- LLM-based conversation circling detection (hybrid: LLM + deterministic, strict threshold)
+- Non-blocking document analysis (background tasks, never blocks WebSocket)
+- Contract drift detection with acceptance-awareness (skips false positives)
 - Signal rate limiting
 - **MediaPipe presence detection** (eye contact, posture, tension)
 - Camera-aware scoring (70/30 split when enabled)
+- **LLM-judge scoring** (Gemini 2.5 Flash evaluates transcript, blended 40/60 with deterministic)
+- 5-minute countdown timer with auto-cleanup on timeout
+- Silence monitor suppressed during screen sharing
+- Adversary transcript dedup (prevents "Sure, go ahead" x2)
+- Coaching dedup (60% word overlap check + 3s per-turn cooldown)
 - Session never auto-ends (user clicks End)
 - **Presence metrics displayed in WebcamPip overlay**
 - **Presence summary in RecapOverlay**

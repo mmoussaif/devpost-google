@@ -39,7 +39,7 @@ from adversary import adversary_agent
 from coach_engine import generate_coaching
 from session_orchestrator import ActiveSessionStore, BuddySessionOrchestrator
 from learnings import analyze_session, get_pre_session_briefing, get_quick_tip
-from recap_engine import build_buddy_recap
+from recap_engine import build_buddy_recap, llm_judge_score
 from session_repository import save_session as persist_session
 
 # Configuration
@@ -151,7 +151,8 @@ async def build_buddy_recap_endpoint(session_data: dict):
     normalized = dict(session_data)
     normalized["visualPresence"] = session_data.get("visualPresence") or {}
     stored = analyze_session(normalized)
-    recap = build_buddy_recap(normalized)
+    llm_judge = await llm_judge_score(normalized)
+    recap = build_buddy_recap(normalized, llm_judge=llm_judge)
     recap["stored_analysis"] = stored
     # Fire-and-forget persist to Firestore (Session Memory); no impact on response or demo flow
     asyncio.get_event_loop().run_in_executor(
@@ -172,11 +173,9 @@ async def get_tactic_tip(tactic: str):
 
 class PracticeConfig(BaseModel):
     """Configuration for practice mode with adversarial agent."""
-    goals: str = "Close deal at $80K"
-    low_cost_mode: bool = False  # Text-only responses (no audio generation)
-    batna: str = "Walk away to other prospects"
+    goals: str = "Close at $70K minimum, net-45 payment terms, IP ownership retained"
+    batna: str = "Walk away — another prospect at $65K"
     key_terms: list[str] = ["50% upfront", "Net-30", "3 revision rounds"]
-    scenario: str = "AI consulting engagement"
 
 
 # Session timeout in seconds (5 minutes max)
@@ -187,12 +186,11 @@ SESSION_TIMEOUT = 300
 async def create_practice_session(config: PracticeConfig):
     """Create a practice session with adversarial client agent."""
     session_id = str(uuid.uuid4())
-    context = f"PRACTICE MODE - Scenario: {config.scenario}\nYour goals: {config.goals}\nYour BATNA: {config.batna}"
+    context = f"PRACTICE MODE - Counterparty: Maya Chen, CTO of TechNova\nYour goals: {config.goals}\nYour BATNA: {config.batna}"
     session_store.create_buddy_session(
         session_id=session_id,
         config=config.model_dump(),
         context=context,
-        low_cost_mode=config.low_cost_mode,
     )
 
     # Create ADK session for adversary

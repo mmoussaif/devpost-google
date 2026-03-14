@@ -1,8 +1,6 @@
 export interface SessionConfig {
   goals: string;
   batna: string;
-  scenario: string;
-  low_cost_mode: boolean;
 }
 
 export interface SessionResponse {

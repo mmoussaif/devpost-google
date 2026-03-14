@@ -71,8 +71,8 @@ export default function RecapOverlay({ recording, onRestart }: RecapOverlayProps
     recap.score >= 70 ? "bg-emerald-400/10" : recap.score >= 50 ? "bg-amber-400/10" : "bg-red-400/10";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md">
-      <div className="w-full max-w-2xl rounded-3xl border border-white/[0.07] bg-[#0B0F19] p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-md">
+      <div className="mx-auto my-8 w-full max-w-2xl rounded-3xl border border-white/[0.07] bg-[#0B0F19] p-6 shadow-2xl">
         {/* Header */}
         <div className="mb-6 text-center">
           <span className="mb-3 inline-block rounded-full bg-indigo-500/10 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-indigo-400">

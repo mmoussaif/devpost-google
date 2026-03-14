@@ -27,6 +27,9 @@ export function useAudioPlayback() {
     if (!ctxRef.current || ctxRef.current.state === "closed") {
       ctxRef.current = new AudioContext({ sampleRate: 24000 });
     }
+    if (ctxRef.current.state === "suspended") {
+      ctxRef.current.resume();
+    }
     return ctxRef.current;
   }, []);
 
@@ -93,5 +96,10 @@ export function useAudioPlayback() {
     setIsPlaying(false);
   }, []);
 
-  return { bufferChunk, playBuffered, clearAudio, isPlaying };
+  const warmup = useCallback(() => {
+    const ctx = getContext();
+    if (ctx.state === "suspended") ctx.resume();
+  }, [getContext]);
+
+  return { bufferChunk, playBuffered, clearAudio, isPlaying, warmup };
 }

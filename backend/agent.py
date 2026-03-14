@@ -6,9 +6,12 @@ Multi-agent architecture for real-time negotiation intelligence:
 - Tools: Web search for counterparty research, contract analysis
 """
 
+import os
 from google.adk.agents import Agent
 from google.adk.tools import google_search, FunctionTool
 from typing import Optional
+
+COACHING_MODEL = os.getenv("COACHING_MODEL", "gemini-2.5-flash")
 
 # ============ CUSTOM TOOLS ============
 
@@ -203,7 +206,7 @@ def create_secondus_agent() -> Agent:
 def create_contract_analyzer() -> Agent:
     """Create sub-agent specialized in contract analysis."""
     return Agent(
-        model="gemini-2.0-flash",  # Non-live model for document analysis
+        model=COACHING_MODEL,  # Non-live model for document analysis
         name="contract_analyzer",
         description="Extracts and tracks contract terms for drift detection",
         instruction=CONTRACT_ANALYZER_PROMPT,

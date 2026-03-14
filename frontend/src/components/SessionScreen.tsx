@@ -27,9 +27,12 @@ interface SessionScreenProps {
   onSessionEnd: (recording: SessionRecording) => void;
 }
 
-function formatElapsed(start: number): string {
-  const s = Math.floor((Date.now() - start) / 1000);
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const SESSION_DURATION_SEC = 300; // 5 minutes
+
+function formatCountdown(start: number): string {
+  const elapsed = Math.floor((Date.now() - start) / 1000);
+  const remaining = Math.max(0, SESSION_DURATION_SEC - elapsed);
+  return `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
 }
 
 export default function SessionScreen({ config, onSessionEnd }: SessionScreenProps) {
@@ -37,7 +40,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
   const [coach, setCoach] = useState<CoachRecommendation | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [turn, setTurn] = useState<TurnState>("waiting");
-  const [timer, setTimer] = useState("00:00");
+  const [timer, setTimer] = useState("05:00");
   const [phase, setPhase] = useState<"ready" | "live" | "ended">("ready");
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -72,7 +75,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     tension: number[];
   }>({ eyeContact: [], posture: [], tension: [] });
 
-  const { bufferChunk, playBuffered, clearAudio, isPlaying } = useAudioPlayback();
+  const { bufferChunk, playBuffered, clearAudio, isPlaying, warmup: warmupAudio } = useAudioPlayback();
   isAdversarySpeakingRef.current = isPlaying;
 
   const lastMessageTimeRef = useRef<number>(0);
@@ -212,11 +215,15 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     setTurn(t);
   }, []);
 
+  const endSessionRef = useRef<(() => void) | null>(null);
+
   const handleSessionEnd = useCallback((_reason: string) => {
-    setPhase("ended");
-    setTimeout(() => {
+    if (endSessionRef.current) {
+      endSessionRef.current();
+    } else {
+      setPhase("ended");
       onSessionEnd(recordingRef.current);
-    }, 800);
+    }
   }, [onSessionEnd]);
 
   const handleError = useCallback((msg: string) => {
@@ -238,6 +245,8 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     status: ScreenAnalysisStatus;
     terms?: ExtractedTerms;
     isShared: boolean;
+    error?: string;
+    shareInProgress?: boolean;
   }>({ status: null, isShared: false });
 
   const handleScreenAnalysis = useCallback((result: {
@@ -249,13 +258,17 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
       status: result.status,
       terms: result.terms ? { ...prev.terms, ...result.terms } : prev.terms,
       isShared: prev.isShared,
+      error: result.terms ? undefined : (result.error ?? prev.error),
     }));
   }, []);
 
-  const handleContractShared = useCallback((success: boolean) => {
-    if (success) {
-      setScreenAnalysis(prev => ({ ...prev, isShared: true }));
-    }
+  const handleContractShared = useCallback((success: boolean, error?: string) => {
+    setScreenAnalysis(prev => ({
+      ...prev,
+      isShared: success,
+      shareInProgress: false,
+      error: success ? undefined : (error ?? "Share failed"),
+    }));
   }, []);
 
   const handleDealClosed = useCallback((detectedBy: string) => {
@@ -337,7 +350,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     if (phase !== "live") return;
     startTimeRef.current = Date.now();
     recordingRef.current.startTime = Date.now();
-    const id = setInterval(() => setTimer(formatElapsed(startTimeRef.current)), 1000);
+    const id = setInterval(() => setTimer(formatCountdown(startTimeRef.current)), 1000);
     return () => clearInterval(id);
   }, [phase]);
 
@@ -347,6 +360,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
   }, [transcript]);
 
   const beginNegotiation = () => {
+    warmupAudio();
     session.send({ type: "start" });
     session.send({ type: "mic_state", muted: true });
     setPhase("live");
@@ -383,9 +397,19 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     screenShare.stopScanning();
   };
 
-  const handleDocShare = () => {
-    session.send({ type: "share_contract" });
-  };
+  const handleCaptureNow = useCallback(() => {
+    screenShare.captureNow?.();
+  }, []);
+
+  const handleDocShare = useCallback(() => {
+    if (screenAnalysis.isShared) return;
+    // Optimistic: mark as shared immediately so UI never blocks
+    setScreenAnalysis(prev => ({ ...prev, isShared: true, shareInProgress: false, error: undefined }));
+    session.send({
+      type: "share_contract",
+      terms: screenAnalysis.terms ?? undefined,
+    });
+  }, [session, screenAnalysis.terms, screenAnalysis.isShared]);
 
   const handleCameraToggle = async () => {
     if (camera.isOn) {
@@ -400,7 +424,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     }
   };
 
-  const handleEnd = () => {
+  const handleEnd = useCallback(() => {
     session.disconnect();
     audio.stop();
     screenShare.stopScanning();
@@ -411,7 +435,6 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     recordingRef.current.sessionId = session.sessionId ?? undefined;
     recordingRef.current.config = config;
 
-    // Calculate presence averages if camera was used
     const pm = presenceMetricsRef.current;
     if (pm.eyeContact.length > 0) {
       const avg = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
@@ -423,7 +446,9 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
     }
 
     onSessionEnd(recordingRef.current);
-  };
+  }, [session, audio, screenShare, camera, config, onSessionEnd]);
+
+  endSessionRef.current = handleEnd;
 
   const handleCopyCoach = () => {
     if (coach) {
@@ -563,9 +588,11 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
         status={screenAnalysis.status}
         terms={screenAnalysis.terms}
         isShared={screenAnalysis.isShared}
+        error={screenAnalysis.error}
         frameCount={screenShare.frameCount}
         onStartScan={handleStartScan}
         onStopScan={handleStopScan}
+        onCaptureNow={handleCaptureNow}
         onShare={handleDocShare}
       />
 
@@ -579,7 +606,7 @@ export default function SessionScreen({ config, onSessionEnd }: SessionScreenPro
 
       {/* Coach card */}
       <CoachCard
-        phrase={coach?.phrase ?? "Waiting for the negotiation to begin..."}
+        phrase={coach?.phrase ?? "Listen to their opening, then respond..."}
         context={coach?.context ?? ""}
         onCopy={handleCopyCoach}
         visible={phase === "live"}

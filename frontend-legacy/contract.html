@@ -387,50 +387,9 @@
         </div>
     </div>
 
-    <!-- Agent Scanner Indicator -->
+    <!-- Static hint: user scrolls this page; Secondus captures when they share screen -->
     <div class="agent-scanner-badge" id="scanner-badge">
-        <div class="scanner-dot"></div>
-        <span>Secondus Vision Agent: Scanning Document</span>
+        <span>You scroll this document. In Secondus, share this window and use Document Scanner to capture views.</span>
     </div>
-
-    <script>
-        // Simulate the Secondus agent taking control of the document to scroll and read it
-        document.addEventListener('DOMContentLoaded', () => {
-            let isScrollingDown = true;
-            let currentScroll = 0;
-            const badge = document.getElementById('scanner-badge');
-            
-            // Clean recursive approach for pausing
-            function autoScroll() {
-                const maxScroll = document.body.scrollHeight - window.innerHeight;
-                if (maxScroll <= 0) return; // No need to scroll if content fits
-
-                if (isScrollingDown) {
-                    currentScroll += 1.5;
-                    if (currentScroll >= maxScroll) {
-                        isScrollingDown = false;
-                        badge.querySelector('span').textContent = 'Vision Agent: Cross-referencing terms...';
-                        setTimeout(() => requestAnimationFrame(autoScroll), 4000); // Pause at bottom
-                        return;
-                    }
-                } else {
-                    currentScroll -= 3;
-                    if (currentScroll <= 0) {
-                        isScrollingDown = true;
-                        badge.querySelector('span').textContent = 'Vision Agent: Scanning terms...';
-                        setTimeout(() => requestAnimationFrame(autoScroll), 4000); // Pause at top
-                        return;
-                    }
-                }
-                window.scrollTo(0, currentScroll);
-                requestAnimationFrame(autoScroll);
-            }
-            
-            // Start the optimized scrolling
-            setTimeout(() => {
-                requestAnimationFrame(autoScroll);
-            }, 3000);
-        });
-    </script>
 </body>
 </html>

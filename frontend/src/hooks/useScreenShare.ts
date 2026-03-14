@@ -15,7 +15,7 @@ export function useScreenShare() {
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastHashRef = useRef<string>("");
 
-  const captureFrame = useCallback(() => {
+  const captureFrame = useCallback((forceSend = false) => {
     if (!videoRef.current || !canvasRef.current || !streamRef.current || !sendFrameRef.current) return false;
     
     const v = videoRef.current;
@@ -31,9 +31,8 @@ export function useScreenShare() {
     const base64 = dataUrl.split(",")[1];
     
     if (base64 && base64.length > MIN_BASE64_LENGTH) {
-      // Simple change detection - only send if frame changed
       const hash = base64.slice(0, 100) + base64.slice(-100);
-      if (hash !== lastHashRef.current) {
+      if (forceSend || hash !== lastHashRef.current) {
         lastHashRef.current = hash;
         sendFrameRef.current(base64);
         setFrameCount(c => c + 1);
@@ -42,6 +41,11 @@ export function useScreenShare() {
     }
     return false;
   }, []);
+
+  /** Capture and send one frame now (e.g. after user scrolled to price/payment section). */
+  const captureNow = useCallback(() => {
+    return captureFrame(true);
+  }, [captureFrame]);
 
   const startScanning = useCallback(() => {
     if (scanIntervalRef.current) return;
@@ -111,5 +115,5 @@ export function useScreenShare() {
     setIsSharing(true);
   }, [stop]);
 
-  return { start, stop, startScanning, stopScanning, isSharing, isScanning, frameCount };
+  return { start, stop, startScanning, stopScanning, captureNow, isSharing, isScanning, frameCount };
 }

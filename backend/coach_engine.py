@@ -7,6 +7,7 @@ statement plus grounded context into one actionable line for the user.
 
 import asyncio
 import json
+import logging
 import os
 import re
 
@@ -16,98 +17,112 @@ from google.genai import types
 from contract_state import ContractState
 from presence_engine import PresenceSnapshot
 
+logger = logging.getLogger(__name__)
+
 
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "platinum-depot-489523-a7")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+COACHING_MODEL = os.getenv("COACHING_MODEL", "gemini-2.5-flash-lite")
+VISION_MODEL = os.getenv("VISION_MODEL", "gemini-2.5-flash")
 
 coaching_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
-COACHING_PROMPT = """You are Secondus, a negotiation coach trained in Harvard PON frameworks.
+COACHING_PROMPT = """Negotiation coach. One sentence. Best next move only.
 
-Your coaching is grounded in research from:
-- Harvard Program on Negotiation (BATNA, anchoring, interest-based bargaining)
-- "Getting to Yes" by Fisher & Ury (principled negotiation)
-- "Never Split the Difference" by Chris Voss (tactical empathy, calibrated questions)
-- "Bargaining for Advantage" by G. Richard Shell (leverage, ethical boundaries)
-
-SCENARIO: User is negotiating a consulting contract. Topics include:
-- Price/budget (e.g., $50K, $80K, etc.)
-- Payment terms (Net-30, Net-60, Net-90)
-- Scope of work
-- Revision rounds
-- Possibly equity
-
-COUNTERPARTY JUST SAID:
-"{adversary_text}"
-
-USER'S POSITION:
-- Goals: {goals}
-- BATNA (Best Alternative): {batna}
-- Recent commitments: {user_history}
-- Structured contract terms: {contract_terms}
-- Presence snapshot: {presence_summary}
-
-COACHING PRINCIPLES:
-- Counter anchoring with value-based re-anchoring (Harvard PON)
-- Use calibrated questions to probe constraints (Voss)
-- Separate positions from interests (Fisher & Ury)
-- Trade, don't give away concessions for free (Shell)
+THEM: "{adversary_text}"
+USER GOALS: {goals} | BATNA: {batna}
+USER SAID SO FAR: {user_history}
+CONTRACT: {contract_terms}
 
 RULES:
-1. Respond ONLY to what the counterparty said - do NOT invent topics
-2. Keep response to 1-2 sentences
-3. If they mention price, respond about price
-4. If they mention equity, respond about equity
-5. Do NOT mention topics they didn't bring up
+- Don't repeat what user already said or did
+- If user is winning/holding firm, acknowledge it ("Good — hold your ground" / "They're moving, lock it in")
+- If they're agreeing, close immediately
+- One sentence, natural spoken language
+- VARY your opening words every time — never start two suggestions the same way (no "Let's" every time)
 
-CRITICAL — AGREEMENT DETECTION:
-If the counterparty is AGREEING, ACCEPTING, or saying "let's move forward":
-- Do NOT push back or demand more
-- CLOSE THE DEAL immediately
-- Example: "Great, let's lock that in. I'll send the contract today."
-
-OUTPUT FORMAT (exactly three lines):
-CLOSING: [YES or NO] - Is this a deal closure, agreement, or end of negotiation?
-CIRCLING: [YES or NO] - Is the conversation stuck repeating the same point without progress?
-SAY THIS: [your coaching phrase]
-
-CLOSING = YES when:
-- "Great, we have a deal", "That works", "I'll move that forward"
-- "Goodbye", "Thanks for your time", "We'll proceed"
-
-CLOSING = NO when:
-- Questions, counter-offers, new topics, objections
-
-CIRCLING = YES when:
-- Same objection repeated 3+ times with no new information
-- Counterparty keeps restating the same position without movement
-- "As I said before...", "I already mentioned...", repeating exact numbers
-- No progress despite multiple exchanges on the same topic
-
-CIRCLING = NO when:
-- New numbers or terms are being proposed (even if on same topic)
-- Negotiation is progressing with counter-offers
-- New information or conditions are added
-- First or second time discussing a topic
+CLOSING: [YES/NO]
+CIRCLING: [YES/NO]
+SAY THIS: [one sentence]
 
 CLOSING:"""
 
-TERM_EXTRACTION_PROMPT = """Analyze this contract/document screenshot and extract key terms.
+TERM_EXTRACTION_PROMPT = """Extract key commercial terms from this document image using Google Vision. Any document type: contract, agreement, proposal, invoice, or form.
 
-Return JSON with these fields:
-{
-  "price": "the price/fee amount (e.g., '$75,000' or '$75K')",
-  "timeline": "delivery timeline (e.g., '6 weeks', '30 days')",
-  "payment_terms": "payment terms (e.g., 'Net-30', '50% upfront')",
-  "scope": "brief scope description (e.g., 'AI integration services')",
-  "revisions": "revision rounds if mentioned",
-  "parties": "names of parties involved",
-  "summary": "one-sentence summary of the contract"
+Extract whatever you can see:
+- price: total amount, fee, contract value (e.g. $75,000, $75K)
+- payment_terms: Net-30, Net-45, upfront %, payment schedule
+- timeline: duration, deadline (e.g. 10 weeks, 6 weeks)
+- scope: short description of work or deliverables
+- revisions: revision rounds, hourly rate for extra work
+- parties: names of parties if visible
+- summary: one sentence describing the document
+
+Return ONLY a single JSON object with these keys. Use null only for keys you truly cannot find. Extract every number, amount, and date you see — do not return all nulls if the image contains document text.
+
+Example: {"price": "$75,000", "payment_terms": "Net-30", "timeline": "10 weeks", "scope": "AI consulting", "revisions": "3 rounds", "parties": null, "summary": "Consulting agreement."}
+"""
+
+# Schema for structured JSON output (Vertex AI); ensures valid JSON from Gemini.
+TERM_EXTRACTION_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "price": {"type": "STRING", "nullable": True},
+        "timeline": {"type": "STRING", "nullable": True},
+        "payment_terms": {"type": "STRING", "nullable": True},
+        "scope": {"type": "STRING", "nullable": True},
+        "revisions": {"type": "STRING", "nullable": True},
+        "parties": {"type": "STRING", "nullable": True},
+        "summary": {"type": "STRING", "nullable": True},
+    },
 }
 
-Use null for any field not visible in the document.
-Return ONLY valid JSON, no other text.
-"""
+EXPECTED_TERM_KEYS = frozenset(TERM_EXTRACTION_SCHEMA["properties"].keys())
+
+
+def _get_response_text(response) -> str | None:
+    """Safely get text from GenerateContentResponse (handles blocked/empty or non-text parts)."""
+    try:
+        if hasattr(response, "text") and response.text is not None:
+            return response.text.strip() or None
+    except (ValueError, AttributeError):
+        pass
+    if getattr(response, "candidates", None) and len(response.candidates) > 0:
+        parts = getattr(response.candidates[0], "content", None) and getattr(
+            response.candidates[0].content, "parts", None
+        )
+        if parts:
+            texts = []
+            for p in parts:
+                if hasattr(p, "text") and p.text:
+                    texts.append(p.text)
+            if texts:
+                return "\n".join(texts).strip() or None
+    return None
+
+
+def _extract_json_from_text(raw: str) -> dict | None:
+    """Extract a JSON object from model output (handles markdown code blocks and trailing text)."""
+    if not raw or not raw.strip():
+        return None
+    # Strip markdown code blocks so we get raw JSON
+    text = raw.strip()
+    for marker in ("```json", "```"):
+        if marker in text:
+            start = text.find(marker) + len(marker)
+            end = text.find("```", start)
+            if end == -1:
+                end = len(text)
+            text = text[start:end].strip()
+    match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.DOTALL)
+    if not match:
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return None
 
 
 def build_user_history_text(user_history: list[str]) -> str:
@@ -126,9 +141,6 @@ async def generate_coaching(
 ) -> dict:
     """Generate real-time coaching response to the latest adversary statement."""
     try:
-        if contract_state:
-            await ensure_contract_terms(contract_state)
-
         prompt = COACHING_PROMPT.format(
             goals=goals or "Close the deal",
             batna=batna or "Walk away",
@@ -138,20 +150,10 @@ async def generate_coaching(
             presence_summary=format_presence_summary(presence_snapshot),
         )
 
-        contents: list[types.Part | str] = [prompt]
-        screen_bytes = contract_state.get_latest_screen() if contract_state else None
-        if screen_bytes and len(screen_bytes) > 500:
-            contents.append(types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg"))
-            contents.append(
-                "CRITICAL: Look at the provided screen capture of the contract. "
-                "If the counterparty's spoken text contradicts the document terms in a way that hurts the user, "
-                "output a 'DRIFT: [Contract says X, they said Y]' alert alongside your SAY THIS response!"
-            )
-
         response = await asyncio.to_thread(
             coaching_client.models.generate_content,
-            model="gemini-2.0-flash",
-            contents=contents,
+            model=COACHING_MODEL,
+            contents=[prompt],
         )
 
         coaching_text = response.text.strip()
@@ -190,11 +192,13 @@ async def generate_coaching(
         }
 
     except Exception as e:
-        print(f"Coaching generation error: {e}")
+        import traceback
+        print(f"Coaching generation error ({COACHING_MODEL}): {e}", flush=True)
+        traceback.print_exc()
         return {
             "type": "coaching",
-            "say_this": "I hear you. Let me think about the best way forward.",
-            "context": "Fallback response",
+            "say_this": "",
+            "context": "",
             "is_closing": False,
             "is_circling": False,
         }
@@ -212,19 +216,18 @@ async def ensure_contract_terms(contract_state: ContractState) -> None:
     try:
         response = await asyncio.to_thread(
             coaching_client.models.generate_content,
-            model="gemini-2.0-flash",
+            model=VISION_MODEL,
             contents=[
                 TERM_EXTRACTION_PROMPT,
                 types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg"),
             ],
         )
-        raw = response.text.strip()
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        payload = json.loads(match.group(0) if match else raw)
-        if isinstance(payload, dict):
+        raw = _get_response_text(response)
+        payload = _extract_json_from_text(raw) if raw else None
+        if isinstance(payload, dict) and payload:
             contract_state.set_structured_terms(payload, extracted_at=asyncio.get_event_loop().time())
     except Exception as e:
-        print(f"Contract extraction error: {e}")
+        logger.warning("Contract extraction error in ensure_contract_terms: %s", e, exc_info=False)
 
 
 async def analyze_document(screen_bytes: bytes) -> dict:
@@ -235,48 +238,78 @@ async def analyze_document(screen_bytes: bytes) -> dict:
     if not screen_bytes or len(screen_bytes) < 500:
         return {"success": False, "error": "Invalid image data"}
 
+    contents = [
+        TERM_EXTRACTION_PROMPT,
+        types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg"),
+    ]
+    terms = None
+    raw = None
+
     try:
         response = await asyncio.to_thread(
             coaching_client.models.generate_content,
-            model="gemini-2.0-flash",
-            contents=[
-                TERM_EXTRACTION_PROMPT,
-                types.Part.from_bytes(data=screen_bytes, mime_type="image/jpeg"),
-            ],
+            model=VISION_MODEL,
+            contents=contents,
         )
-        raw = response.text.strip()
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            return {"success": False, "error": "Could not parse response"}
-
-        terms = json.loads(match.group(0))
-
-        # Build a human-readable summary for the session
-        summary_parts = []
-        if terms.get("price"):
-            summary_parts.append(f"Price: {terms['price']}")
-        if terms.get("payment_terms"):
-            summary_parts.append(f"Payment: {terms['payment_terms']}")
-        if terms.get("timeline"):
-            summary_parts.append(f"Timeline: {terms['timeline']}")
-        if terms.get("scope"):
-            summary_parts.append(f"Scope: {terms['scope']}")
-
-        context_summary = " | ".join(summary_parts) if summary_parts else "Document analyzed"
-
-        return {
-            "success": True,
-            "terms": terms,
-            "summary": terms.get("summary", context_summary),
-            "context_for_session": f"[SHARED DOCUMENT CONTEXT: {context_summary}]",
-        }
-
-    except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
-        return {"success": False, "error": "Failed to parse extracted terms"}
+        raw = _get_response_text(response)
+        terms = _extract_json_from_text(raw) if raw else None
     except Exception as e:
-        print(f"Document analysis error: {e}")
-        return {"success": False, "error": str(e)}
+        logger.warning("Document analysis (prompt-only) failed: %s", e, exc_info=False)
+        try:
+            response = await asyncio.to_thread(
+                coaching_client.models.generate_content,
+                model=VISION_MODEL,
+                contents=contents,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": TERM_EXTRACTION_SCHEMA,
+                },
+            )
+            raw = _get_response_text(response)
+            if raw:
+                try:
+                    terms = json.loads(raw)
+                except json.JSONDecodeError:
+                    terms = _extract_json_from_text(raw)
+        except Exception as fallback_err:
+            logger.exception("Document analysis error")
+            return {"success": False, "error": str(fallback_err)[:500]}
+
+    if not raw:
+        logger.warning("Document analysis: empty or blocked response from model")
+        return {"success": False, "error": "Model returned no text (blocked or empty)"}
+
+    if not terms or not isinstance(terms, dict):
+        logger.warning("Document analysis: could not parse JSON from response (len=%s)", len(raw or ""))
+        return {"success": False, "error": "Could not parse extracted terms from response"}
+
+    # Normalize: only expected keys, string or None
+    normalized = {}
+    for k in EXPECTED_TERM_KEYS:
+        v = terms.get(k)
+        if v is not None and str(v).strip():
+            normalized[k] = str(v).strip()
+        else:
+            normalized[k] = None
+
+    has_any_term = any(normalized.get(k) for k in EXPECTED_TERM_KEYS)
+    if not has_any_term:
+        return {
+            "success": False,
+            "error": "No terms detected in this image. Share the tab or window that shows your document, then capture again.",
+        }
+    summary_parts = []
+    for key in ("price", "payment_terms", "timeline", "scope"):
+        if normalized.get(key):
+            summary_parts.append(f"{key.replace('_', ' ').title()}: {normalized[key]}")
+    context_summary = " | ".join(summary_parts) if summary_parts else "Document analyzed"
+
+    return {
+        "success": True,
+        "terms": {k: v for k, v in normalized.items() if v is not None},
+        "summary": normalized.get("summary") or context_summary,
+        "context_for_session": f"[SHARED DOCUMENT CONTEXT: {context_summary}]",
+    }
 
 
 def format_presence_summary(presence_snapshot: PresenceSnapshot | None) -> str:

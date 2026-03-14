@@ -35,7 +35,7 @@ export default function SessionControls({
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           Live Practice
         </span>
-        <span className="font-mono text-sm text-slate-500">{timer}</span>
+        <span className={`font-mono text-sm ${timer <= "01:00" ? "text-red-400 animate-pulse" : "text-slate-500"}`}>{timer}</span>
       </div>
 
       <div className="flex items-center gap-2">
