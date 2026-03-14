@@ -442,6 +442,14 @@ Secondus coaching is grounded in proven negotiation research:
 
 See [tasks.md](tasks.md) for the complete roadmap with detailed features.
 
+## Proof of Google Cloud deployment
+
+For judges: a short walkthrough showing the backend running on Google Cloud is available in this repo:
+
+- **[Secondus_GCP_Hosting_Proof.mp4](Secondus_GCP_Hosting_Proof.mp4)** — Cloud Console (Cloud Run, Logs/dashboard) demonstrating the deployed service.
+
+You can download the file or view it after cloning the repository.
+
 ## Links
 
 - **Live Demo:** https://secondus-svmgok3hyq-uc.a.run.app
