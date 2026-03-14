@@ -281,8 +281,10 @@ The contract is a **Consulting Services Agreement** for $75,000 / Net-30 / 10 we
 
 ### Step 3 — Share the contract (document scanning)
 
-1. Click the **screen share icon** (top-left of the session screen)
-2. When the browser asks, **share the tab** that has `contract.html` open
+> First, open the demo contract in a **separate browser tab**: **https://secondus-svmgok3hyq-uc.a.run.app/contract.html**
+
+1. Back in the session tab, click the **screen share icon** (top-left of the session screen)
+2. When the browser asks, select **"Share a tab"** and pick the `contract.html` tab
 3. Click **Start Analysis** — slowly scroll through the contract so Gemini Vision can capture all the terms
 4. Click **Done Scanning** — you'll see extracted terms appear (price, payment, timeline, scope)
 5. Click **Share with Counterpart** — the agent now knows the written terms and will detect drift when Maya misquotes them
