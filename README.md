@@ -257,6 +257,68 @@ npm run dev
 ./deploy.sh
 ```
 
+---
+
+## Testing the Full Experience
+
+The fastest way to see every feature working end-to-end — coaching, contract drift detection, presence analysis, and scoring.
+
+### Step 1 — Open the demo contract in a separate tab
+
+A realistic consulting contract is included in the repo. Open it in a new browser tab before you start a session:
+
+- **Live (Cloud Run):** https://secondus-svmgok3hyq-uc.a.run.app/contract.html
+- **Local:** http://localhost:8080/contract.html  *(or `frontend/public/contract.html` opened directly)*
+
+The contract is a **Consulting Services Agreement** for $75,000 / Net-30 / 10 weeks. Maya Chen will push for $50K / Net-60 / 6 weeks — so every key term is intentionally in conflict with what she says.
+
+### Step 2 — Start a negotiation
+
+1. Go to https://secondus-svmgok3hyq-uc.a.run.app (or `localhost:8080`)
+2. Fill in your goals — e.g. *"Close at $70K minimum, Net-45, retain IP"*
+3. Click **Begin Negotiation** — Maya Chen will open with her anchor offer
+4. Optionally **enable your camera** (bottom-right) for presence scoring
+
+### Step 3 — Share the contract (document scanning)
+
+1. Click the **screen share icon** (top-left of the session screen)
+2. When the browser asks, **share the tab** that has `contract.html` open
+3. Click **Start Analysis** — slowly scroll through the contract so Gemini Vision can capture all the terms
+4. Click **Done Scanning** — you'll see extracted terms appear (price, payment, timeline, scope)
+5. Click **Share with Counterpart** — the agent now knows the written terms and will detect drift when Maya misquotes them
+
+> **What to expect:** After sharing, if Maya says "$50K budget" you'll see a ⚠️ **CONTRACT DRIFT** alert — spoken terms vs. written $75,000.
+
+### Step 4 — Negotiate and watch the coaching
+
+- Speak naturally into your mic — Maya listens and responds in real time
+- The **"You could say"** card at the bottom suggests your best next line
+- **Signal toasts** (top-right) fire when Maya uses anchoring, timeline pressure, or other tactics
+- The **5-minute countdown** (top bar) keeps the session focused
+
+### Step 5 — End the session and review your recap
+
+1. Click **End** when you're ready
+2. The recap shows:
+   - **Score** (hybrid: 40% deterministic + 60% LLM judge)
+   - **Breakdown** — outcome, tactics, communication, progress
+   - **Presence metrics** — eye contact, posture, relaxation (if camera was on)
+   - **Strengths + improvements** from the LLM judge
+   - **Deal terms summary** if a deal was reached
+
+### What each feature tests
+
+| Feature | How to trigger it |
+|---|---|
+| **Anchoring detection** | Maya's opening: "$50K budget, 6 weeks" |
+| **Contract drift** | Share contract.html, then hear Maya quote $50K vs $75,000 |
+| **Coaching** | Any adversary statement — coaching fires within 2s |
+| **Deal closure detection** | Agree on terms — coaching stops, recap readies |
+| **Presence metrics** | Enable camera before starting |
+| **LLM-judge score** | Click End — score reflects *how* you negotiated |
+
+---
+
 ### API documentation (OpenAPI)
 
 The backend exposes OpenAPI 3.0 documentation:
