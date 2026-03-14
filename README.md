@@ -19,14 +19,14 @@ In negotiations, you're on your own. Skilled counterparties use tactics like anc
 
 Secondus is a **real-time negotiation copilot** that:
 
-| Capability | What It Does |
-|------------|--------------|
-| **Real-Time Coaching** | "Say this now" recommendations in context |
-| **Contract Drift Detection** | Catches when spoken terms differ from written |
-| **Tactic Detection** | Identifies anchoring, timeline pressure, etc. |
-| **Presence Analysis** | MediaPipe tracks eye contact, posture, tension |
-| **LLM-Powered Detection** | Semantic understanding of deal closure and circling |
-| **Dynamic Scoring** | Fair 70/30 voice/presence weighting with camera |
+| Capability                   | What It Does                                        |
+| ---------------------------- | --------------------------------------------------- |
+| **Real-Time Coaching**       | "Say this now" recommendations in context           |
+| **Contract Drift Detection** | Catches when spoken terms differ from written       |
+| **Tactic Detection**         | Identifies anchoring, timeline pressure, etc.       |
+| **Presence Analysis**        | MediaPipe tracks eye contact, posture, tension      |
+| **LLM-Powered Detection**    | Semantic understanding of deal closure and circling |
+| **Dynamic Scoring**          | Fair 70/30 voice/presence weighting with camera     |
 
 ## Demo
 
@@ -55,7 +55,7 @@ flowchart LR
         Screen[Screen Capture]
         MediaPipe[MediaPipe<br/>Presence Detection]
     end
-    
+
     subgraph Backend
         Orch[Orchestrator]
         Coach[Coach Engine]
@@ -63,13 +63,13 @@ flowchart LR
         Recap[Recap Engine]
         Repo[Session Repository]
     end
-    
+
     subgraph Google
         Live[Gemini Live API]
         Vision[Gemini Vision]
         Firestore[(Firestore)]
     end
-    
+
     React <-->|WebSocket| Orch
     Audio --> Orch
     Screen --> Contract
@@ -102,11 +102,11 @@ flowchart LR
     Posture --> Score
 ```
 
-| Metric | How It's Calculated |
-|--------|---------------------|
+| Metric          | How It's Calculated                                    |
+| --------------- | ------------------------------------------------------ |
 | **Eye Contact** | Iris position relative to eye corners (gaze direction) |
-| **Posture** | Shoulder tilt + head alignment |
-| **Tension** | Brow furrow + jaw clench + squinting - smiling |
+| **Posture**     | Shoulder tilt + head alignment                         |
+| **Tension**     | Brow furrow + jaw clench + squinting - smiling         |
 
 **Privacy-First:** All analysis runs client-side. No video leaves your browser.
 
@@ -142,9 +142,9 @@ Manual capture and share flow:
 ### 5. Dynamic Scoring System
 
 | Camera State | Voice Weight | Presence Weight |
-|--------------|--------------|-----------------|
-| Disabled | 100% | 0% |
-| Enabled | 70% | 30% |
+| ------------ | ------------ | --------------- |
+| Disabled     | 100%         | 0%              |
+| Enabled      | 70%          | 30%             |
 
 **No penalty for disabled camera.** See [Scoring System](#scoring-system) for details.
 
@@ -156,21 +156,21 @@ The final score is a weighted composite of **voice performance** and **presence 
 
 #### Voice Score (0-100 points)
 
-| Component | Max Points | How It's Earned |
-|-----------|------------|-----------------|
-| Turn Participation | 30 | 10 pts per turn you take |
-| Tactics Encountered | 25 | 8 pts per unique tactic faced |
-| Progress Made | 20 | 10 pts per progress signal |
-| Deal Closure | 25 | Full points if deal closed |
-| *Penalties* | -5/-3 | Stalling (-5), Circling (-3) |
+| Component           | Max Points | How It's Earned               |
+| ------------------- | ---------- | ----------------------------- |
+| Turn Participation  | 30         | 10 pts per turn you take      |
+| Tactics Encountered | 25         | 8 pts per unique tactic faced |
+| Progress Made       | 20         | 10 pts per progress signal    |
+| Deal Closure        | 25         | Full points if deal closed    |
+| _Penalties_         | -5/-3      | Stalling (-5), Circling (-3)  |
 
 #### Presence Score (0-100 points, camera only)
 
-| Component | Max Points | How It's Earned |
-|-----------|------------|-----------------|
-| Eye Contact | 40 | `avgEyeContact × 0.4` |
-| Posture | 35 | `avgPosture × 0.35` |
-| Low Tension | 25 | `(100 - avgTension) × 0.25` |
+| Component   | Max Points | How It's Earned             |
+| ----------- | ---------- | --------------------------- |
+| Eye Contact | 40         | `avgEyeContact × 0.4`       |
+| Posture     | 35         | `avgPosture × 0.35`         |
+| Low Tension | 25         | `(100 - avgTension) × 0.25` |
 
 #### Final Calculation
 
@@ -213,13 +213,13 @@ Final: 89×0.7 + 74×0.3 = 85/100
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Frontend | React 18, TypeScript, Tailwind CSS v4, Vite |
-| ML | MediaPipe Tasks Vision (Face + Pose Landmarker) |
-| Backend | FastAPI, Python 3.13 |
-| AI | Gemini Live 2.5 Flash, Gemini 2.0 Flash (Vision) |
-| Deployment | Google Cloud Run |
+| Component  | Technology                                       |
+| ---------- | ------------------------------------------------ |
+| Frontend   | React 18, TypeScript, Tailwind CSS v4, Vite      |
+| ML         | MediaPipe Tasks Vision (Face + Pose Landmarker)  |
+| Backend    | FastAPI, Python 3.13                             |
+| AI         | Gemini Live 2.5 Flash, Gemini 2.0 Flash (Vision) |
+| Deployment | Google Cloud Run                                 |
 
 ## Quick Start
 
@@ -244,6 +244,7 @@ python main.py
 Open http://localhost:8080
 
 For frontend development with hot reload:
+
 ```bash
 cd frontend
 npm install
@@ -268,14 +269,14 @@ The fastest way to see every feature working end-to-end — coaching, contract d
 A realistic consulting contract is included in the repo. Open it in a new browser tab before you start a session:
 
 - **Live (Cloud Run):** https://secondus-svmgok3hyq-uc.a.run.app/contract.html
-- **Local:** http://localhost:8080/contract.html  *(or `frontend/public/contract.html` opened directly)*
+- **Local:** http://localhost:8080/contract.html _(or `frontend/public/contract.html` opened directly)_
 
 The contract is a **Consulting Services Agreement** for $75,000 / Net-30 / 10 weeks. Maya Chen will push for $50K / Net-60 / 6 weeks — so every key term is intentionally in conflict with what she says.
 
 ### Step 2 — Start a negotiation
 
 1. Go to https://secondus-svmgok3hyq-uc.a.run.app (or `localhost:8080`)
-2. Fill in your goals — e.g. *"Close at $70K minimum, Net-45, retain IP"*
+2. Fill in your goals — e.g. _"Close at $70K minimum, Net-45, retain IP"_
 3. Click **Begin Negotiation** — Maya Chen will open with her anchor offer
 4. Optionally **enable your camera** (bottom-right) for presence scoring
 
@@ -310,14 +311,14 @@ The contract is a **Consulting Services Agreement** for $75,000 / Net-30 / 10 we
 
 ### What each feature tests
 
-| Feature | How to trigger it |
-|---|---|
-| **Anchoring detection** | Maya's opening: "$50K budget, 6 weeks" |
-| **Contract drift** | Share contract.html, then hear Maya quote $50K vs $75,000 |
-| **Coaching** | Any adversary statement — coaching fires within 2s |
-| **Deal closure detection** | Agree on terms — coaching stops, recap readies |
-| **Presence metrics** | Enable camera before starting |
-| **LLM-judge score** | Click End — score reflects *how* you negotiated |
+| Feature                    | How to trigger it                                         |
+| -------------------------- | --------------------------------------------------------- |
+| **Anchoring detection**    | Maya's opening: "$50K budget, 6 weeks"                    |
+| **Contract drift**         | Share contract.html, then hear Maya quote $50K vs $75,000 |
+| **Coaching**               | Any adversary statement — coaching fires within 2s        |
+| **Deal closure detection** | Agree on terms — coaching stops, recap readies            |
+| **Presence metrics**       | Enable camera before starting                             |
+| **LLM-judge score**        | Click End — score reflects _how_ you negotiated           |
 
 ---
 
@@ -332,15 +333,15 @@ Endpoints are grouped by tags: Health, Learnings, Session.
 
 ### Google Cloud services used by Secondus
 
-| Service | Purpose |
-|---------|---------|
-| **Cloud Run** | Hosts the backend (FastAPI + WebSocket). |
-| **Cloud Build** | Builds the Docker image. |
-| **Container Registry (gcr.io)** | Stores the image used by Cloud Run. |
-| **Vertex AI** | Access to Gemini models. |
+| Service                           | Purpose                                                                    |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| **Cloud Run**                     | Hosts the backend (FastAPI + WebSocket).                                   |
+| **Cloud Build**                   | Builds the Docker image.                                                   |
+| **Container Registry (gcr.io)**   | Stores the image used by Cloud Run.                                        |
+| **Vertex AI**                     | Access to Gemini models.                                                   |
 | **Gemini Live Agent (2.5 Flash)** | Live Agent: real-time voice counterparty (Google ADK). Speaks and listens. |
-| **Gemini 2.0 Flash** | Vision (documents) and text (coaching, detection). |
-| **Firestore** | Persists completed sessions (collection `sessions`). |
+| **Gemini 2.0 Flash**              | Vision (documents) and text (coaching, detection).                         |
+| **Firestore**                     | Persists completed sessions (collection `sessions`).                       |
 
 See [AGENTS.md](AGENTS.md#google-cloud-services-used-by-secondus) for APIs and details.
 
@@ -349,10 +350,12 @@ See [AGENTS.md](AGENTS.md#google-cloud-services-used-by-secondus) for APIs and d
 Session persistence to Firestore is **on by default** on Cloud Run (when `GOOGLE_CLOUD_PROJECT` is set and the service runs with `K_SERVICE`).
 
 1. **Create a Firestore database** (if not already done):
+
    - [Console](https://console.cloud.google.com/firestore): Firestore → Create database → **Native mode**, choose a region (e.g. `nam5`).
    - Or: `gcloud firestore databases create --region=nam5` (if supported for your project).
 
 2. **Grant the Cloud Run service account access to Firestore**:
+
    ```bash
    PROJECT_ID="${GOOGLE_CLOUD_PROJECT:-platinum-depot-489523-a7}"
    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
@@ -361,14 +364,17 @@ Session persistence to Firestore is **on by default** on Cloud Run (when `GOOGLE
      --member="serviceAccount:${SA}" \
      --role="roles/datastore.user"
    ```
+
    Or in Console: IAM → find the **Compute Engine default service account** → Add role **Cloud Datastore User**.
 
 3. **Deploy** (Firestore API is already enabled in `deploy.sh`):
+
    ```bash
    ./deploy.sh
    ```
 
 4. **Test**:
+
    - Open the Cloud Run URL (printed at the end of `./deploy.sh`).
    - Start a negotiation, speak a few turns, then click **End**.
    - In [Firestore Console](https://console.cloud.google.com/firestore/data), open the `sessions` collection: you should see a new document with `user_session`, `metrics`, `exchanges`, etc.
@@ -411,24 +417,24 @@ secondus/
 
 ### Client → Server
 
-| Message | Purpose |
-|---------|---------|
-| `{ type: "start" }` | Begin negotiation |
-| `{ type: "audio", data }` | Send audio chunk |
-| `{ type: "screen", data }` | Send screen frame |
-| `{ type: "presence_metrics", data }` | Send presence data |
-| `{ type: "share_contract" }` | Share terms with counterpart |
-| `{ type: "end" }` | End session |
+| Message                              | Purpose                      |
+| ------------------------------------ | ---------------------------- |
+| `{ type: "start" }`                  | Begin negotiation            |
+| `{ type: "audio", data }`            | Send audio chunk             |
+| `{ type: "screen", data }`           | Send screen frame            |
+| `{ type: "presence_metrics", data }` | Send presence data           |
+| `{ type: "share_contract" }`         | Share terms with counterpart |
+| `{ type: "end" }`                    | End session                  |
 
 ### Server → Client
 
-| Message | Purpose |
-|---------|---------|
-| `transcript.append` | Chat message |
-| `coach.recommendation` | Coaching phrase |
-| `signal.alert` | Tactic/drift alert |
-| `session.deal_closed` | Deal detected |
-| `session.complete` | Session ended |
+| Message                | Purpose            |
+| ---------------------- | ------------------ |
+| `transcript.append`    | Chat message       |
+| `coach.recommendation` | Coaching phrase    |
+| `signal.alert`         | Tactic/drift alert |
+| `session.deal_closed`  | Deal detected      |
+| `session.complete`     | Session ended      |
 
 ## Gemini Live Agent Challenge 2026
 
@@ -436,12 +442,12 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 
 ### Challenge Requirements Met
 
-| Requirement | Implementation |
-|-------------|----------------|
-| **Live Agent** | Real-time voice agent (Google ADK + Gemini 2.5 Flash Live). Speaks and listens; vision + presence. |
-| Gemini Live API | Native bidirectional audio via ADK |
-| Google Cloud | Cloud Run, Firestore, Vertex AI |
-| Beyond Text Box | Proactive coaching, live agent conversation |
+| Requirement     | Implementation                                                                                     |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| **Live Agent**  | Real-time voice agent (Google ADK + Gemini 2.5 Flash Live). Speaks and listens; vision + presence. |
+| Gemini Live API | Native bidirectional audio via ADK                                                                 |
+| Google Cloud    | Cloud Run, Firestore, Vertex AI                                                                    |
+| Beyond Text Box | Proactive coaching, live agent conversation                                                        |
 
 ### Key Differentiators
 
@@ -455,50 +461,55 @@ Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.dev
 
 Secondus coaching is grounded in proven negotiation research:
 
-| Source | Concepts Used |
-|--------|---------------|
-| **Harvard Program on Negotiation (PON)** | BATNA, anchoring, interest-based bargaining |
-| **"Getting to Yes" (Fisher & Ury)** | Principled negotiation, separating people from problems |
-| **"Never Split the Difference" (Chris Voss)** | Tactical empathy, labeling, calibrated questions |
-| **"Bargaining for Advantage" (G. Richard Shell)** | Leverage, information exchange, ethical boundaries |
+| Source                                            | Concepts Used                                           |
+| ------------------------------------------------- | ------------------------------------------------------- |
+| **Harvard Program on Negotiation (PON)**          | BATNA, anchoring, interest-based bargaining             |
+| **"Getting to Yes" (Fisher & Ury)**               | Principled negotiation, separating people from problems |
+| **"Never Split the Difference" (Chris Voss)**     | Tactical empathy, labeling, calibrated questions        |
+| **"Bargaining for Advantage" (G. Richard Shell)** | Leverage, information exchange, ethical boundaries      |
 
 ### Tactics We Detect
 
-| Tactic | Source | Counter-Strategy |
-|--------|--------|------------------|
-| **Anchoring** | Harvard PON | Re-anchor on value, don't react to first offer |
-| **Artificial Urgency** | Voss | Probe the real deadline, slow down |
-| **Nibbling** | Shell | Trade, don't give away extras |
-| **Limited Authority** | Fisher & Ury | Establish decision-makers early |
-| **Good Cop/Bad Cop** | Harvard PON | Address the dynamic directly |
+| Tactic                 | Source       | Counter-Strategy                               |
+| ---------------------- | ------------ | ---------------------------------------------- |
+| **Anchoring**          | Harvard PON  | Re-anchor on value, don't react to first offer |
+| **Artificial Urgency** | Voss         | Probe the real deadline, slow down             |
+| **Nibbling**           | Shell        | Trade, don't give away extras                  |
+| **Limited Authority**  | Fisher & Ury | Establish decision-makers early                |
+| **Good Cop/Bad Cop**   | Harvard PON  | Address the dynamic directly                   |
 
 ## Product Roadmap
 
 ### Phase 1: Agent Marketplace
+
 - Multiple agent personalities (aggressive buyer, friendly vendor, skeptical investor)
 - Industry-specific scenarios (real estate, salary, vendor contracts)
 - Difficulty levels with adaptive challenge
 - Custom agent builder via prompt configuration
 
 ### Phase 2: Learning & Memory
+
 - Session history persistence across sessions
 - Progress tracking and weakness identification
 - Structured learning paths based on Harvard PON, Chris Voss, Fisher & Ury
 - Achievement system and skill badges
 
 ### Phase 3: Enterprise Features
+
 - Calendar & CRM integration (Salesforce, HubSpot)
 - Pre-meeting practice powered by prospect data
 - Team dashboards with aggregate analytics
 - White-label deployment option
 
 ### Phase 4: Advanced Intelligence
+
 - Multi-language support (Spanish, French, Mandarin)
 - Voice tone analysis (confidence, hesitation)
 - Cultural negotiation style adaptation
 - Enhanced micro-expression detection
 
 ### Phase 5: Platform Expansion
+
 - iOS/Android mobile apps
 - Browser extension for live Zoom/Meet coaching
 - VR practice environments (Oculus Quest)
@@ -506,20 +517,13 @@ Secondus coaching is grounded in proven negotiation research:
 
 See [tasks.md](tasks.md) for the complete roadmap with detailed features.
 
-## Proof of Google Cloud deployment
-
-For judges: a short walkthrough showing the backend running on Google Cloud is available in this repo:
-
-- **[Secondus_GCP_Hosting_Proof.mp4](Secondus_GCP_Hosting_Proof.mp4)** — Cloud Console (Cloud Run, Logs/dashboard) demonstrating the deployed service.
-
-You can download the file or view it after cloning the repository.
-
 ## Links
 
 - **Live Demo:** https://secondus-svmgok3hyq-uc.a.run.app
 - **Demo Video:** https://youtu.be/ffmS4bpW0UQ
 - **Devpost:** https://devpost.com/software/secondus-real-time-negotiation-copilot
 - **Medium Article:** [Building Secondus with Gemini Live API](https://medium.com/@mmsf_74923/building-secondus-a-real-time-ai-negotiation-copilot-with-gemini-live-c601aa3115fc)
+- **GCP Hosting Proof:** [Secondus_GCP_Hosting_Proof.mp4](Secondus_GCP_Hosting_Proof.mp4) — Cloud Console walkthrough (Cloud Run, Logs/dashboard) showing the deployed service
 
 ## License
 
