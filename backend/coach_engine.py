@@ -43,7 +43,7 @@ RULES:
 
 CLOSING: [YES/NO]
 CIRCLING: [YES/NO]
-SAY THIS: [one sentence]
+COULD SAY THIS: [one sentence]
 
 CLOSING:"""
 
@@ -172,15 +172,20 @@ async def generate_coaching(
             if circling_match:
                 is_circling = circling_match.group(1) == "YES"
         
-        # Parse SAY THIS phrase
+        # Parse COULD SAY THIS phrase
         phrase = ""
-        if "SAY THIS:" in coaching_text.upper():
-            idx = coaching_text.upper().find("SAY THIS:")
-            phrase = coaching_text[idx + 9 :].strip().strip('"').strip("'")
+        if "COULD SAY THIS:" in coaching_text.upper():
+            idx = coaching_text.upper().find("COULD SAY THIS:")
+            phrase = coaching_text[idx + 15 :].strip().strip('"').strip("'")
             # Clean up any trailing lines
             phrase = phrase.split("\n")[0].strip()
+        elif "SAY THIS:" in coaching_text.upper():
+            # Fallback for old format
+            idx = coaching_text.upper().find("SAY THIS:")
+            phrase = coaching_text[idx + 9 :].strip().strip('"').strip("'")
+            phrase = phrase.split("\n")[0].strip()
         else:
-            # Fallback: use the whole text if no SAY THIS marker
+            # Fallback: use the whole text if no marker found
             phrase = coaching_text.split("\n")[-1].strip()
         
         return {
