@@ -156,7 +156,7 @@ async def generate_coaching(
             contents=[prompt],
         )
 
-        coaching_text = response.text.strip()
+        coaching_text = (response.text or "").strip()
         
         # Parse CLOSING indicator
         is_closing = False
