@@ -455,7 +455,7 @@ You can download the file or view it after cloning the repository.
 - **Live Demo:** https://secondus-svmgok3hyq-uc.a.run.app
 - **Demo Video:** https://youtu.be/ffmS4bpW0UQ
 - **Devpost:** https://devpost.com/software/secondus-real-time-negotiation-copilot
-- **Medium Article:** [Building Secondus with Gemini Live API](https://medium.com/@mmsf_74923/building-secondus-a-real-time-negotiation-copilot-with-gemini-live-api-and-google-cloud-b478117831db)
+- **Medium Article:** [Building Secondus with Gemini Live API](https://medium.com/@mmsf_74923/building-secondus-a-real-time-ai-negotiation-copilot-with-gemini-live-c601aa3115fc)
 
 ## License
 
